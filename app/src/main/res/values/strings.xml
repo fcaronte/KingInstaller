@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">KingInstaller</string>
+    <string name="welcome_to_installer">Welcome to Installer!</string>
+    <string name="select_apk_to_install">Select APK to install:</string>
+    <string name="select_file">Select file...</string>
+    <string name="info_uninstall">If app already installed,\n uninstall it first</string>
+    <string name="install_as_king">Install as king</string>
+    <string name="info_manager">(if you got NOT EXISTS error use custom file manager to select file)</string>
+    <string name="jen94">Thanks jen94!</string>
 </resources>

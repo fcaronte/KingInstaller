@@ -2,6 +2,14 @@ plugins {
     id 'com.android.application'
 }
 
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file("signing.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
@@ -11,14 +19,29 @@ android {
         minSdkVersion 16
         targetSdkVersion 30
         versionCode 1
-        versionName "1.0"
+        versionName "1.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-
+    signingConfigs {
+        config {
+            storeFile file("keysing.jks")
+            storePassword keystoreProperties['STORE_PASSWORD']
+            keyAlias keystoreProperties['KEYSTORE_ALIAS']
+            keyPassword keystoreProperties['KEY_PASSWORD']
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+    }
     buildTypes {
-        release {
+        debug {
+            debuggable true
             minifyEnabled false
+            signingConfig signingConfigs.config
+        }
+        release {
+            minifyEnabled true
+            signingConfig signingConfigs.config
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -33,7 +56,4 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
-    testImplementation 'junit:junit:4.+'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 }

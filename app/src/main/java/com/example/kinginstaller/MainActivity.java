@@ -13,6 +13,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.OpenableColumns;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -63,7 +65,41 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        TextView siteAnnexhack = findViewById(R.id.site_annexhack);
+        siteAnnexhack.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                    String url = "https://inceptive.ru";
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setData(Uri.parse(url));
+                    startActivity(i);
+                } catch (Exception e) {
+                    TextView tv = findViewById(R.id.textViewError);
+                    tv.setText(e.toString());
+                }
+            }
+        });
     }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.user_info_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.action_search) {
+            String url = "https://gitlab.com/annexhack/king-installer";
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setData(Uri.parse(url));
+            startActivity(i);
+        }
+        return true;
+    }
+
 
     private void installAsKing() {
         try {
