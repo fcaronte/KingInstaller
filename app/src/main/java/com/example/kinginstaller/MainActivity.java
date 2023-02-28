@@ -114,19 +114,13 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Error: file not exists", Toast.LENGTH_SHORT).show();
                 return;
             }
-            Intent intent = new Intent("android.intent.action.INSTALL_PACKAGE");
+            Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
             Uri fileUri;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                fileUri = FileProvider.getUriForFile(getApplicationContext(), getPackageName()+".provider", myFile);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK+1);
-            } else {
-                fileUri = Uri.fromFile(myFile);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);  // Constant Value: 268435456 (0x10000000)
-            }
+            fileUri = FileProvider.getUriForFile(getApplicationContext(), getPackageName() + ".provider", myFile);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK + Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.setData(fileUri);
-
-            intent.putExtra("android.intent.extra.NOT_UNKNOWN_SOURCE", true);
-            intent.putExtra("android.intent.extra.INSTALLER_PACKAGE_NAME", "com.android.vending");
+            intent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true);
+            intent.putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, "com.android.vending");
             et.setText("");
             TextView tv = findViewById(R.id.textViewError);
             tv.setText("");
