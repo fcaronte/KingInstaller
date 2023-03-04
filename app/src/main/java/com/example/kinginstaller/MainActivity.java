@@ -5,6 +5,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 
 import android.Manifest;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -17,6 +18,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int FILE_SELECT_CODE = 1;
     private static final int PERMISSION_REQUEST_CODE = 2;
 
+    boolean oppo_trick = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +68,16 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        /*
+        //TEST TO MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
+        CheckBox oppoTrick = findViewById(R.id.checkBox);
+        oppoTrick.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oppo_trick = true;
+            }
+        });
+         */
 
         TextView siteAnnexhack = findViewById(R.id.site_annexhack);
         siteAnnexhack.setOnClickListener(new View.OnClickListener() {
@@ -124,6 +137,13 @@ public class MainActivity extends AppCompatActivity {
             et.setText("");
             TextView tv = findViewById(R.id.textViewError);
             tv.setText("");
+            /*
+               //TEST TO MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
+            if (oppo_trick) {
+                ComponentName oppoTrickFlagged = new ComponentName(getPackageName(), getPackageName()+".OppoTrick");
+                intent.setComponent(oppoTrickFlagged);
+            }
+             */
             startActivity(intent);
         } catch (Exception e) {
             TextView tv = findViewById(R.id.textViewError);
@@ -169,6 +189,26 @@ public class MainActivity extends AppCompatActivity {
                 }
         }
     }
+
+    public final void clearTempFile() {
+        File[] listFiles;
+        Context applicationContext = getApplicationContext();
+        File file = new File(applicationContext.getFilesDir() + "/apk");
+        if (!file.exists() || !file.isDirectory() || (listFiles = file.listFiles()) == null) {
+            return;
+        }
+        for (File file2 : listFiles) {
+            file2.delete();
+        }
+    }
+    public void onDestroy() {
+        super.onDestroy();
+        try {
+            clearTempFile();
+        } catch (Throwable ignored) {
+        }
+    }
+
     private void checkManageExternalStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             // android 11 has new readFiles request permission

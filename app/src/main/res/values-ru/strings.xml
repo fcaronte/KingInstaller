@@ -1,4 +1,5 @@
 <resources>
+    <string name="installer_trick">USE THE OTHER ONE</string>
     <string name="app_name">KingInstaller</string>
     <string name="welcome_to_installer">Добро пожаловать в KingInstaller!</string>
     <string name="select_apk_to_install">Выберите APK для установки:</string>
@@ -6,5 +7,7 @@
     <string name="info_uninstall">Если приложение уже установлено,\n сначала удалите его!</string>
     <string name="install_as_king">Установить</string>
     <string name="info_manager">(Если вы получили ошибку NOT EXISTS, используйте другой файловый менеджер для выбора файла)</string>
-    <string name="jen94">Спасибо jen94!</string>
+    <string name="jen94">Спасибо jen94!, mod by fcaronte</string>
+    <string name="oppo_trick">Enable if you use Oppo, Realme or OnePlus phone</string>
+    <string name="source_code">Source code</string>
 </resources>

@@ -1,3 +1,8 @@
+***fcaronte***
+I get the app from source code on gitlab "https://gitlab.com/annexhack/king-installer" and update dependecy to be compilable using new version of AS.
+I add the trick needed for Oppo/Realme/OnePlus phone and so now custom apk will work on that phone too :)
+
+
 ***Спасибо jen94.***
 
 > От себя только подправил пути к файлам.

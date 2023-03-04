@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="installer_trick">USA L\'ALTRO</string>
+    <string name="app_name">KingInstaller</string>
+    <string name="welcome_to_installer">Benvenuto nell\'installatore!</string>
+    <string name="select_apk_to_install">Seleziona una APK da installare:</string>
+    <string name="select_file">Seleziona un file…</string>
+    <string name="info_uninstall">Se l\'app è già installata,\n conviene prima disinstallarla</string>
+    <string name="install_as_king">Installa come un king</string>
+    <string name="info_manager">(se ottieni come errore NON ESISTE, usa un gestore file alternativo per scegliere il file)</string>
+    <string name="jen94">Grazie jen94!, mod by fcaronte</string>
+    <string name="oppo_trick">Attiva se usi un telefono Oppo, Realme o OnePlus</string>
+    <string name="source_code">Codice Sorgente</string>
+</resources>

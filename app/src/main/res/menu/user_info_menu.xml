@@ -3,5 +3,5 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/action_search"
-       android:title="Source code"/>
+       android:title="@string/source_code"/>
 </menu>
