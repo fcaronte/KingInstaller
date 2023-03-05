@@ -10,4 +10,8 @@
     <string name="jen94">Спасибо jen94!, mod by fcaronte</string>
     <string name="oppo_trick">Enable if you use Oppo, Realme or OnePlus phone</string>
     <string name="source_code">Source code</string>
+    <string name="select_a_file">Please select a file first</string>
+    <string name="file_error">Error: file not exists</string>
+    <string name="reset_default">Reset Default</string>
+    <string name="reset_default_description">Use \"Reset Default\" button to open default Google PackageInstaller if you wrongly set as default and popup won\'t show anymore. After touch \"Reset Default\" button, search for \"Clear Default Preference\" PS if button give an error is because your phone use a different PackageInstaller and so you need to manually search on your phone setting</string>
 </resources>

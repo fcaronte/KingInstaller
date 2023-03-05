@@ -25,7 +25,7 @@
         <activity-alias android:name=".OppoTrick"
             android:targetActivity=".MainActivity"
             android:exported="true"
-            android:enabled="true">
+            android:enabled="false">
             <intent-filter android:label="@string/installer_trick">
                 <action android:name="android.intent.action.VIEW"/>
                 <action android:name="android.intent.action.INSTALL_PACKAGE"/>

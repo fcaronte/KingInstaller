@@ -77,14 +77,36 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/install_as_king" />
-        <!--
+
         <CheckBox
             android:id="@+id/checkBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginRight="15dp"
+            android:layout_marginBottom="5dp"
             android:layout_gravity="center_horizontal"
             android:text="@string/oppo_trick" />
-         -->
+
+        <Button
+            android:id="@+id/resetButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/reset_default" />
+        <TextView
+            android:id="@+id/textView5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="15dp"
+            android:layout_marginBottom="10dp"
+            android:fontFamily="casual"
+            android:gravity="center"
+            android:lines="6"
+            android:text="@string/reset_default_description"
+            android:textSize="12sp" />
         <TextView
             android:id="@+id/textViewError"
             android:layout_width="match_parent"

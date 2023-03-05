@@ -5,15 +5,19 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.OpenableColumns;
+import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,13 +32,14 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 import static android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION;
+import static android.service.notification.Condition.SCHEME;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int FILE_SELECT_CODE = 1;
     private static final int PERMISSION_REQUEST_CODE = 2;
+    boolean oppo_trick;
 
-    boolean oppo_trick = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,16 +73,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        /*
-        //TEST TO MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
-        CheckBox oppoTrick = findViewById(R.id.checkBox);
-        oppoTrick.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                oppo_trick = true;
-            }
-        });
-         */
 
         TextView siteAnnexhack = findViewById(R.id.site_annexhack);
         siteAnnexhack.setOnClickListener(new View.OnClickListener() {
@@ -93,8 +88,58 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        //MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
+        SharedPreferences oppoTrickStatus = getSharedPreferences("oppo_trick_value", Activity.MODE_PRIVATE);
+        oppo_trick = oppoTrickStatus.getBoolean("oppo_trick_value",false);
+        CheckBox oppoTrick = (CheckBox) findViewById(R.id.checkBox);
+        oppoTrick.setChecked(oppo_trick);
+        oppoTrick.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oppo_trick = !oppo_trick;
+                SharedPreferences.Editor editor = oppoTrickStatus.edit();
+                editor.putBoolean("oppo_trick_value", oppo_trick);
+                editor.apply();
+                oppoTrick.setChecked(oppo_trick);
+                OppoTrick();
+            }
+        });
+        //RESET BUTTON TO OPEN DEFAULT PACKAGE INSTALLER TO CAN CLEAR AS DEFAULT SETTING
+        Button resetButton = findViewById(R.id.resetButton);
+        resetButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    intent.setData(Uri.parse("package:" + "com.google.android.packageinstaller"));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    TextView tv = findViewById(R.id.textViewError);
+                    tv.setText(e.toString());
+                }
+            }
+        });
     }
 
+    public void OppoTrick() {
+        //MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
+        PackageManager pm = getApplicationContext().getPackageManager();
+        if (oppo_trick) {
+            ComponentName oppoTrickFlagged =
+                    new ComponentName(getPackageName(), getPackageName() + ".OppoTrick");
+            pm.setComponentEnabledSetting(
+                    oppoTrickFlagged,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP);
+        } else {
+            ComponentName oppoTrickFlagged =
+                    new ComponentName(getPackageName(), getPackageName() + ".OppoTrick");
+            pm.setComponentEnabledSetting(
+                    oppoTrickFlagged,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP);
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -119,12 +164,12 @@ public class MainActivity extends AppCompatActivity {
             EditText et = findViewById(R.id.pathTextEdit);
             String filepath = et.getText().toString();
             if (filepath.length() == 0) {
-                Toast.makeText(this, "Please select a file first", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.select_a_file, Toast.LENGTH_SHORT).show();
                 return;
             }
             File myFile = new File(filepath);
             if (!myFile.exists()) {
-                Toast.makeText(this, "Error: file not exists", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.file_error, Toast.LENGTH_SHORT).show();
                 return;
             }
             Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
@@ -137,13 +182,6 @@ public class MainActivity extends AppCompatActivity {
             et.setText("");
             TextView tv = findViewById(R.id.textViewError);
             tv.setText("");
-            /*
-               //TEST TO MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
-            if (oppo_trick) {
-                ComponentName oppoTrickFlagged = new ComponentName(getPackageName(), getPackageName()+".OppoTrick");
-                intent.setComponent(oppoTrickFlagged);
-            }
-             */
             startActivity(intent);
         } catch (Exception e) {
             TextView tv = findViewById(R.id.textViewError);

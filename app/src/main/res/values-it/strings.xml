@@ -11,4 +11,8 @@
     <string name="jen94">Grazie jen94!, mod by fcaronte</string>
     <string name="oppo_trick">Attiva se usi un telefono Oppo, Realme o OnePlus</string>
     <string name="source_code">Codice Sorgente</string>
+    <string name="select_a_file">Prima scegli un file</string>
+    <string name="file_error">Errore: il file non esiste</string>
+    <string name="reset_default">Resetta Default</string>
+    <string name="reset_default_description">Usa il tasto \"Resetta Default\" per aprire l\'installatore pacchetto di Google e poterlo resettare se lo hai impostato per sbaglio come default e non esce più il popup. Dopo aver cliccato il tasto di reset, cerca \"Cancella Preferenze Predefinite\" PS se quando clicchi non succede nulla e da errore, è perché il tuo telefono usa un altro \"Installatore Pacchetto\" e quindi dovrai cercarlo manualmente dalle impostazioni del telefono</string>
 </resources>
