@@ -9,7 +9,8 @@
     <string name="info_manager">(if you got NOT EXISTS error use custom file manager to select file)</string>
     <string name="jen94">Thanks jen94!, mod by fcaronte</string>
     <string name="oppo_trick">Enable if you use Oppo, Realme or OnePlus phone</string>
-    <string name="source_code">Source code</string>
+    <string name="source_code_ax">annexhack Source code</string>
+    <string name="source_code_fc">fcaronte Source code</string>
     <string name="select_a_file">Please select a file first</string>
     <string name="file_error">Error: file not exists</string>
     <string name="reset_default">Reset Default</string>

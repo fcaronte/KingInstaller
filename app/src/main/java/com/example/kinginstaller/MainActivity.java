@@ -153,6 +153,12 @@ public class MainActivity extends AppCompatActivity {
             i.setData(Uri.parse(url));
             startActivity(i);
         }
+        if(item.getItemId() == R.id.action_search2) {
+            String url = "https://github.com/fcaronte/KingInstaller";
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setData(Uri.parse(url));
+            startActivity(i);
+        }
         return true;
     }
 

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/action_search"
-       android:title="@string/source_code"/>
+       android:id="@+id/action_search"
+       android:title="@string/source_code_ax"/>
+    <item
+        android:id="@+id/action_search2"
+        android:title="@string/source_code_fc"/>
 </menu>

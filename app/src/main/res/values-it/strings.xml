@@ -10,7 +10,8 @@
     <string name="info_manager">(se ottieni come errore NON ESISTE, usa un gestore file alternativo per scegliere il file)</string>
     <string name="jen94">Grazie jen94!, mod by fcaronte</string>
     <string name="oppo_trick">Attiva se usi un telefono Oppo, Realme o OnePlus</string>
-    <string name="source_code">Codice Sorgente</string>
+    <string name="source_code_ax">Codice Sorgente annexhack</string>
+    <string name="source_code_fc">Codice Sorgente fcaronte</string>
     <string name="select_a_file">Prima scegli un file</string>
     <string name="file_error">Errore: il file non esiste</string>
     <string name="reset_default">Resetta Default</string>
