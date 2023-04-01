@@ -39,7 +39,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int FILE_SELECT_CODE = 1;
     private static final int PERMISSION_REQUEST_CODE = 2;
-    boolean oppo_trick;
+    boolean oppoTrickEnabled;
+    boolean rootTrickEnabled;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,8 +66,10 @@ public class MainActivity extends AppCompatActivity {
         btnInstall.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    installAsKing();
-                } catch (Exception e) {
+                    if (rootTrickEnabled) { installAsRoot(); }
+                    else { installAsKing(); }
+                }
+                catch (Exception e) {
                     TextView tv = findViewById(R.id.textViewError);
                     tv.setText(e.toString());
                 }
@@ -90,18 +93,34 @@ public class MainActivity extends AppCompatActivity {
 
         //MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
         SharedPreferences oppoTrickStatus = getSharedPreferences("oppo_trick_value", Activity.MODE_PRIVATE);
-        oppo_trick = oppoTrickStatus.getBoolean("oppo_trick_value",false);
-        CheckBox oppoTrick = (CheckBox) findViewById(R.id.checkBox);
-        oppoTrick.setChecked(oppo_trick);
+        oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value",false);
+        CheckBox oppoTrick = (CheckBox) findViewById(R.id.checkBox1);
+        oppoTrick.setChecked(oppoTrickEnabled);
         oppoTrick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                oppo_trick = !oppo_trick;
+                oppoTrickEnabled = !oppoTrickEnabled;
                 SharedPreferences.Editor editor = oppoTrickStatus.edit();
-                editor.putBoolean("oppo_trick_value", oppo_trick);
+                editor.putBoolean("oppo_trick_value", oppoTrickEnabled);
                 editor.apply();
-                oppoTrick.setChecked(oppo_trick);
-                OppoTrick();
+                oppoTrick.setChecked(oppoTrickEnabled);
+                oppoTrick();
+            }
+        });
+
+        //MAKE ROOT TRICK DISABLED AS DEFAULT
+        SharedPreferences rootTrickStatus = getSharedPreferences("root_trick_value", Activity.MODE_PRIVATE);
+        rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value",false);
+        CheckBox rootTrick = (CheckBox) findViewById(R.id.checkBox2);
+        rootTrick.setChecked(rootTrickEnabled);
+        rootTrick.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                rootTrickEnabled = !rootTrickEnabled;
+                SharedPreferences.Editor editor = rootTrickStatus.edit();
+                editor.putBoolean("root_trick_value", rootTrickEnabled);
+                editor.apply();
+                rootTrick.setChecked(rootTrickEnabled);
             }
         });
 
@@ -121,10 +140,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void OppoTrick() {
+    public void oppoTrick() {
         //MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
         PackageManager pm = getApplicationContext().getPackageManager();
-        if (oppo_trick) {
+        if (oppoTrickEnabled) {
             ComponentName oppoTrickFlagged =
                     new ComponentName(getPackageName(), getPackageName() + ".OppoTrick");
             pm.setComponentEnabledSetting(
@@ -170,6 +189,19 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    private void installAsRoot() {
+        try {
+            EditText et = findViewById(R.id.pathTextEdit);
+            String filepath = et.getText().toString();
+            runSuWithCmd("pm install -t -i \"com.android.vending\" -r " + filepath);
+            et.setText("");
+            TextView tv = findViewById(R.id.textViewError);
+            tv.setText("");
+        } catch (Exception e) {
+            TextView tv = findViewById(R.id.textViewError);
+            tv.setText(e.toString());
+        }
+    }
 
     private void installAsKing() {
         try {

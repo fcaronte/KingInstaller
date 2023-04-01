@@ -36,19 +36,14 @@
             android:textSize="16sp" />
 
         <TextView
-            android:id="@+id/textView3"
+            android:id="@+id/textViewInfo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="15dp"
             android:layout_marginTop="10dp"
-            android:layout_marginRight="15dp"
-            android:layout_marginBottom="10dp"
-            android:fontFamily="casual"
+            android:fontFamily="sans-serif"
             android:gravity="center"
-            android:lines="2"
-            android:text="@string/info_manager"
-            android:textSize="12sp" />
-
+            android:lines="1"
+            android:text="@string/info_uninstall" />
 
         <Button
             android:id="@+id/selectButton"
@@ -64,47 +59,67 @@
             android:text="" />
 
         <TextView
-            android:id="@+id/textViewInfo"
+            android:id="@+id/textView3"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="casual"
-            android:gravity="center"
-            android:lines="2"
-            android:text="@string/info_uninstall" />
-
-        <Button
-            android:id="@+id/installButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/install_as_king" />
-
-        <CheckBox
-            android:id="@+id/checkBox"
-            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="15dp"
-            android:layout_marginTop="5dp"
             android:layout_marginRight="15dp"
-            android:layout_marginBottom="5dp"
+            android:fontFamily="sans-serif"
+            android:gravity="center"
+            android:lines="1"
+            android:text="@string/info_manager"
+            android:textSize="12sp" />
+
+        <CheckBox
+            android:id="@+id/checkBox1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
             android:layout_gravity="center_horizontal"
             android:text="@string/oppo_trick" />
 
-        <Button
-            android:id="@+id/resetButton"
+        <CheckBox
+            android:id="@+id/checkBox2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/root_trick" />
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/reset_default" />
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/installButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="10dp"
+                android:text="@string/install_as_king" />
+
+            <Button
+                android:id="@+id/resetButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="10dp"
+                android:text="@string/reset_default" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/textView5"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="250dp"
             android:layout_marginLeft="15dp"
             android:layout_marginTop="10dp"
             android:layout_marginRight="15dp"
             android:layout_marginBottom="10dp"
-            android:fontFamily="casual"
-            android:gravity="center"
-            android:lines="6"
+            android:elegantTextHeight="true"
+            android:fontFamily="sans-serif"
+            android:gravity="top"
+            android:lines="20"
             android:text="@string/reset_default_description"
             android:textSize="12sp" />
         <TextView
@@ -118,15 +133,12 @@
         android:id="@+id/textView4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginEnd="16dp"
-        android:gravity="center"
-        android:textSize="16sp"
-        android:layout_marginRight="16dp"
         android:layout_marginBottom="16dp"
+        android:gravity="center"
         android:text="@string/jen94"
-        app:layout_constraintBottom_toBottomOf="@+id/linearLayout" />
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="@+id/linearLayout"
+        tools:layout_editor_absoluteX="16dp" />
 
     <TextView
         android:id="@+id/site_annexhack"
@@ -136,6 +148,7 @@
         android:layout_marginLeft="16dp"
         android:layout_marginEnd="16dp"
         android:gravity="center"
+        android:text="@string/jen94"
         android:textSize="16sp"
         android:layout_marginRight="16dp"
         android:layout_marginBottom="16dp"
