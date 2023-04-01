@@ -28,9 +28,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -42,18 +45,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        try {
-            checkManageExternalStoragePermission();
-        } catch (Exception e) {
+        try { checkManageExternalStoragePermission(); }
+        catch (Exception e) {
             TextView tv = findViewById(R.id.textViewError);
             tv.setText(e.toString());
         }
         Button btnSelect = findViewById(R.id.selectButton);
         btnSelect.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                try {
-                    showFileChooser();
-                } catch (Exception e) {
+                try { showFileChooser(); }
+                catch (Exception e) {
                     TextView tv = findViewById(R.id.textViewError);
                     tv.setText(e.toString());
                 }
@@ -103,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
                 OppoTrick();
             }
         });
+
         //RESET BUTTON TO OPEN DEFAULT PACKAGE INSTALLER TO CAN CLEAR AS DEFAULT SETTING
         Button resetButton = findViewById(R.id.resetButton);
         resetButton.setOnClickListener(new View.OnClickListener() {
@@ -331,5 +333,48 @@ public class MainActivity extends AppCompatActivity {
         } else {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE); //permisison request code is just an int
         }
+    }
+
+    /**
+     * https://github.com/shmykelsa/AA-Tweaker/blob/4d03205f14b2938f96bf04e198dd067cd6fe0967/app/src/main/java/sksa/aa/tweaker/MainActivity.java#L3964
+     * @param cmd
+     * @return
+     */
+    public static StreamLogs runSuWithCmd(String cmd) {
+        DataOutputStream outputStream = null;
+        InputStream inputStream = null;
+        InputStream errorStream = null;
+
+        StreamLogs streamLogs = new StreamLogs();
+        streamLogs.setOutputStreamLog(cmd);
+
+        try {
+            Process su = Runtime.getRuntime().exec("su");
+            outputStream = new DataOutputStream(su.getOutputStream());
+            inputStream = su.getInputStream();
+            errorStream = su.getErrorStream();
+
+            outputStream.writeBytes(cmd + "\n");
+            outputStream.flush();
+            outputStream.writeBytes("exit\n");
+            outputStream.flush();
+
+            try { su.waitFor(); }
+            catch (InterruptedException e) { e.printStackTrace(); }
+            streamLogs.setInputStreamLog(readStream(inputStream));
+            streamLogs.setErrorStreamLog(readStream(errorStream));
+        } catch (IOException e) { e.printStackTrace(); }
+
+        return streamLogs;
+    }
+
+    public static String readStream(InputStream is) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int length;
+        while ((length = is.read(buffer)) != -1) {
+            byteArrayOutputStream.write(buffer, 0, length);
+        }
+        return byteArrayOutputStream.toString("UTF-8");
     }
 }
