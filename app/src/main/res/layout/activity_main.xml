@@ -148,7 +148,6 @@
         android:layout_marginLeft="16dp"
         android:layout_marginEnd="16dp"
         android:gravity="center"
-        android:text="@string/jen94"
         android:textSize="16sp"
         android:layout_marginRight="16dp"
         android:layout_marginBottom="16dp"
