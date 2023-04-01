@@ -6,4 +6,7 @@
     <item
         android:id="@+id/action_search2"
         android:title="@string/source_code_fc"/>
+    <item
+        android:id="@+id/action_search3"
+        android:title="@string/source_code_rikj000"/>
 </menu>
