@@ -7,12 +7,14 @@
     <string name="info_uninstall">Если приложение уже установлено,\n сначала удалите его!</string>
     <string name="install_as_king">Установить</string>
     <string name="info_manager">(Если вы получили ошибку NOT EXISTS, используйте другой файловый менеджер для выбора файла)</string>
-    <string name="jen94">Спасибо jen94!, mod by fcaronte</string>
+    <string name="jen94">Спасибо jen94! Updated by fcaronte &amp; Rikj000</string>
     <string name="oppo_trick">Включить, если вы используете телефон Oppo, Realme или OnePlus</string>
     <string name="source_code_ax">annexhack Исходный код</string>
     <string name="source_code_fc">fcaronte Исходный код</string>
+    <string name="source_code_rikj000">Rikj000 Исходный код</string>
     <string name="select_a_file">Выбрать файл</string>
     <string name="file_error">Ошибка: файл не существует</string>
     <string name="reset_default">Сбросить значение по умолчанию</string>
     <string name="reset_default_description">Используйте кнопку \"Сбросить значение по умолчанию\", чтобы открыть Google PackageInstaller по умолчанию, если вы неправильно установили значение по умолчанию и всплывающее окно больше не будет отображаться. После нажатия кнопки \"Сбросить настройки по умолчанию\" найдите \"Очистить настройки по умолчанию\" PS если кнопка выдает ошибку, это потому, что ваш телефон использует другой PackageInstaller, и поэтому вам нужно вручную выполнить поиск в настройках вашего телефона</string>
+    <string name="root_trick">Включить, если вы используете рутированный (LineageOS) телефон</string>
 </resources>
