@@ -1,24 +1,33 @@
-***fcaronte***
+# King Installer
 
+Install packages "as Google Play Store", to work around restrictions!   
+Useful for Android Auto.
 
-I get the app from source code on gitlab "https://gitlab.com/annexhack/king-installer" and update dependecy to be compilable using new version of AS.
-I add the trick needed for Oppo/Realme/OnePlus phone and so now custom apk will work on that phone too :)
+## Usage
 
+Everything is simple - choose any apk on your smartphone, which you want to install, and click "Install As King"!
+If the selected application has already been installed previously, uninstall it beforehand.
 
-***Спасибо jen94.***
+[Telegram](https://t.me/Android_auto_4pda) - Discuss the program in the chat room
 
-> От себя только подправил пути к файлам.
+[Video](https://www.yewtu.be/watch?v=X5UF9mYKrqc) - Example usage
 
-Все просто - выбираем любой apk на смартфоне, который требуется установить, и нажимаем "Install As King".
-Если выбранное приложение уже было установлено ранее - предварительно его удаляем.
-Приложение должно быть предназначено для работы с Android Auto, не стоит пытаться установить таким образом какие-то другие программы.
+Restriction applies only to Android 11 and above.
 
-Обсуждение программы ведём в чате - [Telegram](https://t.me/Android_auto_4pda)
+It works in 8 out of 10 cases.   
+If it didn't work for you, here's a [video](https://www.yewtu.be/watch?v=ZiFnHxu-g4E) for you about an alternative variant.
 
-Видео Youtube: https://www.youtube.com/watch?v=X5UF9mYKrqc
-____
-Для Android 11 версия Android Auto должна быть 6.3 и ниже или 6.6 и выше !!! Ограничение касается только Android 11
-С 11 Андроидом и версией АА 6.4 и 6.5 для данного метода потребуется рут, см здесь
+## ChangeLog
 
-Работает в 8 случаях из 10. У кого не сработало - для вас отдельное видео про альтернативный вариант: https://www.youtube.com/watch?v=ZiFnHxu-g4E
-____
+**[Rikj000](https://github.com/Rikj000/KingInstaller)**
+Added the root trick needed for (rooted) LineageOS phones.
+
+**[fcaronte](https://github.com/fcaronte/KingInstaller)**
+Added the oppo trick needed for Oppo/Realme/OnePlus phones.
+Updated dependencies.
+
+**jen94**
+Corrected the paths to the files.
+
+**[annexhack](https://gitlab.com/annexhack/king-installer)**
+Initial releases
