@@ -9,12 +9,13 @@
     <string name="info_manager">If you got NOT EXISTS error use custom file manager to select file</string>
     <string name="jen94">Thanks jen94! Updated by fcaronte &amp; Rikj000</string>
     <string name="oppo_trick">Enable if you use Oppo, Realme or OnePlus phone</string>
-    <string name="source_code_ax">annexhack Source code</string>
-    <string name="source_code_fc">fcaronte Source code</string>
+    <string name="source_code_annexhack">Annexhack Source code</string>
+    <string name="source_code_fcaronte">Fcaronte Source code</string>
     <string name="source_code_rikj000">Rikj000 Source code</string>
     <string name="select_a_file">Please select a file first</string>
     <string name="file_error">Error: file not exists</string>
     <string name="reset_default">Reset Default</string>
     <string name="reset_default_description">Use \"Reset Default\" button to open default Google PackageInstaller\nif you wrongly set as default and popup won\'t show anymore.\n\nAfter touch \"Reset Default\" button,\nsearch for \"Clear Default Preference\" PS.\n\nIf the button gives an error,\nit is because your phone use a different PackageInstaller\nand so you need to manually search on your phone setting.</string>
     <string name="root_trick">Enable if you use rooted (LineageOS) phone</string>
+    <string name="device_not_rooted">Can\'t enable, device is not Rooted</string>
 </resources>

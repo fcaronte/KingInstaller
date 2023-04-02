@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.OpenableColumns;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,19 +29,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int FILE_SELECT_CODE = 1;
     private static final int PERMISSION_REQUEST_CODE = 2;
-    boolean oppoTrickEnabled;
-    boolean rootTrickEnabled;
+    boolean oppoTrickEnabled, rootTrickEnabled;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,20 +57,6 @@ public class MainActivity extends AppCompatActivity {
         btnSelect.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try { showFileChooser(); }
-                catch (Exception e) {
-                    TextView tv = findViewById(R.id.textViewError);
-                    tv.setText(e.toString());
-                }
-            }
-        });
-
-        Button btnInstall = findViewById(R.id.installButton);
-        btnInstall.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    if (rootTrickEnabled) { installAsRoot(); }
-                    else { installAsKing(); }
-                }
                 catch (Exception e) {
                     TextView tv = findViewById(R.id.textViewError);
                     tv.setText(e.toString());
@@ -96,31 +84,79 @@ public class MainActivity extends AppCompatActivity {
         oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value",false);
         CheckBox oppoTrick = (CheckBox) findViewById(R.id.checkBox1);
         oppoTrick.setChecked(oppoTrickEnabled);
-        oppoTrick.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                oppoTrickEnabled = !oppoTrickEnabled;
-                SharedPreferences.Editor editor = oppoTrickStatus.edit();
-                editor.putBoolean("oppo_trick_value", oppoTrickEnabled);
-                editor.apply();
-                oppoTrick.setChecked(oppoTrickEnabled);
-                oppoTrick();
-            }
-        });
-
         //MAKE ROOT TRICK DISABLED AS DEFAULT
         SharedPreferences rootTrickStatus = getSharedPreferences("root_trick_value", Activity.MODE_PRIVATE);
         rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value",false);
         CheckBox rootTrick = (CheckBox) findViewById(R.id.checkBox2);
         rootTrick.setChecked(rootTrickEnabled);
+        oppoTrick();
+
+        oppoTrick.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oppoTrickEnabled = !oppoTrickEnabled;
+                SharedPreferences.Editor oppoEditor = oppoTrickStatus.edit();
+                oppoEditor.putBoolean("oppo_trick_value", oppoTrickEnabled);
+                oppoEditor.apply();
+                oppoTrick.setChecked(oppoTrickEnabled);
+                //Switch off root flags
+                SharedPreferences.Editor rootEditor = rootTrickStatus.edit();
+                rootEditor.putBoolean("root_trick_value", false);
+                rootEditor.apply();
+                rootTrick.setChecked(false);
+                oppoTrick();
+
+                Log.d("oppo button", "oppo value is " + oppoTrickStatus.getBoolean("oppo_trick_value", false));
+                Log.d("root button", "root value is " + rootTrickStatus.getBoolean("root_trick_value", false));
+            }
+        });
+
         rootTrick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                rootTrickEnabled = !rootTrickEnabled;
-                SharedPreferences.Editor editor = rootTrickStatus.edit();
-                editor.putBoolean("root_trick_value", rootTrickEnabled);
-                editor.apply();
-                rootTrick.setChecked(rootTrickEnabled);
+                isDeviceRooted();
+                if (!isDeviceRooted()) {
+                    Toast.makeText(getBaseContext(), R.string.device_not_rooted, Toast.LENGTH_SHORT).show();
+                    //Switch off root flags
+                    SharedPreferences.Editor rootEditor = rootTrickStatus.edit();
+                    rootEditor.putBoolean("root_trick_value", false);
+                    rootEditor.apply();
+                    rootTrick.setChecked(false);
+                } else {
+                    rootTrickEnabled = !rootTrickEnabled;
+                    SharedPreferences.Editor rootEditor = rootTrickStatus.edit();
+                    rootEditor.putBoolean("root_trick_value", rootTrickEnabled);
+                    rootEditor.apply();
+                    rootTrick.setChecked(rootTrickEnabled);
+                    //Switch off oppo flags
+                    SharedPreferences.Editor oppoEditor = oppoTrickStatus.edit();
+                    oppoEditor.putBoolean("oppo_trick_value", false);
+                    oppoEditor.apply();
+                    oppoTrick.setChecked(false);
+                    oppoTrick();
+
+                }
+                Log.d("root check", "is phone rooted " + isDeviceRooted());
+                Log.d("oppo button", "oppo value is " + oppoTrickStatus.getBoolean("oppo_trick_value", false));
+                Log.d("root button", "root value is " + rootTrickStatus.getBoolean("root_trick_value", false));
+            }
+        });
+
+        Button btnInstall = findViewById(R.id.installButton);
+        btnInstall.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                SharedPreferences oppoTrickStatus = getSharedPreferences("oppo_trick_value", Activity.MODE_PRIVATE);
+                oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value",false);
+                SharedPreferences rootTrickStatus = getSharedPreferences("root_trick_value", Activity.MODE_PRIVATE);
+                rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value",false);
+                try {
+                    if (rootTrickEnabled) { installAsRoot(); }
+                    else installAsKing();
+                }
+                catch (Exception e) {
+                    TextView tv = findViewById(R.id.textViewError);
+                    tv.setText(e.toString());
+                }
             }
         });
 
@@ -142,6 +178,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void oppoTrick() {
         //MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
+        SharedPreferences oppoTrickStatus = getSharedPreferences("oppo_trick_value", Activity.MODE_PRIVATE);
+        oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value",false);
+        //MAKE ROOT TRICK DISABLED AS DEFAULT
+        SharedPreferences rootTrickStatus = getSharedPreferences("root_trick_value", Activity.MODE_PRIVATE);
+        rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value",false);
         PackageManager pm = getApplicationContext().getPackageManager();
         if (oppoTrickEnabled) {
             ComponentName oppoTrickFlagged =
@@ -158,6 +199,12 @@ public class MainActivity extends AppCompatActivity {
                     PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                     PackageManager.DONT_KILL_APP);
         }
+        SharedPreferences.Editor oppoEditor = oppoTrickStatus.edit();
+        oppoEditor.putBoolean("oppo_trick_value", oppoTrickEnabled);
+        oppoEditor.apply();
+        SharedPreferences.Editor rootEditor = rootTrickStatus.edit();
+        rootEditor.putBoolean("root_trick_value", rootTrickEnabled);
+        rootEditor.apply();
     }
 
     @Override
@@ -414,5 +461,37 @@ public class MainActivity extends AppCompatActivity {
             byteArrayOutputStream.write(buffer, 0, length);
         }
         return byteArrayOutputStream.toString("UTF-8");
+    }
+    public static boolean isDeviceRooted() {
+        return checkRootMethod1() || checkRootMethod2() ||
+                checkRootMethod3();
+    }
+    private static boolean checkRootMethod1() {
+        String buildTags = android.os.Build.TAGS;
+        return buildTags != null && buildTags.contains("test-keys");
+    }
+    private static boolean checkRootMethod2() {
+        String[] paths = { "/system/app/Superuser.apk", "/sbin/su", "/system/bin/su",
+                "/system/xbin/su", "/data/local/xbin/su", "/data/local/bin/su", "/system/sd/xbin/su",
+                "/system/bin/failsafe/su", "/data/local/su" };
+        for (String path : paths) {
+            if (new File(path).exists()) return true;
+        }
+        return false;
+    }
+    private static boolean checkRootMethod3() {
+        Process process = null;
+        try {
+            process = Runtime.getRuntime().exec(new String[] {
+                    "/system/xbin/which", "su" });
+            BufferedReader in = new BufferedReader(new
+                    InputStreamReader(process.getInputStream()));
+            if (in.readLine() != null) return true;
+            return false;
+        } catch (Throwable t) {
+            return false;
+        } finally {
+            if (process != null) process.destroy();
+        }
     }
 }

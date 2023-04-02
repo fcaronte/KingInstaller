@@ -2,10 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
        android:id="@+id/action_search"
-       android:title="@string/source_code_ax"/>
+       android:title="@string/source_code_annexhack"/>
     <item
         android:id="@+id/action_search2"
-        android:title="@string/source_code_fc"/>
+        android:title="@string/source_code_fcaronte"/>
     <item
         android:id="@+id/action_search3"
         android:title="@string/source_code_rikj000"/>
