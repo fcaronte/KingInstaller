@@ -43,6 +43,12 @@ Restriction applies only to Android 11 and above.
 It works in 8 out of 10 cases.   
 If it didn't work for you, here's a [video](https://www.yewtu.be/watch?v=ZiFnHxu-g4E) for you about an alternative variant.
 
+#### Android Auto still won't show some apps.
+Some apps have additional restrictions applied on them by AA,   
+which leads to them still not showing up, even if "installed as Google Play Store".
+
+To unlock these apps use [Android Auto - Xposed Unlocked](https://github.com/Rikj000/Android-Auto-Xposed-Unlocked)
+
 ## ChangeLog
 
 **[Rikj000](https://github.com/Rikj000/KingInstaller)**
