@@ -23,6 +23,15 @@ Useful for Android Auto.
         - Wait for text-field with `.apk` file-path to clear
 3. Validate if package installed "as Google Play Store"
 
+## Verify app installation
+To verify if the process of installing an app "as Google Play Store" went correctly, check as following:
+
+- Settings => Apps => See all apps => Name of installed App => Store *(at the bottom)*
+- There you should see either of following, `App installed from ...` messages:
+    - `Google Play Store` - On devices with Google Play Store enabled
+    - `FakeStore` - On devices with MicroG *(Google Play Store stub)*
+    - `license checker` - On AVDs without Google Play
+
 ## Notes 
 Make sure to enable `Unknown Sources` in Android Auto's Developer Settings.
 
