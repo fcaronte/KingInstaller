@@ -56,7 +56,7 @@ If it didn't work for you, here's a [video](https://www.yewtu.be/watch?v=ZiFnHxu
 Some apps have additional restrictions applied on them by AA,   
 which leads to them still not showing up, even if "installed as Google Play Store".
 
-To unlock these apps use [Android Auto - Xposed Unlocked](https://github.com/Rikj000/Android-Auto-Xposed-Unlocked)
+To unlock these apps use the Xposed module provided by [Android Auto - XLauncher Unlocked](https://github.com/Rikj000/Android-Auto-XLauncher-Unlocked)
 
 ## ChangeLog
 
