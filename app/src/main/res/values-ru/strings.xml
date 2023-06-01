@@ -18,4 +18,7 @@
     <string name="reset_default_description">Используйте кнопку \"Сбросить значение по умолчанию\", чтобы открыть Google PackageInstaller по умолчанию, если вы неправильно установили значение по умолчанию и всплывающее окно больше не будет отображаться. После нажатия кнопки \"Сбросить настройки по умолчанию\" найдите \"Очистить настройки по умолчанию\" PS если кнопка выдает ошибку, это потому, что ваш телефон использует другой PackageInstaller, и поэтому вам нужно вручную выполнить поиск в настройках вашего телефона</string>
     <string name="root_trick">Включить, если вы используете рутированный (LineageOS) телефон</string>
     <string name="device_not_rooted">Невозможно включить, устройство не рутировано</string>
+    <string name="missing_google_package_installer">ВНИМАНИЕ! НА ВАШЕМ УСТРОЙСТВЕ НЕ УСТАНОВЛЕНА ПРОГРАММА УСТАНОВКИ ПАКЕТОВ GOOGLE, ПОЭТОМУ МЕТОД KINGINSTALLER НЕ РАБОТАЕТ</string>
+    <string name="google_package_installer_is_installed">PROGRAMMA USTANOVKI PAKETOV GOOGLE ISPOL\'ZUYETSYA NA VASHEM USTROYSTVE, POETOMU VAM SLEDUYET ISPOL\'ZOVAT\' METOD USTANOVKI NE ROOT KING</string>
+    <string name="root_method_warning">ПРЕДУПРЕЖДЕНИЕ! Вы должны использовать метод NON Root, потому что у вас есть установщик пакетов Google. Корневой метод требует другого шага, чтобы заставить пользовательское приложение работать, прочитайте README на странице GitHub, чтобы получить больше информации. Если вы хотите попробовать режим Root, снова установите этот флажок.</string>
 </resources>

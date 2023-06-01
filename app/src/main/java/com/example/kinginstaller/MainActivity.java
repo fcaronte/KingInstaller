@@ -8,6 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -42,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int FILE_SELECT_CODE = 1;
     private static final int PERMISSION_REQUEST_CODE = 2;
-    boolean oppoTrickEnabled, rootTrickEnabled;
+    boolean oppoTrickEnabled, rootTrickEnabled, forceRootEnabled;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +53,13 @@ public class MainActivity extends AppCompatActivity {
         catch (Exception e) {
             TextView tv = findViewById(R.id.textViewError);
             tv.setText(e.toString());
+        }
+        if (isGooglePackageExist()) {
+            TextView tv = findViewById(R.id.textViewError);
+            tv.setText(R.string.google_package_installer_is_installed);
+        } else {
+            TextView tv = findViewById(R.id.textViewError);
+            tv.setText(R.string.missing_google_package_installer);
         }
         Button btnSelect = findViewById(R.id.selectButton);
         btnSelect.setOnClickListener(new View.OnClickListener() {
@@ -115,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 isDeviceRooted();
+                TextView tv = findViewById(R.id.textViewError);
                 if (!isDeviceRooted()) {
                     Toast.makeText(getBaseContext(), R.string.device_not_rooted, Toast.LENGTH_SHORT).show();
                     //Switch off root flags
@@ -122,7 +131,17 @@ public class MainActivity extends AppCompatActivity {
                     rootEditor.putBoolean("root_trick_value", false);
                     rootEditor.apply();
                     rootTrick.setChecked(false);
+                } else if (isGooglePackageExist() && !forceRootEnabled) {
+                    tv.setText(R.string.root_method_warning);
+                    //Switch off root flags
+                    SharedPreferences.Editor rootEditor = rootTrickStatus.edit();
+                    rootEditor.putBoolean("root_trick_value", false);
+                    rootEditor.apply();
+                    rootTrick.setChecked(false);
+                    forceRootEnabled = true;
                 } else {
+                    tv.setText("");
+                    forceRootEnabled = !rootTrickEnabled;
                     rootTrickEnabled = !rootTrickEnabled;
                     SharedPreferences.Editor rootEditor = rootTrickStatus.edit();
                     rootEditor.putBoolean("root_trick_value", rootTrickEnabled);
@@ -134,7 +153,6 @@ public class MainActivity extends AppCompatActivity {
                     oppoEditor.apply();
                     oppoTrick.setChecked(false);
                     oppoTrick();
-
                 }
                 Log.d("root check", "is phone rooted " + isDeviceRooted());
                 Log.d("oppo button", "oppo value is " + oppoTrickStatus.getBoolean("oppo_trick_value", false));
@@ -164,16 +182,32 @@ public class MainActivity extends AppCompatActivity {
         Button resetButton = findViewById(R.id.resetButton);
         resetButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                try {
-                    Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                    intent.setData(Uri.parse("package:" + "com.google.android.packageinstaller"));
-                    startActivity(intent);
-                } catch (Exception e) {
+                if (isGooglePackageExist()) {
+                    try {
+                        Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        intent.setData(Uri.parse("package:" + "com.google.android.packageinstaller"));
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        TextView tv = findViewById(R.id.textViewError);
+                        tv.setText(e.toString());
+                    }
+                } else {
                     TextView tv = findViewById(R.id.textViewError);
-                    tv.setText(e.toString());
+                    tv.setText(R.string.missing_google_package_installer);
                 }
             }
         });
+    }
+
+    //CHECK IF GOOGLE PACKAGE INSTALLER EXIST ON YOUR DEVICE
+    public boolean isGooglePackageExist(){
+        PackageManager pm=getPackageManager();
+        try {
+            PackageInfo info=pm.getPackageInfo("com.google.android.packageinstaller",PackageManager.GET_META_DATA);
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+        return true;
     }
 
     public void oppoTrick() {

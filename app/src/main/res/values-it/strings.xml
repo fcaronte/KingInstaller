@@ -19,4 +19,7 @@
     <string name="reset_default_description">Usa il tasto \"Resetta Default\" per aprire l\'installatore pacchetto di Google e poterlo resettare se lo hai impostato per sbaglio come default e non esce più il popup. Dopo aver cliccato il tasto di reset, cerca \"Cancella Preferenze Predefinite\" PS se quando clicchi non succede nulla e da errore, è perché il tuo telefono usa un altro \"Installatore Pacchetto\" e quindi dovrai cercarlo manualmente dalle impostazioni del telefono</string>
     <string name="root_trick">Attivare se si utilizza un telefono rootato (LineageOS)</string>
     <string name="device_not_rooted">Non posso attivarlo, il dispositivo non ha Root</string>
+    <string name="missing_google_package_installer">ATTENZIONE, NEL TUO DISPOSITIVO NON RISULTA INSTALLATO IL GESTORE PACCHETTI DI GOOGLE E QUINDI KINGINSTALLER NON PUO\' FUNZIONARE</string>
+    <string name="google_package_installer_is_installed">SUL TUO DISPOSITIVO RISULTA INSTALLATO IL GESTORE PACCHETTI DI GOOGLE QUINDI DOVRESTI USARE IL METODO KINGINSTALLER SENZA ROOT</string>
+    <string name="root_method_warning">ATTENZIONE! Dovresti usare il metodo NO Root perché hai il Gestore Pacchetti di Google. Il metodo Root richiede ulteriori passaggi per rendere le app custom funionanti, leggi il README su GitHub per avere maggiori dettagli. Se vuoi attivare lo stesso la modalità Root, seleziona nuovamente il checkbox</string>
 </resources>

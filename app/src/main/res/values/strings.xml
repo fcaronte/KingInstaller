@@ -18,4 +18,7 @@
     <string name="reset_default_description">Use \"Reset Default\" button to open default Google PackageInstaller\nif you wrongly set as default and popup won\'t show anymore.\n\nAfter touch \"Reset Default\" button,\nsearch for \"Clear Default Preference\" PS.\n\nIf the button gives an error,\nit is because your phone use a different PackageInstaller\nand so you need to manually search on your phone setting.</string>
     <string name="root_trick">Enable if you use rooted (LineageOS) phone</string>
     <string name="device_not_rooted">Can\'t enable, device is not Rooted</string>
+    <string name="missing_google_package_installer">WARNING,ON YOUR DEVICE THE GOOGLE PACKAGE INSTALLER IS NOT INSTALLED AND SO KINGINSTALLER METHOD CAN\'T WORK</string>
+    <string name="google_package_installer_is_installed">GOOGLE PACKAGE INSTALLER IS USED ON YOUR DEVICE AND SO YOU SHOULD USE NO ROOT KINGINSTALLER METHOD</string>
+    <string name="root_method_warning">WARNING! You should use the NON Root method because you have Google Package Installer. Root method need other step to make custom app to work, read the README on GitHub page to get more info. If you want to try Root mode, select again this checkbox</string>
 </resources>
