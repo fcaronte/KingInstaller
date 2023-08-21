@@ -58,6 +58,9 @@ which leads to them still not showing up, even if "installed as Google Play Stor
 
 To unlock these apps use the Xposed module provided by [Android Auto - XLauncher Unlocked](https://github.com/Rikj000/Android-Auto-XLauncher-Unlocked)
 
+#### Google Pixel Phone ####
+For this phone you need to reinstall\update the current Google PackageInstaller, you can download the same version from ApkMirror or similar site, or you can get the apk directly from your phone using a file manager with that feature (I'm use mixplorer) then install the apk as normal and now you can use kinginstaller to install the app and will work!
+
 ## ChangeLog
 
 **[Rikj000](https://github.com/Rikj000/KingInstaller)**
