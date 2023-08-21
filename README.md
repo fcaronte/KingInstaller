@@ -1,3 +1,7 @@
+
+[<img height=80 alt="Get it on GitHub" src="https://raw.githubusercontent.com/flocke/andOTP/master/assets/badges/get-it-on-github.png" />](https://github.com/fcaronte/KingInstaller/releases)  [<img height=80 alt="Get it on IzzySoft" src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" />](https://apt.izzysoft.de/fdroid/index/apk/com.example.kinginstaller/)
+
+
 # King Installer
 
 Install packages "as Google Play Store", to work around restrictions!   
