@@ -39,6 +39,8 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import com.google.android.material.color.DynamicColors;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final int FILE_SELECT_CODE = 1;
@@ -47,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        DynamicColors.applyToActivitiesIfAvailable(this.getApplication());
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         try { checkManageExternalStoragePermission(); }
