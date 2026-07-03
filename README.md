@@ -1,85 +1,78 @@
+# KingInstaller X
 
-[<img height=80 alt="Get it on GitHub" src="https://raw.githubusercontent.com/flocke/andOTP/master/assets/badges/get-it-on-github.png" />](https://github.com/fcaronte/KingInstaller/releases)  [<img height=80 alt="Get it on IzzySoft" src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" />](https://apt.izzysoft.de/fdroid/index/apk/com.example.kinginstaller/)
+KingInstaller X installs Android packages while letting you control the installer source and advanced install flags. It is mainly useful when an app needs to appear as installed from Google Play Store, including Android Auto workflows.
 
+## Supported files
 
-# King Installer
+- APK
+- APKS
+- APKM
+- XAPK
+- ZIP bundles containing split APKs
 
-Install packages "as Google Play Store", to work around restrictions!   
-Useful for Android Auto.
+## Install methods
 
-## Installation
-1. Download and install the latest King Installer [release](https://github.com/fcaronte/KingInstaller/releases)
-2. Settings => Apps
-    - Special app access => All files access => KingInstaller => Check `Allow access to manage all files`
-    - See all apps => KingInstaller =>  Install unknown apps => Check `Allow from this source`
+KingInstaller X uses a simple flow:
 
-## Usage
-1. If the `.apk` is already installed => Uninstall it first
-2. KingInstaller
-    - Click `Select file ...` => Select `.apk` to install
-    - Optional, use maximum 1 check:
-        - Check `Enable if you use Oppo, Realme or OnePlus phone`
-        - Check `Enable if you use rooted (LineageOS) phone`
-    - Click `Install as king`
-        - Optional:
-            - If checked `Enable if you use Oppo, Realme or OnePlus phone` => Select Default Package installer => Install
-            - If checked `Enable if you use rooted (LineageOS) phone` => Grant Root access
-        - Wait for text-field with `.apk` file-path to clear
-3. Validate if package installed "as Google Play Store"
+1. Pick a package file.
+2. Choose a method.
+3. Choose advanced options if needed.
+4. Install and check the status.
 
-## Verify app installation
-To verify if the process of installing an app "as Google Play Store" went correctly, check as following:
+Methods:
 
-- Settings => Apps => See all apps => Name of installed App => Store *(at the bottom)*
-- There you should see either of following, `App installed from ...` messages:
-    - `Google Play Store` - On devices with Google Play Store enabled
-    - `FakeStore` - On devices with MicroG *(Google Play Store stub)*
-    - `license checker` - On AVDs without Google Play
+- Normal Mode: Android's standard install route.
+- OEM MODE: chooser route for Oppo, OnePlus, Realme and Nothing-style installers.
 
-## Notes 
-Make sure to enable `Unknown Sources` in Android Auto's Developer Settings.
+Authorization:
 
-King Installer **only** installs `.apk`s "as Google Play Store".   
-So it overcomes only 1 of multiple restrictions put into place by Google.
+- No root: opens Android's install prompt.
+- Shizuku/Sui: silent session install through Shizuku.
+- Root: silent `pm install` route through `su`.
 
-You might still need to patch your `phenotype.db` with [AA-Tweaker](https://github.com/shmykelsa/AA-Tweaker) for the apps to show up in Android Auto.
+## Advanced options
 
-If you're on MicroG, then you likely are still missing the actual `phenotype.db` + a `.pb` file,   
-see this [fork of `aa4mg` ](https://github.com/Rikj000/AndroidAuto4MicroG) for that.
+Advanced options are real install/session flags where Android supports them. Unsupported options are disabled in no-root mode, and the status area reports selected options as set, requested, skipped or failed after install.
 
-[Telegram](https://t.me/Android_auto_4pda) - Discuss the program in the chat room
+Available options include:
 
-[Video](https://www.yewtu.be/watch?v=X5UF9mYKrqc) - Example usage
+- Set install source package, defaulting to `com.android.vending`.
+- Customize install reason and package source.
+- Set target user or install for all users.
+- Allow test APKs.
+- Allow downgrade.
+- Bypass low target SDK block.
+- Grant requested permissions.
+- Allow restricted permissions.
+- Disable package verification.
+- Disable ADB verifier.
+- Enable rollback.
+- Mark install as from ADB.
+- Request update ownership.
+- Bypass Play Protect-related checks where the selected route can request it.
+- Private space/profile install flag on supported Android versions.
 
-Restriction applies only to Android 11 and above.
+Some flags depend on Android version, ROM behavior, root policy or Shizuku permissions. If Android ignores a submitted flag, KingInstaller X cannot force it without deeper system privileges.
 
-It works in 8 out of 10 cases.   
-If it didn't work for you, here's a [video](https://www.yewtu.be/watch?v=ZiFnHxu-g4E) for you about an alternative variant.
+## Extra actions
 
-#### Android Auto still won't show some apps.
-Some apps have additional restrictions applied on them by AA,   
-which leads to them still not showing up, even if "installed as Google Play Store".
+- Open installed app after a successful install.
+- Check the reported installer source.
+- Open package-installer settings to clear default handlers.
+- Request ignore battery optimization for stricter ROMs.
 
-To unlock these apps use the Xposed module provided by [Android Auto - XLauncher Unlocked](https://github.com/Rikj000/Android-Auto-XLauncher-Unlocked)
+## GitHub release builds
 
-#### Google Pixel Phone (Android 13 or Earlier) ####
-For this phone you need to reinstall\update the current Google PackageInstaller, you can download the same version from ApkMirror or similar site, or you can get the apk directly from your phone using a file manager with that feature (I'm use mixplorer) then install the apk as normal and now you can use kinginstaller to install the app and will work!
+The Android release workflow can be run manually from GitHub Actions. It builds debug and release APKs, uploads them as workflow artifacts, and creates or updates a GitHub release with the APK files and SHA256 sums.
 
-#### Google Pixel (Android 14 or Later) ####
-Currently not supported.  Only apps installed on Android 13 before upgrading to Android 14 will work.  See issue #13
+## Android Auto notes
 
-## ChangeLog
+Installing as Google Play Store is only one Android Auto requirement. Some apps still need Android Auto developer settings, AA phenotype changes, MicroG-specific files, or an unlock module before they appear in Android Auto.
 
-**[Rikj000](https://github.com/Rikj000/KingInstaller)**
-Added the root trick needed for (rooted) LineageOS phones.   
-Updated documentation.
+## Credits
 
-**[fcaronte](https://github.com/fcaronte/KingInstaller)**
-Added the oppo trick needed for Oppo/Realme/OnePlus phones.   
-Updated dependencies.
-
-**jen94**
-Corrected the paths to the files.
-
-**[annexhack](https://gitlab.com/annexhack/king-installer)**
-Initial releases
+- Original KingInstaller work by annexhack.
+- Root installer flow by Rikj000.
+- OEM MODE work by fcaronte.
+- File path fixes by jen94.
+- Advanced install ideas referenced from InstallerX Revived, InstallWithOptions and PackageInstaller.

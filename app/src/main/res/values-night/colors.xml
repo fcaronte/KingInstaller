@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="king_primary">#B9C4FF</color>
+    <color name="king_on_primary">#10256E</color>
+    <color name="king_primary_container">#2846B8</color>
+    <color name="king_on_primary_container">#E1E6FF</color>
+    <color name="king_secondary">#8EDBD5</color>
+    <color name="king_on_secondary">#003735</color>
+    <color name="king_secondary_container">#004F4B</color>
+    <color name="king_on_secondary_container">#A8F0EA</color>
+    <color name="king_tertiary">#FFB690</color>
+    <color name="king_on_tertiary">#592000</color>
+    <color name="king_surface">#11131A</color>
+    <color name="king_on_surface">#E4E6F0</color>
+</resources>

@@ -1,0 +1,139 @@
+name: Android Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag. Leave blank to use v<versionName>."
+        required: false
+        type: string
+      prerelease:
+        description: "Mark this GitHub release as a pre-release."
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build APKs
+    runs-on: ubuntu-latest
+
+    outputs:
+      version_name: ${{ steps.version.outputs.version_name }}
+      version_code: ${{ steps.version.outputs.version_code }}
+      release_tag: ${{ steps.version.outputs.release_tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Prepare Android SDK
+        shell: bash
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          yes 2>/dev/null | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "platform-tools" "build-tools;36.0.0" "platforms;android-36"
+
+      - name: Make Gradle executable
+        run: chmod +x gradlew
+
+      - name: Read app version
+        id: version
+        env:
+          INPUT_RELEASE_TAG: ${{ inputs.release_tag }}
+        shell: bash
+        run: |
+          version_name=$(awk -F'"' '/versionName/ { print $2; exit }' app/build.gradle)
+          version_code=$(awk '/versionCode/ { print $2; exit }' app/build.gradle)
+          release_tag="$INPUT_RELEASE_TAG"
+
+          if [ -z "$version_name" ] || [ -z "$version_code" ]; then
+            echo "Could not read versionName/versionCode from app/build.gradle" >&2
+            exit 1
+          fi
+
+          if [ -z "$release_tag" ]; then
+            release_tag="v$version_name"
+          fi
+
+          echo "version_name=$version_name" >> "$GITHUB_OUTPUT"
+          echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Build debug and release APKs
+        run: ./gradlew --no-daemon clean :app:assembleDebug :app:assembleRelease
+
+      - name: Prepare APK artifacts
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          cp app/build/outputs/apk/debug/app-debug.apk \
+            "artifacts/KingInstallerX-${{ steps.version.outputs.version_name }}-${{ steps.version.outputs.version_code }}-debug.apk"
+          cp app/build/outputs/apk/release/app-release.apk \
+            "artifacts/KingInstallerX-${{ steps.version.outputs.version_name }}-${{ steps.version.outputs.version_code }}-release.apk"
+          sha256sum artifacts/*.apk > artifacts/SHA256SUMS.txt
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: KingInstallerX-${{ steps.version.outputs.version_name }}-${{ steps.version.outputs.version_code }}-apks
+          path: artifacts/*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: KingInstallerX-${{ needs.build.outputs.version_name }}-${{ needs.build.outputs.version_code }}-apks
+          path: artifacts
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.build.outputs.release_tag }}
+          VERSION_NAME: ${{ needs.build.outputs.version_name }}
+          IS_PRERELEASE: ${{ inputs.prerelease }}
+        shell: bash
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" artifacts/* --clobber
+          else
+            prerelease_args=()
+            if [ "$IS_PRERELEASE" = "true" ]; then
+              prerelease_args+=(--prerelease)
+            fi
+
+            gh release create "$TAG" artifacts/* \
+              --title "KingInstaller X $VERSION_NAME" \
+              --target "$GITHUB_SHA" \
+              "${prerelease_args[@]}" \
+              --generate-notes
+          fi

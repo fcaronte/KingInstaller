@@ -1,20 +1,21 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="Theme.KingInstaller" parent="Theme.Material3.DayNight">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorPrimaryContainer">@color/purple_200</item>
-        <item name="colorOnPrimaryContainer">@color/purple_700</item>
-
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorOnSecondary">@color/black</item>
-
-        <!-- Status bar color. -->
+    <style name="Theme.KingInstaller" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/king_primary</item>
+        <item name="colorOnPrimary">@color/king_on_primary</item>
+        <item name="colorPrimaryContainer">@color/king_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/king_on_primary_container</item>
+        <item name="colorSecondary">@color/king_secondary</item>
+        <item name="colorOnSecondary">@color/king_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/king_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/king_on_secondary_container</item>
+        <item name="colorTertiary">@color/king_tertiary</item>
+        <item name="colorOnTertiary">@color/king_on_tertiary</item>
+        <item name="colorSurface">@color/king_surface</item>
+        <item name="colorOnSurface">@color/king_on_surface</item>
         <item name="android:statusBarColor">?attr/colorSurface</item>
         <item name="android:windowLightStatusBar">true</item>
-
-        <!-- Customize your theme here. -->
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 </resources>
