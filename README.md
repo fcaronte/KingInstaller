@@ -1,5 +1,5 @@
 
-[<img height=80 alt="Get it on GitHub" src="https://raw.githubusercontent.com/flocke/andOTP/master/assets/badges/get-it-on-github.png" />](https://github.com/fcaronte/KingInstaller/releases)  [<img height=80 alt="Get it on IzzySoft" src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" />](https://apt.izzysoft.de/fdroid/index/apk/com.example.kinginstaller/)
+[<img height=80 alt="Get it on GitHub" src="https://raw.githubusercontent.com/flocke/andOTP/master/assets/badges/get-it-on-github.png" />](https://github.com/fcaronte/KingInstaller/releases)
 
 
 # King Installer
@@ -16,7 +16,7 @@ Useful for Android Auto.
 ## Usage
 1. If the `.apk` is already installed => Uninstall it first
 2. KingInstaller
-    - Click `Select file ...` => Select `.apk` to install
+    - Click `Select APK to install` => Select `.apk` to install
     - Optional, use maximum 1 check:
         - Check `Enable if you use Oppo, Realme or OnePlus phone`
         - Check `Enable if you use rooted (LineageOS) phone`
@@ -24,8 +24,8 @@ Useful for Android Auto.
         - Optional:
             - If checked `Enable if you use Oppo, Realme or OnePlus phone` => Select Default Package installer => Install
             - If checked `Enable if you use rooted (LineageOS) phone` => Grant Root access
-        - Wait for text-field with `.apk` file-path to clear
-3. Validate if package installed "as Google Play Store"
+        - Wait for the selected file name to clear
+3. Validate if package installed "as Google Play Store" using the built-in `Check App Installer` tool.
 
 ## Verify app installation
 To verify if the process of installing an app "as Google Play Store" went correctly, check as following:
@@ -65,8 +65,12 @@ To unlock these apps use the Xposed module provided by [Android Auto - XLauncher
 #### Google Pixel Phone (Android 13 or Earlier) ####
 For this phone you need to reinstall\update the current Google PackageInstaller, you can download the same version from ApkMirror or similar site, or you can get the apk directly from your phone using a file manager with that feature (I'm use mixplorer) then install the apk as normal and now you can use kinginstaller to install the app and will work!
 
-#### Google Pixel (Android 14 or Later) ####
-Currently not supported.  Only apps installed on Android 13 before upgrading to Android 14 will work.  See issue #13
+#### Google Pixel (Android 14 to 16) ####
+Currently supported using the methods above.
+
+#### Android 17 or Later ####
+Currently not supported due to new system security restrictions on installer metadata.
+
 
 ## ChangeLog
 

@@ -313,7 +313,7 @@ class MainActivity : AppCompatActivity() {
                 type = "application/vnd.android.package-archive"
             }
 
-            if ("application/vnd.android.package-archive" == type || type == null) {
+            if ("application/vnd.android.package-archive" == type || "application/octet-stream" == type || type == null) {
                 try {
                     val path: String? = if ("file" == data.scheme) {
                         data.path
