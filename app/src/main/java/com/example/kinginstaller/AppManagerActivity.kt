@@ -1,6 +1,7 @@
 package com.example.kinginstaller
 
 import android.content.pm.ApplicationInfo
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,18 +12,31 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.text.HtmlCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.addTextChangedListener
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.color.DynamicColors
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.textfield.TextInputEditText
+import java.util.Locale
 import kotlin.concurrent.thread
+
+data class AppItem(
+    val packageName: String,
+    val label: String,
+    val icon: Drawable,
+    val isSystem: Boolean,
+    val searchKey: String
+)
 
 class AppManagerActivity : AppCompatActivity() {
 
@@ -31,7 +45,7 @@ class AppManagerActivity : AppCompatActivity() {
     private lateinit var searchEditText: TextInputEditText
     private lateinit var systemSwitch: MaterialSwitch
     
-    private var allApps: List<ApplicationInfo> = emptyList()
+    private var allAppsItems: List<AppItem> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -55,8 +69,8 @@ class AppManagerActivity : AppCompatActivity() {
 
         val recyclerView = findViewById<RecyclerView>(R.id.appsRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = AppAdapter { appInfo ->
-            showInstallerInfo(appInfo)
+        adapter = AppAdapter { appItem ->
+            showInstallerInfo(appItem)
         }
         recyclerView.adapter = adapter
 
@@ -70,10 +84,22 @@ class AppManagerActivity : AppCompatActivity() {
         progressBar.visibility = View.VISIBLE
         thread {
             try {
-                // Usiamo 0 invece di GET_META_DATA per risparmiare memoria ed evitare crash su dispositivi con troppe app
-                val packages = packageManager.getInstalledApplications(0)
-                allApps = packages
+                val pm = packageManager
+                val packages = pm.getInstalledApplications(0)
+                
+                val items = packages.map { app ->
+                    val label = app.loadLabel(pm).toString()
+                    AppItem(
+                        packageName = app.packageName,
+                        label = label,
+                        icon = app.loadIcon(pm),
+                        isSystem = (app.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
+                        searchKey = (label + app.packageName).lowercase(Locale.getDefault())
+                    )
+                }.sortedBy { it.label.lowercase(Locale.getDefault()) }
+
                 runOnUiThread {
+                    allAppsItems = items
                     progressBar.visibility = View.GONE
                     filterApps()
                 }
@@ -87,62 +113,75 @@ class AppManagerActivity : AppCompatActivity() {
     }
 
     private fun filterApps() {
-        val query = searchEditText.text.toString().lowercase()
+        val query = searchEditText.text.toString().lowercase(Locale.getDefault())
         val showSystem = systemSwitch.isChecked
-        val pm = packageManager
 
-        val filtered = allApps.filter { app ->
-            try {
-                val label = app.loadLabel(pm).toString().lowercase()
-                val pkg = app.packageName.lowercase()
-                val matchesQuery = label.contains(query) || pkg.contains(query)
-                val isSystem = (app.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-                
-                matchesQuery && (showSystem || !isSystem)
-            } catch (e: Exception) {
-                false
-            }
-        }.sortedBy { it.loadLabel(pm).toString().lowercase() }
+        val filtered = allAppsItems.filter { item ->
+            val matchesQuery = query.isEmpty() || item.searchKey.contains(query)
+            matchesQuery && (showSystem || !item.isSystem)
+        }
 
         adapter.submitList(filtered)
     }
 
-    private fun showInstallerInfo(app: ApplicationInfo) {
+    private fun showInstallerInfo(app: AppItem) {
         val packageName = app.packageName
-        val appLabel = app.loadLabel(packageManager).toString()
         
         try {
             val pm = packageManager
-            val packageInfo = pm.getPackageInfo(packageName, 0)
-            val appInfo = packageInfo.applicationInfo
-            val isSystem = if (appInfo != null) (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0 else false
-            
-            val message = StringBuilder()
-            message.append(getString(R.string.app_type, if (isSystem) getString(R.string.system_app) else getString(R.string.user_app))).append("\n\n")
+            var initiating: String? = null
+            var installing: String? = null
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 val info = pm.getInstallSourceInfo(packageName)
-                val initiating = info.initiatingPackageName
-                val installing = info.installingPackageName
-                val originating = info.originatingPackageName
-
-                message.append(getString(R.string.initiating_installer, formatPackageInfo(initiating))).append("\n\n")
-                message.append(getString(R.string.installing_installer, formatPackageInfo(installing))).append("\n\n")
-                message.append(getString(R.string.originating_installer, formatPackageInfo(originating)))
-
-                if (Build.VERSION.SDK_INT >= 34) {
-                    val updateOwner = info.updateOwnerPackageName
-                    message.append("\n\n").append(getString(R.string.update_owner, formatPackageInfo(updateOwner)))
-                }
+                initiating = info.initiatingPackageName
+                installing = info.installingPackageName
             } else {
                 @Suppress("DEPRECATION")
-                val installing = pm.getInstallerPackageName(packageName)
-                message.append(getString(R.string.installing_installer, formatPackageInfo(installing)))
+                installing = pm.getInstallerPackageName(packageName)
             }
 
-            AlertDialog.Builder(this)
-                .setTitle(appLabel)
-                .setMessage(message.toString())
+            // Logica compatibilità Android Auto
+            val isPlayStoreInstalling = installing == "com.android.vending"
+            val isValidInitiating = initiating == "com.android.vending" || 
+                                   initiating == "com.google.android.packageinstaller" ||
+                                   (initiating?.contains("packageinstaller") == true)
+
+            val isCompatible = isPlayStoreInstalling && isValidInitiating
+
+            // Create custom dialog view
+            val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_installer_info, null)
+            val iconImg = dialogView.findViewById<ImageView>(R.id.dialogAppIcon)
+            val nameTv = dialogView.findViewById<TextView>(R.id.dialogAppName)
+            val pkgTv = dialogView.findViewById<TextView>(R.id.dialogPackageName)
+            val initiatingTv = dialogView.findViewById<TextView>(R.id.initiatingText)
+            val installingTv = dialogView.findViewById<TextView>(R.id.installingText)
+            val compCard = dialogView.findViewById<MaterialCardView>(R.id.compatibilityCard)
+            val compIcon = dialogView.findViewById<ImageView>(R.id.compatibilityIcon)
+            val compTv = dialogView.findViewById<TextView>(R.id.compatibilityText)
+
+            iconImg.setImageDrawable(app.icon)
+            nameTv.text = app.label
+            pkgTv.text = app.packageName
+            initiatingTv.text = formatPackageInfo(initiating)
+            installingTv.text = formatPackageInfo(installing)
+
+            if (isCompatible) {
+                compCard.setCardBackgroundColor(getColor(R.color.aa_green_container))
+                compTv.text = getString(R.string.aa_compatibility_ok)
+                compTv.setTextColor(getColor(R.color.aa_green_text))
+                compIcon.setImageResource(android.R.drawable.checkbox_on_background)
+                compIcon.setColorFilter(getColor(R.color.aa_green_text))
+            } else {
+                compCard.setCardBackgroundColor(getColor(R.color.aa_red_container))
+                compTv.text = getString(R.string.aa_compatibility_error)
+                compTv.setTextColor(getColor(R.color.aa_red_text))
+                compIcon.setImageResource(android.R.drawable.ic_delete)
+                compIcon.setColorFilter(getColor(R.color.aa_red_text))
+            }
+
+            MaterialAlertDialogBuilder(this)
+                .setView(dialogView)
                 .setPositiveButton(android.R.string.ok, null)
                 .show()
         } catch (e: Exception) {
@@ -162,13 +201,7 @@ class AppManagerActivity : AppCompatActivity() {
         }
     }
 
-    inner class AppAdapter(private val onClick: (ApplicationInfo) -> Unit) : RecyclerView.Adapter<AppAdapter.ViewHolder>() {
-        private var list: List<ApplicationInfo> = emptyList()
-
-        fun submitList(newList: List<ApplicationInfo>) {
-            list = newList
-            notifyDataSetChanged()
-        }
+    class AppAdapter(private val onClick: (AppItem) -> Unit) : ListAdapter<AppItem, AppAdapter.ViewHolder>(DiffCallback()) {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = LayoutInflater.from(parent.context).inflate(R.layout.item_app, parent, false)
@@ -176,25 +209,24 @@ class AppManagerActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val app = list[position]
-            val pm = packageManager
-            holder.name.text = app.loadLabel(pm)
-            holder.pkg.text = app.packageName
-            holder.icon.setImageDrawable(app.loadIcon(pm))
-            
-            val isSystem = (app.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-            holder.systemTag.visibility = if (isSystem) View.VISIBLE else View.GONE
-            
-            holder.itemView.setOnClickListener { onClick(app) }
+            val item = getItem(position)
+            holder.name.text = item.label
+            holder.pkg.text = item.packageName
+            holder.icon.setImageDrawable(item.icon)
+            holder.systemTag.visibility = if (item.isSystem) View.VISIBLE else View.GONE
+            holder.itemView.setOnClickListener { onClick(item) }
         }
 
-        override fun getItemCount() = list.size
-
-        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val icon: ImageView = view.findViewById(R.id.appIcon)
             val name: TextView = view.findViewById(R.id.appName)
             val pkg: TextView = view.findViewById(R.id.packageName)
-            val systemTag: TextView = view.findViewById(R.id.systemTag)
+            val systemTag: View = view.findViewById(R.id.systemTag)
+        }
+
+        class DiffCallback : DiffUtil.ItemCallback<AppItem>() {
+            override fun areItemsTheSame(oldItem: AppItem, newItem: AppItem) = oldItem.packageName == newItem.packageName
+            override fun areContentsTheSame(oldItem: AppItem, newItem: AppItem) = oldItem == newItem
         }
     }
 }

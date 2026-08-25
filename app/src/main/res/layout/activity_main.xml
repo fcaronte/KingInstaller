@@ -9,10 +9,9 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
-        app:layout_constraintBottom_toTopOf="@+id/footerCard"
-        app:layout_constraintTop_toTopOf="parent">
+        tools:context=".MainActivity">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -138,17 +137,41 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <CheckBox
-                        android:id="@+id/checkBox1"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:text="@string/installation_method"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchOppo"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/oppo_trick" />
 
-                    <CheckBox
-                        android:id="@+id/checkBox2"
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchRoot"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
                         android:text="@string/root_trick" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchShizuku"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/shizuku_trick" />
+
+                    <TextView
+                        android:id="@+id/shizukuDesc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="@string/shizuku_desc"
+                        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                        android:textColor="?attr/colorOutline" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -200,39 +223,5 @@
 
         </LinearLayout>
     </ScrollView>
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/footerCard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardCornerRadius="0dp"
-        app:cardElevation="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:strokeWidth="0dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="12dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="@string/jen94"
-                android:textAppearance="@style/TextAppearance.Material3.LabelSmall" />
-
-            <TextView
-                android:id="@+id/site_annexhack"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center"
-                android:text="@string/site_url_text"
-                android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
-                android:textColor="?attr/colorPrimary" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

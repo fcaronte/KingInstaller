@@ -10,11 +10,11 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Button
-import android.widget.CheckBox
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -27,6 +27,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import com.google.android.material.color.DynamicColors
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.textfield.TextInputEditText
+import rikka.shizuku.Shizuku
 import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
@@ -38,14 +42,43 @@ import java.io.InputStreamReader
 class MainActivity : AppCompatActivity() {
     var oppoTrickEnabled: Boolean = false
     var rootTrickEnabled: Boolean = false
+    var shizukuTrickEnabled: Boolean = false
     var forceRootEnabled: Boolean = false
     private var selectedFilePath: String? = null
+
+    private val shizukuRequestCode = 1001
+
+    private val shizukuListener = Shizuku.OnRequestPermissionResultListener { requestCode, grantResult ->
+        if (requestCode == shizukuRequestCode) {
+            if (grantResult == PackageManager.PERMISSION_GRANTED) {
+                shizukuTrickEnabled = true
+                oppoTrickEnabled = false
+                rootTrickEnabled = false
+                saveMethodSelection()
+                syncSwitches()
+                oppoTrick()
+                Toast.makeText(this, "Shizuku authorized", Toast.LENGTH_SHORT).show()
+            } else {
+                shizukuTrickEnabled = false
+                saveMethodSelection()
+                syncSwitches()
+                Toast.makeText(this, R.string.permission_not_granted, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private val binderListener = Shizuku.OnBinderReceivedListener {
+        checkShizukuPermission()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         DynamicColors.applyToActivitiesIfAvailable(this.application)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        Shizuku.addRequestPermissionResultListener(shizukuListener)
+        Shizuku.addBinderReceivedListenerSticky(binderListener)
 
         // Pulisce i file temporanei all'avvio
         try {
@@ -88,102 +121,93 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val siteAnnexhack = findViewById<TextView>(R.id.site_annexhack)
-        siteAnnexhack.setOnClickListener {
-            try {
-                val url = "https://inceptive.ru"
-                val i = Intent(Intent.ACTION_VIEW)
-                i.setData(url.toUri())
-                startActivity(i)
-            } catch (e: Exception) {
-                val tv = findViewById<TextView>(R.id.textViewError)
-                tv.text = getString(R.string.error_occurred, e.toString())
-            }
-        }
+        // Initialize selection states
+        oppoTrickEnabled = getSharedPreferences("oppo_trick_value", MODE_PRIVATE).getBoolean("oppo_trick_value", false)
+        rootTrickEnabled = getSharedPreferences("root_trick_value", MODE_PRIVATE).getBoolean("root_trick_value", false)
+        shizukuTrickEnabled = getSharedPreferences("shizuku_trick_value", MODE_PRIVATE).getBoolean("shizuku_trick_value", false)
 
-        //MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
-        val oppoTrickStatus = getSharedPreferences("oppo_trick_value", MODE_PRIVATE)
-        oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value", false)
-        val oppoTrick = findViewById<CheckBox>(R.id.checkBox1)
-        oppoTrick.isChecked = oppoTrickEnabled
-        //MAKE ROOT TRICK DISABLED AS DEFAULT
-        val rootTrickStatus = getSharedPreferences("root_trick_value", MODE_PRIVATE)
-        rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value", false)
-        val rootTrick = findViewById<CheckBox>(R.id.checkBox2)
-        rootTrick.isChecked = rootTrickEnabled
-        oppoTrick()
+        val switchShizuku = findViewById<MaterialSwitch>(R.id.switchShizuku)
+        syncSwitches()
 
-        oppoTrick.setOnClickListener {
-            oppoTrickEnabled = !oppoTrickEnabled
-            oppoTrickStatus.edit {
-                putBoolean("oppo_trick_value", oppoTrickEnabled)
-            }
-            oppoTrick.isChecked = oppoTrickEnabled
-            //Switch off root flags
-            rootTrickStatus.edit {
-                putBoolean("root_trick_value", false)
-            }
-            rootTrick.isChecked = false
-            oppoTrick()
-
-            Log.d(
-                "oppo button",
-                "oppo value is " + oppoTrickStatus.getBoolean("oppo_trick_value", false)
-            )
-            Log.d(
-                "root button",
-                "root value is " + rootTrickStatus.getBoolean("root_trick_value", false)
-            )
-        }
-
-        rootTrick.setOnClickListener {
-            val tv = findViewById<TextView>(R.id.textViewError)
-            if (!isDeviceRooted) {
-                Toast.makeText(baseContext, R.string.device_not_rooted, Toast.LENGTH_SHORT)
-                    .show()
-                //Switch off root flags
-                rootTrickStatus.edit {
-                    putBoolean("root_trick_value", false)
-                }
-                rootTrick.isChecked = false
-            } else if (isGooglePackageExist && !forceRootEnabled) {
-                tv.setText(R.string.root_method_warning)
-                //Switch off root flags
-                rootTrickStatus.edit {
-                    putBoolean("root_trick_value", false)
-                }
-                rootTrick.isChecked = false
-                forceRootEnabled = true
-            } else {
-                tv.text = ""
-                forceRootEnabled = !rootTrickEnabled
-                rootTrickEnabled = !rootTrickEnabled
-                rootTrickStatus.edit {
-                    putBoolean("root_trick_value", rootTrickEnabled)
-                }
-                rootTrick.isChecked = rootTrickEnabled
-                //Switch off oppo flags
-                oppoTrickStatus.edit {
-                    putBoolean("oppo_trick_value", false)
-                }
-                oppoTrick.isChecked = false
+        findViewById<MaterialSwitch>(R.id.switchOppo).setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                oppoTrickEnabled = true
+                rootTrickEnabled = false
+                shizukuTrickEnabled = false
+                syncSwitches()
+                saveMethodSelection()
+                oppoTrick()
+            } else if (oppoTrickEnabled) {
+                oppoTrickEnabled = false
+                saveMethodSelection()
                 oppoTrick()
             }
-            Log.d("root check", "is phone rooted $isDeviceRooted")
-            Log.d(
-                "oppo button",
-                "oppo value is " + oppoTrickStatus.getBoolean("oppo_trick_value", false)
-            )
-            Log.d(
-                "root button",
-                "root value is " + rootTrickStatus.getBoolean("root_trick_value", false)
-            )
+        }
+
+        findViewById<MaterialSwitch>(R.id.switchRoot).setOnCheckedChangeListener { view, isChecked ->
+            if (isChecked) {
+                if (isDeviceRooted) {
+                    rootTrickEnabled = true
+                    oppoTrickEnabled = false
+                    shizukuTrickEnabled = false
+                    if (isGooglePackageExist && !forceRootEnabled) {
+                        findViewById<TextView>(R.id.textViewError).setText(R.string.root_method_warning)
+                        forceRootEnabled = true
+                    }
+                    syncSwitches()
+                    saveMethodSelection()
+                    oppoTrick()
+                } else {
+                    view.isChecked = false
+                    Toast.makeText(this, R.string.device_not_rooted, Toast.LENGTH_SHORT).show()
+                }
+            } else if (rootTrickEnabled) {
+                rootTrickEnabled = false
+                saveMethodSelection()
+                oppoTrick()
+            }
+        }
+
+        switchShizuku.setOnCheckedChangeListener { view, isChecked ->
+            if (isChecked) {
+                if (isShizukuAvailable()) {
+                    if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                        shizukuTrickEnabled = true
+                        oppoTrickEnabled = false
+                        rootTrickEnabled = false
+                        syncSwitches()
+                        saveMethodSelection()
+                        oppoTrick()
+                    } else {
+                        view.isChecked = false
+                        Shizuku.requestPermission(shizukuRequestCode)
+                    }
+                } else {
+                    view.isChecked = false
+                    Toast.makeText(this, R.string.shizuku_not_available, Toast.LENGTH_SHORT).show()
+                }
+            } else if (shizukuTrickEnabled) {
+                shizukuTrickEnabled = false
+                saveMethodSelection()
+                oppoTrick()
+            }
+        }
+
+        switchShizuku.setOnLongClickListener {
+            showAdvancedShizukuDialog()
+            true
+        }
+        findViewById<View>(R.id.shizukuDesc).setOnLongClickListener {
+            showAdvancedShizukuDialog()
+            true
         }
 
         val btnInstall = findViewById<Button>(R.id.installButton)
         btnInstall.setOnClickListener {
             try {
-                if (rootTrickEnabled) {
+                if (shizukuTrickEnabled) {
+                    installWithShizuku()
+                } else if (rootTrickEnabled) {
                     installAsRoot()
                 } else installAsKing()
             } catch (e: Exception) {
@@ -224,6 +248,90 @@ class MainActivity : AppCompatActivity() {
         openAndroidAutoButton.setOnClickListener {
             openAndroidAutoSettings()
         }
+    }
+
+    private fun showAdvancedShizukuDialog() {
+        if (!isShizukuAvailable() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, R.string.shizuku_not_available, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val input = TextInputEditText(this)
+        input.setText(getString(R.string.advanced_shizuku_default))
+        input.hint = getString(R.string.advanced_shizuku_hint)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.advanced_shizuku_title)
+            .setView(input)
+            .setPositiveButton(R.string.execute) { _, _ ->
+                val command = input.text.toString()
+                executeAdvancedShizukuCommand(command)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun executeAdvancedShizukuCommand(command: String) {
+        val filepath = selectedFilePath
+        if (filepath == null) {
+            Toast.makeText(this, R.string.select_a_file, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val tvError = findViewById<TextView>(R.id.textViewError)
+        tvError.text = "Executing advanced command..."
+
+        kotlin.concurrent.thread {
+            try {
+                // Prepariamo l'APK in /data/local/tmp come zona sicura e leggibile per shizuku
+                val remotePath = "/data/local/tmp/king_advanced_temp.apk"
+                val catProcess = Shizuku.newProcess(arrayOf("sh", "-c", "cat > $remotePath"), null, null)
+                File(filepath).inputStream().use { input -> input.copyTo(catProcess.outputStream) }
+                catProcess.outputStream.close()
+                catProcess.waitFor()
+
+                // Sostituiamo $APK nel comando con il percorso remoto
+                val finalCmd = command.replace("\$APK", remotePath)
+                val process = Shizuku.newProcess(arrayOf("sh", "-c", finalCmd), null, null)
+                
+                val output = StringBuilder()
+                val reader = BufferedReader(InputStreamReader(process.inputStream))
+                val errorReader = BufferedReader(InputStreamReader(process.errorStream))
+                var line: String?
+                while (reader.readLine().also { line = it } != null) output.append(line).append("\n")
+                while (errorReader.readLine().also { line = it } != null) output.append(line).append("\n")
+                
+                val exitCode = process.waitFor()
+                Shizuku.newProcess(arrayOf("sh", "-c", "rm $remotePath"), null, null).waitFor()
+
+                runOnUiThread {
+                    tvError.text = "Exit Code: $exitCode\nOutput:\n$output"
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    tvError.text = getString(R.string.error_occurred, e.toString())
+                }
+            }
+        }
+    }
+
+    private fun checkShizukuPermission() {
+        if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+            shizukuTrickEnabled = getSharedPreferences("shizuku_trick_value", MODE_PRIVATE).getBoolean("shizuku_trick_value", false)
+            runOnUiThread { syncSwitches() }
+        }
+    }
+
+    private fun syncSwitches() {
+        findViewById<MaterialSwitch>(R.id.switchOppo).isChecked = oppoTrickEnabled
+        findViewById<MaterialSwitch>(R.id.switchRoot).isChecked = rootTrickEnabled
+        findViewById<MaterialSwitch>(R.id.switchShizuku).isChecked = shizukuTrickEnabled
+    }
+
+    private fun saveMethodSelection() {
+        getSharedPreferences("oppo_trick_value", MODE_PRIVATE).edit { putBoolean("oppo_trick_value", oppoTrickEnabled) }
+        getSharedPreferences("root_trick_value", MODE_PRIVATE).edit { putBoolean("root_trick_value", rootTrickEnabled) }
+        getSharedPreferences("shizuku_trick_value", MODE_PRIVATE).edit { putBoolean("shizuku_trick_value", shizukuTrickEnabled) }
     }
 
     private fun updateSelectedFile(path: String?) {
@@ -303,6 +411,12 @@ class MainActivity : AppCompatActivity() {
         Log.d("KingInstaller", "handleIntent: action=$action, type=$type, data=$data")
 
         if (data != null && (Intent.ACTION_VIEW == action || Intent.ACTION_INSTALL_PACKAGE == action)) {
+            // Ignoriamo l'intent se proviene dal nostro file temporaneo Shizuku per evitare loop
+            if (data.toString().contains("king_installer_shizuku.apk")) {
+                Log.d("KingInstaller", "Ignoring intent from our own Shizuku temp file")
+                return
+            }
+
             // Se il type è nullo, proviamo a ricavarlo dal ContentResolver
             if (type == null) {
                 type = contentResolver.getType(data)
@@ -348,35 +462,25 @@ class MainActivity : AppCompatActivity() {
         }
 
     fun oppoTrick() {
-        //MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
-        val oppoTrickStatus = getSharedPreferences("oppo_trick_value", MODE_PRIVATE)
-        oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value", false)
-        //MAKE ROOT TRICK DISABLED AS DEFAULT
-        val rootTrickStatus = getSharedPreferences("root_trick_value", MODE_PRIVATE)
-        rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value", false)
         val pm = applicationContext.packageManager
-        if (oppoTrickEnabled) {
-            val oppoTrickFlagged =
-                ComponentName(packageName, "$packageName.OppoTrick")
-            pm.setComponentEnabledSetting(
-                oppoTrickFlagged,
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                PackageManager.DONT_KILL_APP
-            )
-        } else {
-            val oppoTrickFlagged =
-                ComponentName(packageName, "$packageName.OppoTrick")
-            pm.setComponentEnabledSetting(
-                oppoTrickFlagged,
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                PackageManager.DONT_KILL_APP
-            )
-        }
-        oppoTrickStatus.edit {
-            putBoolean("oppo_trick_value", oppoTrickEnabled)
-        }
-        rootTrickStatus.edit {
-            putBoolean("root_trick_value", rootTrickEnabled)
+        val oppoTrickFlagged = ComponentName(packageName, "$packageName.OppoTrick")
+        
+        try {
+            if (oppoTrickEnabled) {
+                pm.setComponentEnabledSetting(
+                    oppoTrickFlagged,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP
+                )
+            } else {
+                pm.setComponentEnabledSetting(
+                    oppoTrickFlagged,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("KingInstaller", "Error setting component state", e)
         }
     }
 
@@ -386,25 +490,49 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.action_search) {
+        if (item.getItemId() == R.id.action_search) {
             val url = "https://gitlab.com/annexhack/king-installer"
             val i = Intent(Intent.ACTION_VIEW)
             i.setData(url.toUri())
             startActivity(i)
         }
-        if (item.itemId == R.id.action_search2) {
+        if (item.getItemId() == R.id.action_search2) {
             val url = "https://github.com/fcaronte/KingInstaller"
             val i = Intent(Intent.ACTION_VIEW)
             i.setData(url.toUri())
             startActivity(i)
         }
-        if (item.itemId == R.id.action_search3) {
+        if (item.getItemId() == R.id.action_search3) {
             val url = "https://github.com/Rikj000/KingInstaller"
             val i = Intent(Intent.ACTION_VIEW)
             i.setData(url.toUri())
             startActivity(i)
         }
+        if (item.getItemId() == R.id.action_site) {
+            val url = "https://inceptive.ru"
+            val i = Intent(Intent.ACTION_VIEW)
+            i.setData(url.toUri())
+            startActivity(i)
+        }
+        if (item.getItemId() == R.id.action_about) {
+            showAboutDialog()
+        }
         return true
+    }
+
+    private fun showAboutDialog() {
+        val version = try {
+            val pInfo = packageManager.getPackageInfo(packageName, 0)
+            pInfo.versionName
+        } catch (e: Exception) {
+            "N/A"
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.action_about)
+            .setMessage(getString(R.string.app_version, version) + "\n\n" + getString(R.string.jen94))
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
     }
 
     private fun installAsRoot() {
@@ -510,6 +638,8 @@ class MainActivity : AppCompatActivity() {
 
     public override fun onDestroy() {
         super.onDestroy()
+        Shizuku.removeRequestPermissionResultListener(shizukuListener)
+        Shizuku.removeBinderReceivedListener(binderListener)
         try {
             clearTempFile()
         } catch (ignored: Throwable) {
@@ -595,6 +725,85 @@ class MainActivity : AppCompatActivity() {
                 ),
                 PERMISSION_REQUEST_CODE
             )
+        }
+    }
+
+    private fun isShizukuAvailable(): Boolean {
+        return try {
+            Shizuku.pingBinder()
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun installWithShizuku() {
+        val filepath = selectedFilePath
+        if (filepath == null) {
+            Toast.makeText(this, R.string.select_a_file, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val apkFile = File(filepath)
+        if (!apkFile.exists()) {
+            Toast.makeText(this, R.string.file_error, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val tvError = findViewById<TextView>(R.id.textViewError)
+        tvError.text = "Transferring APK via Shizuku..."
+
+        kotlin.concurrent.thread {
+            try {
+                val remotePath = "/data/local/tmp/king_install_temp.apk"
+                
+                // 1. Trasferiamo il file in /data/local/tmp usando cat (bypassiamo ogni problema di permessi file)
+                val catProcess = Shizuku.newProcess(arrayOf("sh", "-c", "cat > $remotePath"), null, null)
+                val os = catProcess.outputStream
+                apkFile.inputStream().use { input ->
+                    input.copyTo(os)
+                }
+                os.flush()
+                os.close()
+                val catExit = catProcess.waitFor()
+                
+                if (catExit != 0) {
+                    runOnUiThread { tvError.text = "Failed to transfer APK (Exit $catExit)" }
+                    return@thread
+                }
+                
+                runOnUiThread { tvError.text = "File transferred. Installing..." }
+
+                // 2. Lanciamo l'installazione dal percorso sicuro forzando l'installer Play Store
+                val installCmd = "pm install -r -t -i com.android.vending $remotePath"
+                val installProcess = Shizuku.newProcess(arrayOf("sh", "-c", installCmd), null, null)
+                
+                val output = StringBuilder()
+                val reader = BufferedReader(InputStreamReader(installProcess.inputStream))
+                val errorReader = BufferedReader(InputStreamReader(installProcess.errorStream))
+                
+                var line: String?
+                while (reader.readLine().also { line = it } != null) output.append(line).append("\n")
+                while (errorReader.readLine().also { line = it } != null) output.append(line).append("\n")
+                
+                val exitCode = installProcess.waitFor()
+                
+                // 3. Pulizia del file temporaneo in /data/local/tmp
+                Shizuku.newProcess(arrayOf("sh", "-c", "rm $remotePath"), null, null).waitFor()
+
+                runOnUiThread {
+                    if (exitCode == 0 && output.contains("Success")) {
+                        updateSelectedFile(null)
+                        tvError.text = "Installation Successful!\n(Installer: com.android.vending)"
+                        Toast.makeText(this, "App installed successfully", Toast.LENGTH_LONG).show()
+                    } else {
+                        tvError.text = "Install Failed (Exit $exitCode):\n$output"
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    tvError.text = getString(R.string.error_occurred, e.toString())
+                }
+            }
         }
     }
 

@@ -8,7 +8,7 @@
     <string name="install_as_king">Установить</string>
     <string name="info_manager">(Если вы получили ошибку NOT EXISTS, используйте другой файловый менеджер для выбора файла)</string>
     <string name="jen94">Спасибо jen94! Обновлено fcaronte &amp; Rikj000</string>
-    <string name="oppo_trick">Включить, если вы используете телефон Oppo, Realme или OnePlus</string>
+    <string name="oppo_trick">Oppo/Realme/OnePlus</string>
     <string name="source_code_annexhack">Annexhack Исходный код</string>
     <string name="source_code_fcaronte">Fcaronte Исходный код</string>
     <string name="source_code_rikj000">Rikj000 Исходный код</string>
@@ -16,7 +16,15 @@
     <string name="file_error">Ошибка: файл не существует</string>
     <string name="reset_default">Сбросить значение по умолчанию</string>
     <string name="reset_default_description">Используйте кнопку \"Сбросить значение по умолчанию\", чтобы открыть Google PackageInstaller по умолчанию, если вы неправильно установили значение по умолчанию и всплывающее окно больше не будет отображаться. После нажатия кнопки \"Сбросить настройки по умолчанию\" найдите \"Очистить настройки по умолчанию\" PS если кнопка выдает ошибку, это потому, что ваш телефон использует другой PackageInstaller, и поэтому вам нужно вручную выполнить поиск в настройках вашего телефона</string>
-    <string name="root_trick">Включить, если вы используете рутированный (LineageOS) телефон</string>
+    <string name="root_trick">Root (LineageOS)</string>
+    <string name="shizuku_trick">Shizuku (ADB)</string>
+    <string name="shizuku_desc">Long press for advanced installation</string>
+    <string name="advanced_shizuku_title">Advanced Shizuku Install</string>
+    <string name="advanced_shizuku_hint">Enter your adb shell command here. Use $APK for the current file path.</string>
+    <string name="advanced_shizuku_default">pm install -r -t -i com.android.vending $APK</string>
+    <string name="execute">Execute</string>
+    <string name="installation_method">Installation Method</string>
+    <string name="none">None</string>
     <string name="device_not_rooted">Невозможно включить, устройство не рутировано</string>
     <string name="missing_google_package_installer">ВНИМАНИЕ! НА ВАШЕМ УСТРОЙСТВЕ НЕ УСТАНОВЛЕНА ПРОГРАММА УСТАНОВКИ ПАКЕТОВ GOOGLE, ПОЭТОМУ МЕТОД KINGINSTALLER НЕ РАБОТАЕТ</string>
     <string name="google_package_installer_is_installed">PROGRAMMA USTANOVKI PAKETOV GOOGLE ISPOL\'ZUYETSYA NA VASHEM USTROYSTVE, POETOMU VAM SLEDUYET ISPOL\'ZOVAT\' METOD USTANOVKI NE ROOT KING</string>
@@ -35,12 +43,18 @@
     <string name="app_installer_info">Installer Info: %1$s</string>
     <string name="initiating_installer">Initiating: %1$s</string>
     <string name="installing_installer">Installing: %1$s</string>
+    <string name="initiating_installer_label">Initiating Installer</string>
+    <string name="installing_installer_label">Installing Installer</string>
     <string name="originating_installer">Originating: %1$s</string>
     <string name="update_owner">Update Owner: %1$s</string>
     <string name="app_type">App Type: %1$s</string>
     <string name="system_app">System</string>
     <string name="user_app">User</string>
     <string name="no_info">N/A</string>
+    <string name="aa_compatibility_ok">Это приложение должно работать в Android Auto</string>
+    <string name="aa_compatibility_error">Это приложение может быть недоступно в Android Auto</string>
     <string name="open_android_auto">Open Android Auto Settings</string>
     <string name="show_system_apps">Show System Apps</string>
+    <string name="action_about">About</string>
+    <string name="app_version">Version: %1$s</string>
 </resources>

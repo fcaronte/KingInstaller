@@ -16,14 +16,15 @@ Useful for Android Auto.
 ## Usage
 1. If the `.apk` is already installed => Uninstall it first
 2. KingInstaller
-    - Click `Select APK to install` => Select `.apk` to install
     - Optional, use maximum 1 check:
         - Check `Enable if you use Oppo, Realme or OnePlus phone`
         - Check `Enable if you use rooted (LineageOS) phone`
+        - Check `Enable if you use Shizuku (ADB)`
     - Click `Install as king`
         - Optional:
             - If checked `Enable if you use Oppo, Realme or OnePlus phone` => Select Default Package installer => Install
             - If checked `Enable if you use rooted (LineageOS) phone` => Grant Root access
+            - If checked `Enable if you use Shizuku (ADB)` => Authorize Shizuku access
         - Wait for the selected file name to clear
 3. Validate if package installed "as Google Play Store" using the built-in `Check App Installer` tool.
 
