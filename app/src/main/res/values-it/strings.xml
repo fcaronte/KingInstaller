@@ -61,4 +61,10 @@
     <string name="search_apps">Cerca app…</string>
     <string name="action_about">Info</string>
     <string name="app_version">Versione: %1$s</string>
+    <string name="testing_info">Testato su:\n• Emulatore Pixel con Android 16 (tutto ok) e 17 (al momento non funzionante)\n• Samsung S24 Ultra (usando AABrowser)\n\nUn ringraziamento speciale a Gemini ❤️\n\nScopri AABrowser: https://github.com/fcaronte/AABrowser</string>
+    <string name="update_available_title">Aggiornamento Disponibile</string>
+    <string name="update_available_msg">Una nuova versione (%1$s) è disponibile. Vuoi scaricarla ora?</string>
+    <string name="download">Scarica</string>
+    <string name="action_check_update">Controlla aggiornamenti</string>
+    <string name="no_update_available">Nessun aggiornamento disponibile</string>
 </resources>

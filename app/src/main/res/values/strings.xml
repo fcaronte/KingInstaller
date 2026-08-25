@@ -60,4 +60,10 @@
     <string name="search_apps">Search apps…</string>
     <string name="action_about">About</string>
     <string name="app_version">Version: %1$s</string>
+    <string name="testing_info">Tested on:\n• Pixel Emulator on Android 16 (all ok) and 17 (currently not working)\n• Samsung S24 Ultra (using AABrowser)\n\nSpecial thanks to Gemini ❤️\n\nCheck out AABrowser: https://github.com/fcaronte/AABrowser</string>
+    <string name="update_available_title">Update Available</string>
+    <string name="update_available_msg">A new version (%1$s) is available. Would you like to download it now?</string>
+    <string name="download">Download</string>
+    <string name="action_check_update">Check for updates</string>
+    <string name="no_update_available">No updates available</string>
 </resources>

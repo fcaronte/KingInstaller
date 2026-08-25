@@ -13,6 +13,10 @@
         android:id="@+id/action_site"
         android:title="inceptive.ru"/>
     <item
+        android:id="@+id/action_check_update"
+        android:title="@string/action_check_update"
+        android:icon="@android:drawable/ic_popup_sync"/>
+    <item
         android:id="@+id/action_about"
         android:title="@string/action_about"
         android:icon="@android:drawable/ic_menu_info_details"/>

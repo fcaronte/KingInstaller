@@ -1,90 +1,68 @@
+---
 
-[<img height=80 alt="Get it on GitHub" src="https://raw.githubusercontent.com/flocke/andOTP/master/assets/badges/get-it-on-github.png" />](https://github.com/fcaronte/KingInstaller/releases)
+# KingInstaller
 
+Install packages "as Google Play Store" to work around restrictions! Useful for Android Auto.
 
-# King Installer
+---
 
-Install packages "as Google Play Store", to work around restrictions!   
-Useful for Android Auto.
+## 🚀 What is KingInstaller?
 
-## Installation
-1. Download and install the latest King Installer [release](https://github.com/fcaronte/KingInstaller/releases)
-2. Settings => Apps
-    - Special app access => All files access => KingInstaller => Check `Allow access to manage all files`
-    - See all apps => KingInstaller =>  Install unknown apps => Check `Allow from this source`
+KingInstaller is a utility designed to install APK files in a way that tricks the system (and Android Auto) into thinking the application originated directly from the official Google Play Store, helping bypass specific app visibility restrictions.
 
-## Usage
-1. If the `.apk` is already installed => Uninstall it first
-2. KingInstaller
-    - Optional, use maximum 1 check:
-        - Check `Enable if you use Oppo, Realme or OnePlus phone`
-        - Check `Enable if you use rooted (LineageOS) phone`
-        - Check `Enable if you use Shizuku (ADB)`
-    - Click `Install as king`
-        - Optional:
-            - If checked `Enable if you use Oppo, Realme or OnePlus phone` => Select Default Package installer => Install
-            - If checked `Enable if you use rooted (LineageOS) phone` => Grant Root access
-            - If checked `Enable if you use Shizuku (ADB)` => Authorize Shizuku access
-        - Wait for the selected file name to clear
-3. Validate if package installed "as Google Play Store" using the built-in `Check App Installer` tool.
+---
 
-## Verify app installation
-To verify if the process of installing an app "as Google Play Store" went correctly, check as following:
+## 📸 Screenshots
 
-- Settings => Apps => See all apps => Name of installed App => Store *(at the bottom)*
-- There you should see either of following, `App installed from ...` messages:
-    - `Google Play Store` - On devices with Google Play Store enabled
-    - `FakeStore` - On devices with MicroG *(Google Play Store stub)*
-    - `license checker` - On AVDs without Google Play
+<p align="center">
+  <img src="assets/1.png" width="200" />
+  <img src="assets/2.png" width="200" />
+  <img src="assets/3.png" width="200" />
+  <img src="assets/4.png" width="200" />
+</p>
 
-## Notes 
-Make sure to enable `Unknown Sources` in Android Auto's Developer Settings.
+---
 
-King Installer **only** installs `.apk`s "as Google Play Store".   
-So it overcomes only 1 of multiple restrictions put into place by Google.
+## ✨ Features & Recent Updates
 
-You might still need to patch your `phenotype.db` with [AA-Tweaker](https://github.com/shmykelsa/AA-Tweaker) for the apps to show up in Android Auto.
+* **Material Design 3 UI:** Modernized interface embracing clean layouts and Material 3 guidelines.
+* **Shizuku (ADB) Support:** Integrated native Shizuku execution to leverage ADB privileges without requiring traditional root overhead.
+* **App Diagnostic Checker:** Built-in tool to inspect how the system perceives an installed application, giving an immediate estimation of whether it will appear and function inside Android Auto.
+* **Android Auto Settings Shortcut:** Quick shortcut button to jump straight into the system's Android Auto settings page.
+* **Direct APK Opening:** Open APK files directly with KingInstaller (via file managers or shares) for a faster installation flow.
+* **Improved Root Detection:** Enhanced accuracy for root permission detection across different devices.
+* **Package Installer Reinstallation Menu:** Re-added utility option to reinstall the stock Package Installer *(Note: while some users believe this helps with unlocking, my testing shows no noticeable change)*.
 
-If you're on MicroG, then you likely are still missing the actual `phenotype.db` + a `.pb` file,   
-see this [fork of `aa4mg` ](https://github.com/Rikj000/AndroidAuto4MicroG) for that.
+---
 
-[Telegram](https://t.me/Android_auto_4pda) - Discuss the program in the chat room
+## ⚠️ Compatibility & Android Auto Requirements (Current Status)
 
-[Video](https://www.yewtu.be/watch?v=X5UF9mYKrqc) - Example usage
+### 📊 System Compatibility
 
-Restriction applies only to Android 11 and above.
+* **Android 16 (A16):** Currently confirmed to work properly on Samsung and Pixel devices running A16.
+* **Android 17 (A17):** Out-of-the-box installation **does not work** on Pixel devices running A17. *(Note: It generally only works if the app was already installed and running on A16 and then preserved/carried over during an OS upgrade to A17 without reinstalling or updating it).*
 
-It works in 8 out of 10 cases.   
-If it didn't work for you, here's a [video](https://www.yewtu.be/watch?v=ZiFnHxu-g4E) for you about an alternative variant.
+### 🚗 Android Auto Rules & Insights
 
-#### Android Auto still won't show some apps.
-Some apps have additional restrictions applied on them by AA,   
-which leads to them still not showing up, even if "installed as Google Play Store".
+Based on extensive testing (using my companion project **[AABrowser](https://github.com/fcaronte/AABrowser)**, tested successfully on my personal Samsung Galaxy S24 Ultra and a friend's Pixel 7 running Android 16):
 
-To unlock these apps use the Xposed module provided by [Android Auto - XLauncher Unlocked](https://github.com/Rikj000/Android-Auto-XLauncher-Unlocked)
+* **The Golden Rule:** For an app to successfully show up and function in Android Auto, the **"Requested by"** field must trace back to the Play Store or the Package Installer, while the **"Installed by"** field **MUST be exclusively the Play Store**.
+* **The ADB Trap:** If an app is tracked as requested by **`com.android.shell`** (such as standard ADB commands or manual scripts), **it will fail to work in Android Auto**, even if it technically looks like it was installed from the Play Store.
+* Shizuku allows injecting ADB commands for testing purposes, but **unfortunately, no pure ADB-driven installation method can permanently bypass Android Auto's strict installer checks.**
 
-#### Google Pixel Phone (Android 13 or Earlier) ####
-For this phone you need to reinstall\update the current Google PackageInstaller, you can download the same version from ApkMirror or similar site, or you can get the apk directly from your phone using a file manager with that feature (I'm use mixplorer) then install the apk as normal and now you can use kinginstaller to install the app and will work!
+---
 
-#### Google Pixel (Android 14 to 16) ####
-Currently supported using the methods above.
+## 🛠️ Usage
 
-#### Android 17 or Later ####
-Currently not supported due to new system security restrictions on installer metadata.
+1. Download and install the latest KingInstaller release.
+2. Grant necessary file access and installation permissions when prompted.
+3. Select your `.apk` file (or open it directly from your file manager with KingInstaller).
+4. Follow the on-screen installation steps depending on your device configuration (Root/Shizuku/Package Installer method).
 
+---
 
-## ChangeLog
+## 📝 Notes & Limitations
 
-**[Rikj000](https://github.com/Rikj000/KingInstaller)**
-Added the root trick needed for (rooted) LineageOS phones.   
-Updated documentation.
-
-**[fcaronte](https://github.com/fcaronte/KingInstaller)**
-Added the oppo trick needed for Oppo/Realme/OnePlus phones.   
-Updated dependencies.
-
-**jen94**
-Corrected the paths to the files.
-
-**[annexhack](https://gitlab.com/annexhack/king-installer)**
-Initial releases
+* Make sure to enable **Unknown Sources** in Android Auto's Developer Settings.
+* KingInstaller only alters how the package source is registered; some apps may still require additional patches (like modifying `phenotype.db` via tools like AA-Tweaker) to show up on the car display.
+* Some apps carry hardcoded restrictions enforced by Android Auto itself. To unlock those, consider using Xposed modules designed for layout unlocking (such as *Android Auto - XLauncher Unlocked*).
