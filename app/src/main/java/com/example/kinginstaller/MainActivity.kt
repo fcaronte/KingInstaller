@@ -23,7 +23,6 @@ import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import com.google.android.material.color.DynamicColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
 import rikka.shizuku.Shizuku
@@ -63,9 +62,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
-        DynamicColors.applyToActivitiesIfAvailable(this.application)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val version = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (e: Exception) { "" }
+        title = "${getString(R.string.app_name)} v$version"
 
         Shizuku.addRequestPermissionResultListener(shizukuListener)
         Shizuku.addBinderReceivedListenerSticky(binderListener)
