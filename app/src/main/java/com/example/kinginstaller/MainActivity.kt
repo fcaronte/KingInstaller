@@ -1,410 +1,409 @@
-package com.example.kinginstaller;
+package com.example.kinginstaller
 
-import static android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION;
+import android.Manifest
+import android.content.ActivityNotFoundException
+import android.content.ComponentName
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.os.Environment
+import android.provider.OpenableColumns
+import android.provider.Settings
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.Button
+import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.FileProvider
+import com.google.android.material.color.DynamicColors
+import java.io.BufferedReader
+import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
+import androidx.core.net.toUri
+import androidx.core.content.edit
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Environment;
-import android.provider.OpenableColumns;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
+class MainActivity : AppCompatActivity() {
+    var oppoTrickEnabled: Boolean = false
+    var rootTrickEnabled: Boolean = false
+    var forceRootEnabled: Boolean = false
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.FileProvider;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
-import com.google.android.material.color.DynamicColors;
-
-public class MainActivity extends AppCompatActivity {
-
-    private static final int FILE_SELECT_CODE = 1;
-    private static final int PERMISSION_REQUEST_CODE = 2;
-    boolean oppoTrickEnabled, rootTrickEnabled, forceRootEnabled;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        DynamicColors.applyToActivitiesIfAvailable(this.getApplication());
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        try { checkManageExternalStoragePermission(); }
-        catch (Exception e) {
-            TextView tv = findViewById(R.id.textViewError);
-            tv.setText(e.toString());
+    override fun onCreate(savedInstanceState: Bundle?) {
+        DynamicColors.applyToActivitiesIfAvailable(this.getApplication())
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        try {
+            checkManageExternalStoragePermission()
+        } catch (e: Exception) {
+            val tv = findViewById<TextView>(R.id.textViewError)
+            tv.text = e.toString()
         }
-        if (isGooglePackageExist()) {
-            TextView tv = findViewById(R.id.textViewError);
-            tv.setText(R.string.google_package_installer_is_installed);
+        if (isGooglePackageExist) {
+            val tv = findViewById<TextView>(R.id.textViewError)
+            tv.setText(R.string.google_package_installer_is_installed)
         } else {
-            TextView tv = findViewById(R.id.textViewError);
-            tv.setText(R.string.missing_google_package_installer);
+            val tv = findViewById<TextView>(R.id.textViewError)
+            tv.setText(R.string.missing_google_package_installer)
         }
-        Button btnSelect = findViewById(R.id.selectButton);
-        btnSelect.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try { showFileChooser(); }
-                catch (Exception e) {
-                    TextView tv = findViewById(R.id.textViewError);
-                    tv.setText(e.toString());
-                }
+        val btnSelect = findViewById<Button>(R.id.selectButton)
+        btnSelect.setOnClickListener {
+            try {
+                showFileChooser()
+            } catch (e: Exception) {
+                val tv = findViewById<TextView>(R.id.textViewError)
+                tv.text = e.toString()
             }
-        });
+        }
 
-        TextView siteAnnexhack = findViewById(R.id.site_annexhack);
-        siteAnnexhack.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    String url = "https://inceptive.ru";
-                    Intent i = new Intent(Intent.ACTION_VIEW);
-                    i.setData(Uri.parse(url));
-                    startActivity(i);
-                } catch (Exception e) {
-                    TextView tv = findViewById(R.id.textViewError);
-                    tv.setText(e.toString());
-                }
+        val siteAnnexhack = findViewById<TextView>(R.id.site_annexhack)
+        siteAnnexhack.setOnClickListener {
+            try {
+                val url = "https://inceptive.ru"
+                val i = Intent(Intent.ACTION_VIEW)
+                i.setData(url.toUri())
+                startActivity(i)
+            } catch (e: Exception) {
+                val tv = findViewById<TextView>(R.id.textViewError)
+                tv.text = e.toString()
             }
-        });
+        }
 
         //MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
-        SharedPreferences oppoTrickStatus = getSharedPreferences("oppo_trick_value", Activity.MODE_PRIVATE);
-        oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value",false);
-        CheckBox oppoTrick = (CheckBox) findViewById(R.id.checkBox1);
-        oppoTrick.setChecked(oppoTrickEnabled);
+        val oppoTrickStatus = getSharedPreferences("oppo_trick_value", MODE_PRIVATE)
+        oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value", false)
+        val oppoTrick = findViewById<View?>(R.id.checkBox1) as CheckBox
+        oppoTrick.setChecked(oppoTrickEnabled)
         //MAKE ROOT TRICK DISABLED AS DEFAULT
-        SharedPreferences rootTrickStatus = getSharedPreferences("root_trick_value", Activity.MODE_PRIVATE);
-        rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value",false);
-        CheckBox rootTrick = (CheckBox) findViewById(R.id.checkBox2);
-        rootTrick.setChecked(rootTrickEnabled);
-        oppoTrick();
+        val rootTrickStatus = getSharedPreferences("root_trick_value", MODE_PRIVATE)
+        rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value", false)
+        val rootTrick = findViewById<View?>(R.id.checkBox2) as CheckBox
+        rootTrick.setChecked(rootTrickEnabled)
+        oppoTrick()
 
-        oppoTrick.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                oppoTrickEnabled = !oppoTrickEnabled;
-                SharedPreferences.Editor oppoEditor = oppoTrickStatus.edit();
-                oppoEditor.putBoolean("oppo_trick_value", oppoTrickEnabled);
-                oppoEditor.apply();
-                oppoTrick.setChecked(oppoTrickEnabled);
+        oppoTrick.setOnClickListener {
+            oppoTrickEnabled = !oppoTrickEnabled
+            oppoTrickStatus.edit {
+                putBoolean("oppo_trick_value", oppoTrickEnabled)
+            }
+            oppoTrick.setChecked(oppoTrickEnabled)
+            //Switch off root flags
+            rootTrickStatus.edit {
+                putBoolean("root_trick_value", false)
+            }
+            rootTrick.setChecked(false)
+            oppoTrick()
+
+            Log.d(
+                "oppo button",
+                "oppo value is " + oppoTrickStatus.getBoolean("oppo_trick_value", false)
+            )
+            Log.d(
+                "root button",
+                "root value is " + rootTrickStatus.getBoolean("root_trick_value", false)
+            )
+        }
+
+        rootTrick.setOnClickListener {
+            isDeviceRooted
+            val tv = findViewById<TextView>(R.id.textViewError)
+            if (!isDeviceRooted) {
+                Toast.makeText(baseContext, R.string.device_not_rooted, Toast.LENGTH_SHORT)
+                    .show()
                 //Switch off root flags
-                SharedPreferences.Editor rootEditor = rootTrickStatus.edit();
-                rootEditor.putBoolean("root_trick_value", false);
-                rootEditor.apply();
-                rootTrick.setChecked(false);
-                oppoTrick();
-
-                Log.d("oppo button", "oppo value is " + oppoTrickStatus.getBoolean("oppo_trick_value", false));
-                Log.d("root button", "root value is " + rootTrickStatus.getBoolean("root_trick_value", false));
-            }
-        });
-
-        rootTrick.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isDeviceRooted();
-                TextView tv = findViewById(R.id.textViewError);
-                if (!isDeviceRooted()) {
-                    Toast.makeText(getBaseContext(), R.string.device_not_rooted, Toast.LENGTH_SHORT).show();
-                    //Switch off root flags
-                    SharedPreferences.Editor rootEditor = rootTrickStatus.edit();
-                    rootEditor.putBoolean("root_trick_value", false);
-                    rootEditor.apply();
-                    rootTrick.setChecked(false);
-                } else if (isGooglePackageExist() && !forceRootEnabled) {
-                    tv.setText(R.string.root_method_warning);
-                    //Switch off root flags
-                    SharedPreferences.Editor rootEditor = rootTrickStatus.edit();
-                    rootEditor.putBoolean("root_trick_value", false);
-                    rootEditor.apply();
-                    rootTrick.setChecked(false);
-                    forceRootEnabled = true;
-                } else {
-                    tv.setText("");
-                    forceRootEnabled = !rootTrickEnabled;
-                    rootTrickEnabled = !rootTrickEnabled;
-                    SharedPreferences.Editor rootEditor = rootTrickStatus.edit();
-                    rootEditor.putBoolean("root_trick_value", rootTrickEnabled);
-                    rootEditor.apply();
-                    rootTrick.setChecked(rootTrickEnabled);
-                    //Switch off oppo flags
-                    SharedPreferences.Editor oppoEditor = oppoTrickStatus.edit();
-                    oppoEditor.putBoolean("oppo_trick_value", false);
-                    oppoEditor.apply();
-                    oppoTrick.setChecked(false);
-                    oppoTrick();
+                rootTrickStatus.edit {
+                    putBoolean("root_trick_value", false)
                 }
-                Log.d("root check", "is phone rooted " + isDeviceRooted());
-                Log.d("oppo button", "oppo value is " + oppoTrickStatus.getBoolean("oppo_trick_value", false));
-                Log.d("root button", "root value is " + rootTrickStatus.getBoolean("root_trick_value", false));
+                rootTrick.setChecked(false)
+            } else if (isGooglePackageExist && !forceRootEnabled) {
+                tv.setText(R.string.root_method_warning)
+                //Switch off root flags
+                rootTrickStatus.edit {
+                    putBoolean("root_trick_value", false)
+                }
+                rootTrick.setChecked(false)
+                forceRootEnabled = true
+            } else {
+                tv.text = ""
+                forceRootEnabled = !rootTrickEnabled
+                rootTrickEnabled = !rootTrickEnabled
+                rootTrickStatus.edit {
+                    putBoolean("root_trick_value", rootTrickEnabled)
+                }
+                rootTrick.setChecked(rootTrickEnabled)
+                //Switch off oppo flags
+                oppoTrickStatus.edit {
+                    putBoolean("oppo_trick_value", false)
+                }
+                oppoTrick.setChecked(false)
+                oppoTrick()
             }
-        });
+            Log.d("root check", "is phone rooted $isDeviceRooted")
+            Log.d(
+                "oppo button",
+                "oppo value is " + oppoTrickStatus.getBoolean("oppo_trick_value", false)
+            )
+            Log.d(
+                "root button",
+                "root value is " + rootTrickStatus.getBoolean("root_trick_value", false)
+            )
+        }
 
-        Button btnInstall = findViewById(R.id.installButton);
-        btnInstall.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                SharedPreferences oppoTrickStatus = getSharedPreferences("oppo_trick_value", Activity.MODE_PRIVATE);
-                oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value",false);
-                SharedPreferences rootTrickStatus = getSharedPreferences("root_trick_value", Activity.MODE_PRIVATE);
-                rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value",false);
-                try {
-                    if (rootTrickEnabled) { installAsRoot(); }
-                    else installAsKing();
-                }
-                catch (Exception e) {
-                    TextView tv = findViewById(R.id.textViewError);
-                    tv.setText(e.toString());
-                }
+        val btnInstall = findViewById<Button>(R.id.installButton)
+        btnInstall.setOnClickListener {
+            val oppoTrickStatus = getSharedPreferences("oppo_trick_value", MODE_PRIVATE)
+            oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value", false)
+            val rootTrickStatus = getSharedPreferences("root_trick_value", MODE_PRIVATE)
+            rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value", false)
+            try {
+                if (rootTrickEnabled) {
+                    installAsRoot()
+                } else installAsKing()
+            } catch (e: Exception) {
+                val tv = findViewById<TextView>(R.id.textViewError)
+                tv.text = e.toString()
             }
-        });
+        }
 
         //RESET BUTTON TO OPEN DEFAULT PACKAGE INSTALLER TO CAN CLEAR AS DEFAULT SETTING
-        Button resetButton = findViewById(R.id.resetButton);
-        resetButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                if (isGooglePackageExist()) {
-                    try {
-                        Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        intent.setData(Uri.parse("package:" + "com.google.android.packageinstaller"));
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        TextView tv = findViewById(R.id.textViewError);
-                        tv.setText(e.toString());
-                    }
-                } else {
-                    TextView tv = findViewById(R.id.textViewError);
-                    tv.setText(R.string.missing_google_package_installer);
+        val resetButton = findViewById<Button>(R.id.resetButton)
+        resetButton.setOnClickListener {
+            if (isGooglePackageExist) {
+                try {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    intent.setData(("package:" + "com.google.android.packageinstaller").toUri())
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    val tv = findViewById<TextView>(R.id.textViewError)
+                    tv.text = e.toString()
                 }
+            } else {
+                val tv = findViewById<TextView>(R.id.textViewError)
+                tv.setText(R.string.missing_google_package_installer)
             }
-        });
-    }
-
-    //CHECK IF GOOGLE PACKAGE INSTALLER EXIST ON YOUR DEVICE
-    public boolean isGooglePackageExist(){
-        PackageManager pm=getPackageManager();
-        try {
-            PackageInfo info=pm.getPackageInfo("com.google.android.packageinstaller",PackageManager.GET_META_DATA);
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
         }
-        return true;
     }
 
-    public void oppoTrick() {
+    val isGooglePackageExist: Boolean
+        //CHECK IF GOOGLE PACKAGE INSTALLER EXIST ON YOUR DEVICE
+        get() {
+            val pm = packageManager
+            try {
+                val info = pm.getPackageInfo(
+                    "com.google.android.packageinstaller",
+                    PackageManager.GET_META_DATA
+                )
+            } catch (e: PackageManager.NameNotFoundException) {
+                return false
+            }
+            return true
+        }
+
+    fun oppoTrick() {
         //MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
-        SharedPreferences oppoTrickStatus = getSharedPreferences("oppo_trick_value", Activity.MODE_PRIVATE);
-        oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value",false);
+        val oppoTrickStatus = getSharedPreferences("oppo_trick_value", MODE_PRIVATE)
+        oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value", false)
         //MAKE ROOT TRICK DISABLED AS DEFAULT
-        SharedPreferences rootTrickStatus = getSharedPreferences("root_trick_value", Activity.MODE_PRIVATE);
-        rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value",false);
-        PackageManager pm = getApplicationContext().getPackageManager();
+        val rootTrickStatus = getSharedPreferences("root_trick_value", MODE_PRIVATE)
+        rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value", false)
+        val pm = applicationContext.packageManager
         if (oppoTrickEnabled) {
-            ComponentName oppoTrickFlagged =
-                    new ComponentName(getPackageName(), getPackageName() + ".OppoTrick");
+            val oppoTrickFlagged =
+                ComponentName(packageName, "$packageName.OppoTrick")
             pm.setComponentEnabledSetting(
-                    oppoTrickFlagged,
-                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                    PackageManager.DONT_KILL_APP);
+                oppoTrickFlagged,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP
+            )
         } else {
-            ComponentName oppoTrickFlagged =
-                    new ComponentName(getPackageName(), getPackageName() + ".OppoTrick");
+            val oppoTrickFlagged =
+                ComponentName(packageName, "$packageName.OppoTrick")
             pm.setComponentEnabledSetting(
-                    oppoTrickFlagged,
-                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    PackageManager.DONT_KILL_APP);
+                oppoTrickFlagged,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP
+            )
         }
-        SharedPreferences.Editor oppoEditor = oppoTrickStatus.edit();
-        oppoEditor.putBoolean("oppo_trick_value", oppoTrickEnabled);
-        oppoEditor.apply();
-        SharedPreferences.Editor rootEditor = rootTrickStatus.edit();
-        rootEditor.putBoolean("root_trick_value", rootTrickEnabled);
-        rootEditor.apply();
+        oppoTrickStatus.edit {
+            putBoolean("oppo_trick_value", oppoTrickEnabled)
+        }
+        rootTrickStatus.edit {
+            putBoolean("root_trick_value", rootTrickEnabled)
+        }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.user_info_menu, menu);
-        return true;
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.user_info_menu, menu)
+        return true
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if(item.getItemId() == R.id.action_search) {
-            String url = "https://gitlab.com/annexhack/king-installer";
-            Intent i = new Intent(Intent.ACTION_VIEW);
-            i.setData(Uri.parse(url));
-            startActivity(i);
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_search) {
+            val url = "https://gitlab.com/annexhack/king-installer"
+            val i = Intent(Intent.ACTION_VIEW)
+            i.setData(url.toUri())
+            startActivity(i)
         }
-        if(item.getItemId() == R.id.action_search2) {
-            String url = "https://github.com/fcaronte/KingInstaller";
-            Intent i = new Intent(Intent.ACTION_VIEW);
-            i.setData(Uri.parse(url));
-            startActivity(i);
+        if (item.itemId == R.id.action_search2) {
+            val url = "https://github.com/fcaronte/KingInstaller"
+            val i = Intent(Intent.ACTION_VIEW)
+            i.setData(url.toUri())
+            startActivity(i)
         }
-        if(item.getItemId() == R.id.action_search3) {
-            String url = "https://github.com/Rikj000/KingInstaller";
-            Intent i = new Intent(Intent.ACTION_VIEW);
-            i.setData(Uri.parse(url));
-            startActivity(i);
+        if (item.itemId == R.id.action_search3) {
+            val url = "https://github.com/Rikj000/KingInstaller"
+            val i = Intent(Intent.ACTION_VIEW)
+            i.setData(url.toUri())
+            startActivity(i)
         }
-        return true;
+        return true
     }
 
-    private void installAsRoot() {
+    private fun installAsRoot() {
         try {
-            EditText et = findViewById(R.id.pathTextEdit);
-            String filepath = et.getText().toString();
-            runSuWithCmd("pm install -t -i \"com.android.vending\" -r " + filepath);
-            et.setText("");
-            TextView tv = findViewById(R.id.textViewError);
-            tv.setText("");
-        } catch (Exception e) {
-            TextView tv = findViewById(R.id.textViewError);
-            tv.setText(e.toString());
+            val et = findViewById<EditText>(R.id.pathTextEdit)
+            val filepath = et.getText().toString()
+            runSuWithCmd("pm install -t -i \"com.android.vending\" -r $filepath")
+            et.setText("")
+            val tv = findViewById<TextView>(R.id.textViewError)
+            tv.text = ""
+        } catch (e: Exception) {
+            val tv = findViewById<TextView>(R.id.textViewError)
+            tv.text = e.toString()
         }
     }
 
-    private void installAsKing() {
+    private fun installAsKing() {
         try {
-            EditText et = findViewById(R.id.pathTextEdit);
-            String filepath = et.getText().toString();
-            if (filepath.length() == 0) {
-                Toast.makeText(this, R.string.select_a_file, Toast.LENGTH_SHORT).show();
-                return;
+            val et = findViewById<EditText>(R.id.pathTextEdit)
+            val filepath = et.getText().toString()
+            if (filepath.isEmpty()) {
+                Toast.makeText(this, R.string.select_a_file, Toast.LENGTH_SHORT).show()
+                return
             }
-            File myFile = new File(filepath);
+            val myFile = File(filepath)
             if (!myFile.exists()) {
-                Toast.makeText(this, R.string.file_error, Toast.LENGTH_SHORT).show();
-                return;
+                Toast.makeText(this, R.string.file_error, Toast.LENGTH_SHORT).show()
+                return
             }
-            Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
-            Uri fileUri;
-            fileUri = FileProvider.getUriForFile(getApplicationContext(), getPackageName() + ".provider", myFile);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK + Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            intent.setData(fileUri);
-            intent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true);
-            intent.putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, "com.android.vending");
-            et.setText("");
-            TextView tv = findViewById(R.id.textViewError);
-            tv.setText("");
-            startActivity(intent);
-        } catch (Exception e) {
-            TextView tv = findViewById(R.id.textViewError);
-            tv.setText(e.toString());
+            val intent = Intent(Intent.ACTION_INSTALL_PACKAGE)
+            val fileUri: Uri? = FileProvider.getUriForFile(
+                applicationContext,
+                "$packageName.provider",
+                myFile
+            )
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK + Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            intent.setData(fileUri)
+            intent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
+            intent.putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, "com.android.vending")
+            et.setText("")
+            val tv = findViewById<TextView>(R.id.textViewError)
+            tv.text = ""
+            startActivity(intent)
+        } catch (e: Exception) {
+            val tv = findViewById<TextView>(R.id.textViewError)
+            tv.text = e.toString()
         }
     }
 
-    private void showFileChooser() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        requestPermissions();
+    private fun showFileChooser() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.setType("*/*")
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        requestPermissions()
         try {
             startActivityForResult(
-                    Intent.createChooser(intent, "Select APK"), FILE_SELECT_CODE);
-        } catch (android.content.ActivityNotFoundException ex) {
-            Toast.makeText(this, "Please install a File Manager.",Toast.LENGTH_SHORT).show();
+                Intent.createChooser(intent, "Select APK"), FILE_SELECT_CODE
+            )
+        } catch (ex: ActivityNotFoundException) {
+            Toast.makeText(this, "Please install a File Manager.", Toast.LENGTH_SHORT).show()
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case FILE_SELECT_CODE:
-                if (resultCode == RESULT_OK) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            FILE_SELECT_CODE -> if (resultCode == RESULT_OK) {
+                val uri = data?.data
+                val path = copyFileToInternalStorage(uri!!, "apk")
 
-                    Uri uri = data.getData();
-                    String path = copyFileToInternalStorage(uri, "apk");
+                val et = findViewById<EditText>(R.id.pathTextEdit)
+                et.setText(path)
+            }
 
-                    EditText et = findViewById(R.id.pathTextEdit);
-                    et.setText(path);
+            PERMISSION_REQUEST_CODE -> if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Permission not granted", Toast.LENGTH_SHORT).show()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    requestPermissions()
                 }
-                break;
-            case PERMISSION_REQUEST_CODE:
-                if (resultCode == RESULT_OK) {
-                    Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, "Permission not granted", Toast.LENGTH_SHORT).show();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        requestPermissions();
-                    }
-                }
+            }
         }
     }
 
-    public final void clearTempFile() {
-        File[] listFiles;
-        Context applicationContext = getApplicationContext();
-        File file = new File(applicationContext.getFilesDir() + "/apk");
-        if (!file.exists() || !file.isDirectory() || (listFiles = file.listFiles()) == null) {
-            return;
+    fun clearTempFile() {
+        val file = File(applicationContext.filesDir.toString() + "/apk")
+        val listFiles = file.listFiles()
+        if (listFiles == null || !file.isDirectory) {
+            return
         }
-        for (File file2 : listFiles) {
-            file2.delete();
+        for (file2 in listFiles) {
+            file2.delete()
         }
     }
-    public void onDestroy() {
-        super.onDestroy();
+
+    public override fun onDestroy() {
+        super.onDestroy()
         try {
-            clearTempFile();
-        } catch (Throwable ignored) {
+            clearTempFile()
+        } catch (ignored: Throwable) {
         }
     }
 
-    private void checkManageExternalStoragePermission() {
+    private fun checkManageExternalStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             // android 11 has new readFiles request permission
             if (Environment.isExternalStorageManager()) {
-                return;
+                return
             } else {
                 if (Environment.isExternalStorageLegacy()) {
-                    return;
+                    return
                 }
                 try {
-                    Intent intent = new Intent();
-                    intent.setAction(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                    intent.setData(Uri.parse("package:"+getApplicationContext().getPackageName()));
-                    startActivityForResult(intent, RESULT_OK); //result code is just an int
-                    return;
-                } catch (Exception e) {
-                    return;
+                    val intent = Intent()
+                    intent.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                    intent.setData(("package:" + applicationContext.packageName).toUri())
+                    startActivityForResult(intent, RESULT_OK) //result code is just an int
+                    return
+                } catch (e: Exception) {
+                    return
                 }
             }
         } else { // android 10 and lower - classic request
-            requestPermissions();
+            requestPermissions()
         }
     }
 
-    private String copyFileToInternalStorage(Uri uri, String newDirName) {
-        Uri returnUri = uri;
+    private fun copyFileToInternalStorage(uri: Uri, newDirName: String): String {
 
-        Context mContext = getApplicationContext();
-        Cursor returnCursor = mContext.getContentResolver().query(returnUri, new String[]{ OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE
-        }, null, null, null);
+        val mContext = applicationContext
+        val returnCursor = mContext.contentResolver.query(
+            uri, arrayOf<String>(
+                OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE
+            ), null, null, null
+        )
 
 
         /*
@@ -412,123 +411,176 @@ public class MainActivity extends AppCompatActivity {
          *     * move to the first row in the Cursor, get the data,
          *     * and display it.
          * */
-        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-        int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
-        returnCursor.moveToFirst();
-        String name = (returnCursor.getString(nameIndex));
-        String size = (Long.toString(returnCursor.getLong(sizeIndex)));
+        val nameIndex = returnCursor!!.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        val sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE)
+        returnCursor.moveToFirst()
+        val name = (returnCursor.getString(nameIndex))
+        val size = (returnCursor.getLong(sizeIndex).toString())
 
-        File output;
-        if (!newDirName.equals("")) {
-            File dir = new File(mContext.getFilesDir() + "/" + newDirName);
+        val output: File?
+        if (newDirName != "") {
+            val dir = File(mContext.filesDir.toString() + "/" + newDirName)
             if (!dir.exists()) {
-                dir.mkdir();
+                dir.mkdir()
             }
-            output = new File(mContext.getFilesDir() + "/" + newDirName + "/" + name);
+            output = File(mContext.filesDir.toString() + "/" + newDirName + "/" + name)
         } else {
-            output = new File(mContext.getFilesDir() + "/" + name);
+            output = File(mContext.filesDir.toString() + "/" + name)
         }
         try {
-            InputStream inputStream = mContext.getContentResolver().openInputStream(uri);
-            FileOutputStream outputStream = new FileOutputStream(output);
-            int read = 0;
-            int bufferSize = 1024;
-            final byte[] buffers = new byte[bufferSize];
-            while ((read = inputStream.read(buffers)) != -1) {
-                outputStream.write(buffers, 0, read);
+            val inputStream = mContext.contentResolver.openInputStream(uri)
+            val outputStream = FileOutputStream(output)
+            var read = 0
+            val bufferSize = 1024
+            val buffers = ByteArray(bufferSize)
+            while ((inputStream!!.read(buffers).also { read = it }) != -1) {
+                outputStream.write(buffers, 0, read)
             }
 
-            inputStream.close();
-            outputStream.close();
-
-        } catch (Exception e) {
-
-//            L.e("Exception", e.getMessage());
+            inputStream.close()
+            outputStream.close()
+        } catch (e: Exception) {
+            //            L.e("Exception", e.getMessage());
         }
 
-        return output.getPath();
+        return output.path
     }
 
-    private void requestPermissions() {
+    private fun requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MANAGE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE); //permission request code is just an int
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf<String>(
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.MANAGE_EXTERNAL_STORAGE
+                ),
+                PERMISSION_REQUEST_CODE
+            ) //permission request code is just an int
         } else {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE); //permisison request code is just an int
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf<String>(
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ),
+                PERMISSION_REQUEST_CODE
+            ) //permisison request code is just an int
         }
     }
 
-    /**
-     * https://github.com/shmykelsa/AA-Tweaker/blob/4d03205f14b2938f96bf04e198dd067cd6fe0967/app/src/main/java/sksa/aa/tweaker/MainActivity.java#L3964
-     * @param cmd
-     * @return
-     */
-    public static StreamLogs runSuWithCmd(String cmd) {
-        DataOutputStream outputStream = null;
-        InputStream inputStream = null;
-        InputStream errorStream = null;
+    companion object {
+        private const val FILE_SELECT_CODE = 1
+        private const val PERMISSION_REQUEST_CODE = 2
 
-        StreamLogs streamLogs = new StreamLogs();
-        streamLogs.setOutputStreamLog(cmd);
+        /**
+         * https://github.com/shmykelsa/AA-Tweaker/blob/4d03205f14b2938f96bf04e198dd067cd6fe0967/app/src/main/java/sksa/aa/tweaker/MainActivity.java#L3964
+         * @param cmd
+         * @return
+         */
+        fun runSuWithCmd(cmd: String?): StreamLogs {
+            var outputStream: DataOutputStream? = null
+            var inputStream: InputStream? = null
+            var errorStream: InputStream? = null
 
-        try {
-            Process su = Runtime.getRuntime().exec("su");
-            outputStream = new DataOutputStream(su.getOutputStream());
-            inputStream = su.getInputStream();
-            errorStream = su.getErrorStream();
+            val streamLogs = StreamLogs()
+            streamLogs.setOutputStreamLog(cmd)
 
-            outputStream.writeBytes(cmd + "\n");
-            outputStream.flush();
-            outputStream.writeBytes("exit\n");
-            outputStream.flush();
+            try {
+                val su = Runtime.getRuntime().exec("su")
+                outputStream = DataOutputStream(su.outputStream)
+                inputStream = su.inputStream
+                errorStream = su.errorStream
 
-            try { su.waitFor(); }
-            catch (InterruptedException e) { e.printStackTrace(); }
-            streamLogs.setInputStreamLog(readStream(inputStream));
-            streamLogs.setErrorStreamLog(readStream(errorStream));
-        } catch (IOException e) { e.printStackTrace(); }
+                outputStream.writeBytes(cmd + "\n")
+                outputStream.flush()
+                outputStream.writeBytes("exit\n")
+                outputStream.flush()
 
-        return streamLogs;
-    }
+                try {
+                    su.waitFor()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
+                }
+                streamLogs.setInputStreamLog(readStream(inputStream))
+                streamLogs.setErrorStreamLog(readStream(errorStream))
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
 
-    public static String readStream(InputStream is) throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int length;
-        while ((length = is.read(buffer)) != -1) {
-            byteArrayOutputStream.write(buffer, 0, length);
+            return streamLogs
         }
-        return byteArrayOutputStream.toString("UTF-8");
-    }
-    public static boolean isDeviceRooted() {
-        return checkRootMethod1() || checkRootMethod2() ||
-                checkRootMethod3();
-    }
-    private static boolean checkRootMethod1() {
-        String buildTags = android.os.Build.TAGS;
-        return buildTags != null && buildTags.contains("test-keys");
-    }
-    private static boolean checkRootMethod2() {
-        String[] paths = { "/system/app/Superuser.apk", "/sbin/su", "/system/bin/su",
-                "/system/xbin/su", "/data/local/xbin/su", "/data/local/bin/su", "/system/sd/xbin/su",
-                "/system/bin/failsafe/su", "/data/local/su" };
-        for (String path : paths) {
-            if (new File(path).exists()) return true;
+
+        @Throws(IOException::class)
+        fun readStream(`is`: InputStream): String {
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            val buffer = ByteArray(1024)
+            var length: Int
+            while ((`is`.read(buffer).also { length = it }) != -1) {
+                byteArrayOutputStream.write(buffer, 0, length)
+            }
+            return byteArrayOutputStream.toString("UTF-8")
         }
-        return false;
-    }
-    private static boolean checkRootMethod3() {
-        Process process = null;
-        try {
-            process = Runtime.getRuntime().exec(new String[] {
-                    "/system/xbin/which", "su" });
-            BufferedReader in = new BufferedReader(new
-                    InputStreamReader(process.getInputStream()));
-            if (in.readLine() != null) return true;
-            return false;
-        } catch (Throwable t) {
-            return false;
-        } finally {
-            if (process != null) process.destroy();
+
+        val isDeviceRooted: Boolean
+            get() = checkRootMethod1() || checkRootMethod2() ||
+                    checkRootMethod3() || checkRootMethod4()
+
+        private fun checkRootMethod1(): Boolean {
+            val buildTags = Build.TAGS
+            return buildTags != null && buildTags.contains("test-keys")
+        }
+
+        private fun checkRootMethod2(): Boolean {
+            val paths = arrayOf<String?>(
+                "/system/app/Superuser.apk",
+                "/sbin/su",
+                "/system/bin/su",
+                "/system/xbin/su",
+                "/data/local/xbin/su",
+                "/data/local/bin/su",
+                "/system/sd/xbin/su",
+                "/system/bin/failsafe/su",
+                "/data/local/su",
+                "/su/bin/su",
+                "/magisk/.core/bin/su",
+                "/data/adb/magisk/su",
+                "/data/adb/ksu/bin/su"
+            )
+            for (path in paths) {
+                if (File(path).exists()) return true
+            }
+            return false
+        }
+
+        private fun checkRootMethod3(): Boolean {
+            var process: Process? = null
+            try {
+                process = Runtime.getRuntime().exec(arrayOf<String>("/system/xbin/which", "su"))
+                val `in` = BufferedReader(InputStreamReader(process.inputStream))
+                if (`in`.readLine() != null) return true
+                return false
+            } catch (t: Throwable) {
+                return false
+            } finally {
+                process?.destroy()
+            }
+        }
+
+        private fun checkRootMethod4(): Boolean {
+            var process: Process? = null
+            return try {
+                process = Runtime.getRuntime().exec("su")
+                val os = DataOutputStream(process.outputStream)
+                os.writeBytes("exit\n")
+                os.flush()
+                process.waitFor()
+                true
+            } catch (e: Exception) {
+                false
+            } finally {
+                process?.destroy()
+            }
         }
     }
 }

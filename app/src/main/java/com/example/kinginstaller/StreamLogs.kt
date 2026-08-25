@@ -1,54 +1,64 @@
-package com.example.kinginstaller;
+package com.example.kinginstaller
 
-public class StreamLogs {
-    private String inputStreamLog;
-    private String errorStreamLog;
-    private String outputStreamLog;
+class StreamLogs {
+    private var inputStreamLog: String? = null
+    private var errorStreamLog: String? = null
+    private var outputStreamLog: String? = null
 
-    public StreamLogs() {}
-
-    public String getInputStreamLog() {
-        if (inputStreamLog == null) { return ""; }
-        return inputStreamLog.trim();
+    fun getInputStreamLog(): String {
+        if (inputStreamLog == null) {
+            return ""
+        }
+        return inputStreamLog!!.trim { it <= ' ' }
     }
 
-    public String getErrorStreamLog() {
-        if (errorStreamLog == null) { return ""; }
-        return errorStreamLog.trim();
+    fun getErrorStreamLog(): String {
+        if (errorStreamLog == null) {
+            return ""
+        }
+        return errorStreamLog!!.trim { it <= ' ' }
     }
 
-    public String getOutputStreamLog() {
-        if (outputStreamLog == null) { return ""; }
-        return outputStreamLog.trim();
+    fun getOutputStreamLog(): String {
+        if (outputStreamLog == null) {
+            return ""
+        }
+        return outputStreamLog!!.trim { it <= ' ' }
     }
 
-    public void setInputStreamLog(String inputStreamLog) { this.inputStreamLog = inputStreamLog; }
-
-    public void setErrorStreamLog(String errorStreamLog) { this.errorStreamLog = errorStreamLog; }
-
-    public void setOutputStreamLog(String outputStreamLog) {
-        this.outputStreamLog = outputStreamLog;
+    fun setInputStreamLog(inputStreamLog: String?) {
+        this.inputStreamLog = inputStreamLog
     }
 
-    public String getInputStreamLogWithLabel() {
-        return "\tInputStream:\n\t\t" +
-                getInputStreamLog().replaceAll("\n", "\n\t\t");
+    fun setErrorStreamLog(errorStreamLog: String?) {
+        this.errorStreamLog = errorStreamLog
     }
 
-    public String getErrorStreamLogWithLabel() {
-        return "\tErrorStream:\n\t\t" +
-                getErrorStreamLog().replaceAll("\n", "\n\t\t");
+    fun setOutputStreamLog(outputStreamLog: String?) {
+        this.outputStreamLog = outputStreamLog
     }
 
-    public String getOutputStreamLogWithLabel() {
-        return "\tOutputStream:\n\t\t" +
-                getOutputStreamLog().replaceAll("\n", "\n\t\t");
-    }
+    val inputStreamLogWithLabel: String
+        get() = "\tInputStream:\n\t\t" +
+                getInputStreamLog().replace("\n".toRegex(), "\n\t\t")
 
-    public String getStreamLogsWithLabels() {
-        String result = "\n" + getOutputStreamLogWithLabel();
-        if (!getInputStreamLog().isEmpty()) { result += "\n" + getInputStreamLogWithLabel(); }
-        if (!getErrorStreamLog().isEmpty()) { result += "\n" + getErrorStreamLogWithLabel(); }
-        return result;
-    }
+    val errorStreamLogWithLabel: String
+        get() = "\tErrorStream:\n\t\t" +
+                getErrorStreamLog().replace("\n".toRegex(), "\n\t\t")
+
+    val outputStreamLogWithLabel: String
+        get() = "\tOutputStream:\n\t\t" +
+                getOutputStreamLog().replace("\n".toRegex(), "\n\t\t")
+
+    val streamLogsWithLabels: String
+        get() {
+            var result = "\n" + this.outputStreamLogWithLabel
+            if (!getInputStreamLog().isEmpty()) {
+                result += "\n" + this.inputStreamLogWithLabel
+            }
+            if (!getErrorStreamLog().isEmpty()) {
+                result += "\n" + this.errorStreamLogWithLabel
+            }
+            return result
+        }
 }

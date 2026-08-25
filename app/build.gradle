@@ -1,7 +1,9 @@
 plugins {
     id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
 }
 
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file("signing.properties")
@@ -9,20 +11,19 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
-
 android {
-    compileSdkVersion 37
-    buildToolsVersion "30.0.3"
+    compileSdk = 37
 
     defaultConfig {
         applicationId "com.example.kinginstaller"
-        minSdkVersion 26
-        targetSdkVersion 37
+        minSdk 26
+        targetSdk 37
         versionCode 2
         versionName "1.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+
     signingConfigs {
         config {
             storeFile file("keysing.jks")
@@ -33,6 +34,7 @@ android {
             v2SigningEnabled true
         }
     }
+
     buildTypes {
         debug {
             debuggable true
@@ -45,18 +47,26 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
+
     namespace 'com.example.kinginstaller'
 }
 
-dependencies {
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+    }
+}
 
-    implementation 'androidx.appcompat:appcompat:1.7.1'
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.8.0'
+    implementation 'androidx.core:core-ktx:1.19.0'
     implementation 'com.google.android.material:material:1.14.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.2'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
