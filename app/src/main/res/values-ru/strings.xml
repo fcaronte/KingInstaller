@@ -21,4 +21,26 @@
     <string name="missing_google_package_installer">ВНИМАНИЕ! НА ВАШЕМ УСТРОЙСТВЕ НЕ УСТАНОВЛЕНА ПРОГРАММА УСТАНОВКИ ПАКЕТОВ GOOGLE, ПОЭТОМУ МЕТОД KINGINSTALLER НЕ РАБОТАЕТ</string>
     <string name="google_package_installer_is_installed">PROGRAMMA USTANOVKI PAKETOV GOOGLE ISPOL\'ZUYETSYA NA VASHEM USTROYSTVE, POETOMU VAM SLEDUYET ISPOL\'ZOVAT\' METOD USTANOVKI NE ROOT KING</string>
     <string name="root_method_warning">ПРЕДУПРЕЖДЕНИЕ! Вы должны использовать метод NON Root, потому что у вас есть установщик пакетов Google. Корневой метод требует другого шага, чтобы заставить пользовательское приложение работать, прочитайте README на странице GitHub, чтобы получить больше информации. Если вы хотите попробовать режим Root, снова установите этот флажок.</string>
+    <string name="reinstall_google_installer">Reinstall Google Installer</string>
+    <string name="error_loading_apk">Error loading APK: %1$s</string>
+    <string name="error_google_installer_not_found">Could not find APK path for Google Installer</string>
+    <string name="select_apk">Select APK</string>
+    <string name="install_file_manager">Please install a File Manager.</string>
+    <string name="permission_granted">Permission granted</string>
+    <string name="permission_not_granted">Permission not granted</string>
+    <string name="error_occurred">Error: %1$s</string>
+    <string name="site_url_text">inceptive.ru</string>
+    <string name="check_app_installer">Check App Installer</string>
+    <string name="select_app_to_check">Select an app to check its installer:</string>
+    <string name="app_installer_info">Installer Info: %1$s</string>
+    <string name="initiating_installer">Initiating: %1$s</string>
+    <string name="installing_installer">Installing: %1$s</string>
+    <string name="originating_installer">Originating: %1$s</string>
+    <string name="update_owner">Update Owner: %1$s</string>
+    <string name="app_type">App Type: %1$s</string>
+    <string name="system_app">System</string>
+    <string name="user_app">User</string>
+    <string name="no_info">N/A</string>
+    <string name="open_android_auto">Open Android Auto Settings</string>
+    <string name="show_system_apps">Show System Apps</string>
 </resources>

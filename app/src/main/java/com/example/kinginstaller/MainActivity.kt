@@ -1,6 +1,5 @@
 package com.example.kinginstaller
 
-import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
@@ -9,7 +8,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
 import android.view.Menu
@@ -17,53 +15,76 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
-import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
+import androidx.core.content.edit
+import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import com.google.android.material.color.DynamicColors
 import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
-import androidx.core.net.toUri
-import androidx.core.content.edit
 
 class MainActivity : AppCompatActivity() {
     var oppoTrickEnabled: Boolean = false
     var rootTrickEnabled: Boolean = false
     var forceRootEnabled: Boolean = false
+    private var selectedFilePath: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        DynamicColors.applyToActivitiesIfAvailable(this.getApplication())
+        enableEdgeToEdge()
+        DynamicColors.applyToActivitiesIfAvailable(this.application)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Pulisce i file temporanei all'avvio
+        try {
+            clearTempFile()
+        } catch (ignored: Exception) {
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.updatePadding(
+                left = systemBars.left,
+                top = systemBars.top,
+                right = systemBars.right,
+                bottom = systemBars.bottom
+            )
+            insets
+        }
+
+        handleIntent(intent)
+        val tvStatus = findViewById<TextView>(R.id.textViewError)
+        if (isGooglePackageExist) {
+            tvStatus.setText(R.string.google_package_installer_is_installed)
+        } else {
+            tvStatus.setText(R.string.missing_google_package_installer)
+        }
+
         try {
             checkManageExternalStoragePermission()
         } catch (e: Exception) {
-            val tv = findViewById<TextView>(R.id.textViewError)
-            tv.text = e.toString()
+            tvStatus.text = getString(R.string.error_occurred, e.toString())
         }
-        if (isGooglePackageExist) {
-            val tv = findViewById<TextView>(R.id.textViewError)
-            tv.setText(R.string.google_package_installer_is_installed)
-        } else {
-            val tv = findViewById<TextView>(R.id.textViewError)
-            tv.setText(R.string.missing_google_package_installer)
-        }
+
         val btnSelect = findViewById<Button>(R.id.selectButton)
         btnSelect.setOnClickListener {
             try {
                 showFileChooser()
             } catch (e: Exception) {
                 val tv = findViewById<TextView>(R.id.textViewError)
-                tv.text = e.toString()
+                tv.text = getString(R.string.error_occurred, e.toString())
             }
         }
 
@@ -76,20 +97,20 @@ class MainActivity : AppCompatActivity() {
                 startActivity(i)
             } catch (e: Exception) {
                 val tv = findViewById<TextView>(R.id.textViewError)
-                tv.text = e.toString()
+                tv.text = getString(R.string.error_occurred, e.toString())
             }
         }
 
         //MAKE OPPO TRICK DISABLED AS DEFAULT AND AVOID HAVE AN UNUSEFUL FAKE INSTALLER
         val oppoTrickStatus = getSharedPreferences("oppo_trick_value", MODE_PRIVATE)
         oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value", false)
-        val oppoTrick = findViewById<View?>(R.id.checkBox1) as CheckBox
-        oppoTrick.setChecked(oppoTrickEnabled)
+        val oppoTrick = findViewById<CheckBox>(R.id.checkBox1)
+        oppoTrick.isChecked = oppoTrickEnabled
         //MAKE ROOT TRICK DISABLED AS DEFAULT
         val rootTrickStatus = getSharedPreferences("root_trick_value", MODE_PRIVATE)
         rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value", false)
-        val rootTrick = findViewById<View?>(R.id.checkBox2) as CheckBox
-        rootTrick.setChecked(rootTrickEnabled)
+        val rootTrick = findViewById<CheckBox>(R.id.checkBox2)
+        rootTrick.isChecked = rootTrickEnabled
         oppoTrick()
 
         oppoTrick.setOnClickListener {
@@ -97,12 +118,12 @@ class MainActivity : AppCompatActivity() {
             oppoTrickStatus.edit {
                 putBoolean("oppo_trick_value", oppoTrickEnabled)
             }
-            oppoTrick.setChecked(oppoTrickEnabled)
+            oppoTrick.isChecked = oppoTrickEnabled
             //Switch off root flags
             rootTrickStatus.edit {
                 putBoolean("root_trick_value", false)
             }
-            rootTrick.setChecked(false)
+            rootTrick.isChecked = false
             oppoTrick()
 
             Log.d(
@@ -116,7 +137,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         rootTrick.setOnClickListener {
-            isDeviceRooted
             val tv = findViewById<TextView>(R.id.textViewError)
             if (!isDeviceRooted) {
                 Toast.makeText(baseContext, R.string.device_not_rooted, Toast.LENGTH_SHORT)
@@ -125,14 +145,14 @@ class MainActivity : AppCompatActivity() {
                 rootTrickStatus.edit {
                     putBoolean("root_trick_value", false)
                 }
-                rootTrick.setChecked(false)
+                rootTrick.isChecked = false
             } else if (isGooglePackageExist && !forceRootEnabled) {
                 tv.setText(R.string.root_method_warning)
                 //Switch off root flags
                 rootTrickStatus.edit {
                     putBoolean("root_trick_value", false)
                 }
-                rootTrick.setChecked(false)
+                rootTrick.isChecked = false
                 forceRootEnabled = true
             } else {
                 tv.text = ""
@@ -141,12 +161,12 @@ class MainActivity : AppCompatActivity() {
                 rootTrickStatus.edit {
                     putBoolean("root_trick_value", rootTrickEnabled)
                 }
-                rootTrick.setChecked(rootTrickEnabled)
+                rootTrick.isChecked = rootTrickEnabled
                 //Switch off oppo flags
                 oppoTrickStatus.edit {
                     putBoolean("oppo_trick_value", false)
                 }
-                oppoTrick.setChecked(false)
+                oppoTrick.isChecked = false
                 oppoTrick()
             }
             Log.d("root check", "is phone rooted $isDeviceRooted")
@@ -162,17 +182,13 @@ class MainActivity : AppCompatActivity() {
 
         val btnInstall = findViewById<Button>(R.id.installButton)
         btnInstall.setOnClickListener {
-            val oppoTrickStatus = getSharedPreferences("oppo_trick_value", MODE_PRIVATE)
-            oppoTrickEnabled = oppoTrickStatus.getBoolean("oppo_trick_value", false)
-            val rootTrickStatus = getSharedPreferences("root_trick_value", MODE_PRIVATE)
-            rootTrickEnabled = rootTrickStatus.getBoolean("root_trick_value", false)
             try {
                 if (rootTrickEnabled) {
                     installAsRoot()
                 } else installAsKing()
             } catch (e: Exception) {
                 val tv = findViewById<TextView>(R.id.textViewError)
-                tv.text = e.toString()
+                tv.text = getString(R.string.error_occurred, e.toString())
             }
         }
 
@@ -186,11 +202,132 @@ class MainActivity : AppCompatActivity() {
                     startActivity(intent)
                 } catch (e: Exception) {
                     val tv = findViewById<TextView>(R.id.textViewError)
-                    tv.text = e.toString()
+                    tv.text = getString(R.string.error_occurred, e.toString())
                 }
             } else {
                 val tv = findViewById<TextView>(R.id.textViewError)
                 tv.setText(R.string.missing_google_package_installer)
+            }
+        }
+
+        val reinstallButton = findViewById<Button>(R.id.reinstallGoogleButton)
+        reinstallButton.setOnClickListener {
+            reinstallGoogleInstaller()
+        }
+
+        val checkInstallerButton = findViewById<Button>(R.id.checkInstallerButton)
+        checkInstallerButton.setOnClickListener {
+            startActivity(Intent(this, AppManagerActivity::class.java))
+        }
+
+        val openAndroidAutoButton = findViewById<Button>(R.id.openAndroidAutoButton)
+        openAndroidAutoButton.setOnClickListener {
+            openAndroidAutoSettings()
+        }
+    }
+
+    private fun updateSelectedFile(path: String?) {
+        selectedFilePath = path
+        val fileNameText = findViewById<TextView>(R.id.selectedFileText)
+        if (path != null) {
+            fileNameText.text = File(path).name
+            fileNameText.visibility = View.VISIBLE
+        } else {
+            fileNameText.visibility = View.GONE
+        }
+    }
+
+    private fun openAndroidAutoSettings() {
+        try {
+            val intent = Intent("com.google.android.projection.gearhead.SETTINGS")
+            intent.setPackage("com.google.android.projection.gearhead")
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        } catch (e: Exception) {
+            try {
+                // Alternativa se la precedente fallisce (versioni più vecchie o diverse)
+                val intent = Intent()
+                intent.setClassName("com.google.android.projection.gearhead", "com.google.android.projection.gearhead.companion.settings.DefaultSettingsActivity")
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+            } catch (e2: Exception) {
+                val tv = findViewById<TextView>(R.id.textViewError)
+                tv.text = getString(R.string.error_occurred, "Android Auto not found")
+            }
+        }
+    }
+
+    private fun reinstallGoogleInstaller() {
+        try {
+            val pm = packageManager
+            val info = pm.getPackageInfo("com.google.android.packageinstaller", 0)
+            val sourceDir = info.applicationInfo?.sourceDir
+            if (sourceDir != null) {
+                val systemApk = File(sourceDir)
+                if (systemApk.exists()) {
+                    // Copia l'APK di sistema nella sottocartella "apk" per pulizia automatica
+                    val dir = File(filesDir, "apk")
+                    if (!dir.exists()) dir.mkdir()
+                    val tempApk = File(dir, "google_installer.apk")
+                    systemApk.inputStream().use { input ->
+                        tempApk.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    updateSelectedFile(tempApk.absolutePath)
+                    installAsKing()
+                } else {
+                    val tv = findViewById<TextView>(R.id.textViewError)
+                    tv.setText(R.string.error_google_installer_not_found)
+                }
+            } else {
+                val tv = findViewById<TextView>(R.id.textViewError)
+                tv.setText(R.string.error_google_installer_not_found)
+            }
+        } catch (e: Exception) {
+            val tv = findViewById<TextView>(R.id.textViewError)
+            tv.text = getString(R.string.error_occurred, e.message ?: e.toString())
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        val action = intent?.action
+        var type = intent?.type
+        val data = intent?.data
+
+        Log.d("KingInstaller", "handleIntent: action=$action, type=$type, data=$data")
+
+        if (data != null && (Intent.ACTION_VIEW == action || Intent.ACTION_INSTALL_PACKAGE == action)) {
+            // Se il type è nullo, proviamo a ricavarlo dal ContentResolver
+            if (type == null) {
+                type = contentResolver.getType(data)
+            }
+            
+            // Se è ancora nullo, controlliamo l'estensione del file
+            if (type == null && data.toString().lowercase().endsWith(".apk")) {
+                type = "application/vnd.android.package-archive"
+            }
+
+            if ("application/vnd.android.package-archive" == type || type == null) {
+                try {
+                    val path: String? = if ("file" == data.scheme) {
+                        data.path
+                    } else {
+                        copyFileToInternalStorage(data, "apk")
+                    }
+                    if (path != null) {
+                        updateSelectedFile(path)
+                    }
+                } catch (e: Exception) {
+                    val tv = findViewById<TextView>(R.id.textViewError)
+                    tv.text = getString(R.string.error_loading_apk, e.message ?: "")
+                    Log.e("KingInstaller", "Error handling intent", e)
+                }
             }
         }
     }
@@ -200,7 +337,7 @@ class MainActivity : AppCompatActivity() {
         get() {
             val pm = packageManager
             try {
-                val info = pm.getPackageInfo(
+                pm.getPackageInfo(
                     "com.google.android.packageinstaller",
                     PackageManager.GET_META_DATA
                 )
@@ -272,26 +409,32 @@ class MainActivity : AppCompatActivity() {
 
     private fun installAsRoot() {
         try {
-            val et = findViewById<EditText>(R.id.pathTextEdit)
-            val filepath = et.getText().toString()
+            val filepath = selectedFilePath ?: ""
             runSuWithCmd("pm install -t -i \"com.android.vending\" -r $filepath")
-            et.setText("")
+            updateSelectedFile(null)
             val tv = findViewById<TextView>(R.id.textViewError)
             tv.text = ""
         } catch (e: Exception) {
             val tv = findViewById<TextView>(R.id.textViewError)
-            tv.text = e.toString()
+            tv.text = getString(R.string.error_occurred, e.toString())
         }
     }
 
     private fun installAsKing() {
         try {
-            val et = findViewById<EditText>(R.id.pathTextEdit)
-            val filepath = et.getText().toString()
+            val filepath = selectedFilePath ?: ""
             if (filepath.isEmpty()) {
                 Toast.makeText(this, R.string.select_a_file, Toast.LENGTH_SHORT).show()
                 return
             }
+
+            if (!packageManager.canRequestPackageInstalls()) {
+                val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
+                intent.data = Uri.parse("package:$packageName")
+                startActivity(intent)
+                return
+            }
+
             val myFile = File(filepath)
             if (!myFile.exists()) {
                 Toast.makeText(this, R.string.file_error, Toast.LENGTH_SHORT).show()
@@ -303,17 +446,17 @@ class MainActivity : AppCompatActivity() {
                 "$packageName.provider",
                 myFile
             )
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK + Intent.FLAG_GRANT_READ_URI_PERMISSION)
             intent.setData(fileUri)
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
             intent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
             intent.putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, "com.android.vending")
-            et.setText("")
+            updateSelectedFile(null)
             val tv = findViewById<TextView>(R.id.textViewError)
             tv.text = ""
             startActivity(intent)
         } catch (e: Exception) {
             val tv = findViewById<TextView>(R.id.textViewError)
-            tv.text = e.toString()
+            tv.text = getString(R.string.error_occurred, e.toString())
         }
     }
 
@@ -324,10 +467,10 @@ class MainActivity : AppCompatActivity() {
         requestPermissions()
         try {
             startActivityForResult(
-                Intent.createChooser(intent, "Select APK"), FILE_SELECT_CODE
+                Intent.createChooser(intent, getString(R.string.select_apk)), FILE_SELECT_CODE
             )
         } catch (ex: ActivityNotFoundException) {
-            Toast.makeText(this, "Please install a File Manager.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.install_file_manager, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -338,14 +481,15 @@ class MainActivity : AppCompatActivity() {
                 val uri = data?.data
                 val path = copyFileToInternalStorage(uri!!, "apk")
 
-                val et = findViewById<EditText>(R.id.pathTextEdit)
-                et.setText(path)
+                if (path != null) {
+                    updateSelectedFile(path)
+                }
             }
 
             PERMISSION_REQUEST_CODE -> if (resultCode == RESULT_OK) {
-                Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.permission_granted, Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, "Permission not granted", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.permission_not_granted, Toast.LENGTH_SHORT).show()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     requestPermissions()
                 }
@@ -374,50 +518,35 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkManageExternalStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // android 11 has new readFiles request permission
-            if (Environment.isExternalStorageManager()) {
-                return
-            } else {
-                if (Environment.isExternalStorageLegacy()) {
-                    return
-                }
+            if (!Environment.isExternalStorageManager()) {
                 try {
-                    val intent = Intent()
-                    intent.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                    intent.setData(("package:" + applicationContext.packageName).toUri())
-                    startActivityForResult(intent, RESULT_OK) //result code is just an int
-                    return
+                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                    intent.data = Uri.parse("package:$packageName")
+                    startActivityForResult(intent, PERMISSION_REQUEST_CODE)
                 } catch (e: Exception) {
-                    return
+                    val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                    startActivityForResult(intent, PERMISSION_REQUEST_CODE)
                 }
             }
-        } else { // android 10 and lower - classic request
+        } else {
             requestPermissions()
         }
     }
 
-    private fun copyFileToInternalStorage(uri: Uri, newDirName: String): String {
-
+    private fun copyFileToInternalStorage(uri: Uri, newDirName: String): String? {
         val mContext = applicationContext
         val returnCursor = mContext.contentResolver.query(
-            uri, arrayOf<String>(
-                OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE
+            uri, arrayOf(
+                android.provider.OpenableColumns.DISPLAY_NAME, android.provider.OpenableColumns.SIZE
             ), null, null, null
         )
 
+        val nameIndex = returnCursor?.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME) ?: -1
+        returnCursor?.moveToFirst()
+        val name = if (nameIndex != -1) returnCursor?.getString(nameIndex) else "temp.apk"
+        returnCursor?.close()
 
-        /*
-         * Get the column indexes of the data in the Cursor,
-         *     * move to the first row in the Cursor, get the data,
-         *     * and display it.
-         * */
-        val nameIndex = returnCursor!!.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        val sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE)
-        returnCursor.moveToFirst()
-        val name = (returnCursor.getString(nameIndex))
-        val size = (returnCursor.getLong(sizeIndex).toString())
-
-        val output: File?
+        val output: File
         if (newDirName != "") {
             val dir = File(mContext.filesDir.toString() + "/" + newDirName)
             if (!dir.exists()) {
@@ -429,7 +558,7 @@ class MainActivity : AppCompatActivity() {
         }
         try {
             val inputStream = mContext.contentResolver.openInputStream(uri)
-            val outputStream = FileOutputStream(output)
+            val outputStream = java.io.FileOutputStream(output)
             var read = 0
             val bufferSize = 1024
             val buffers = ByteArray(bufferSize)
@@ -440,7 +569,7 @@ class MainActivity : AppCompatActivity() {
             inputStream.close()
             outputStream.close()
         } catch (e: Exception) {
-            //            L.e("Exception", e.getMessage());
+            return null
         }
 
         return output.path
@@ -450,22 +579,22 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf<String>(
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    Manifest.permission.MANAGE_EXTERNAL_STORAGE
+                arrayOf(
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    android.Manifest.permission.MANAGE_EXTERNAL_STORAGE
                 ),
                 PERMISSION_REQUEST_CODE
-            ) //permission request code is just an int
+            )
         } else {
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf<String>(
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                arrayOf(
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE
                 ),
                 PERMISSION_REQUEST_CODE
-            ) //permisison request code is just an int
+            )
         }
     }
 
@@ -473,11 +602,6 @@ class MainActivity : AppCompatActivity() {
         private const val FILE_SELECT_CODE = 1
         private const val PERMISSION_REQUEST_CODE = 2
 
-        /**
-         * https://github.com/shmykelsa/AA-Tweaker/blob/4d03205f14b2938f96bf04e198dd067cd6fe0967/app/src/main/java/sksa/aa/tweaker/MainActivity.java#L3964
-         * @param cmd
-         * @return
-         */
         fun runSuWithCmd(cmd: String?): StreamLogs {
             var outputStream: DataOutputStream? = null
             var inputStream: InputStream? = null
@@ -556,10 +680,9 @@ class MainActivity : AppCompatActivity() {
         private fun checkRootMethod3(): Boolean {
             var process: Process? = null
             try {
-                process = Runtime.getRuntime().exec(arrayOf<String>("/system/xbin/which", "su"))
+                process = Runtime.getRuntime().exec(arrayOf("/system/xbin/which", "su"))
                 val `in` = BufferedReader(InputStreamReader(process.inputStream))
-                if (`in`.readLine() != null) return true
-                return false
+                return `in`.readLine() != null
             } catch (t: Throwable) {
                 return false
             } finally {
