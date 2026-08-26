@@ -406,7 +406,6 @@ class MainActivity : AppCompatActivity() {
         try {
             val filepath = selectedFilePath ?: return
             RootUtils.runSuWithCmd("pm install -t -i \"${InstallationUtils.VENDING_PKG}\" -r $filepath")
-            updateSelectedFile(null)
             findViewById<TextView>(R.id.textViewError).text = ""
         } catch (e: Exception) {
             findViewById<TextView>(R.id.textViewError).text = getString(R.string.error_occurred, e.toString())
@@ -425,7 +424,6 @@ class MainActivity : AppCompatActivity() {
             
             updateComponentStates(installing = true)
             startActivity(InstallationUtils.createInstallIntent(this, myFile))
-            updateSelectedFile(null)
             findViewById<TextView>(R.id.textViewError).text = ""
         } catch (e: Exception) {
             findViewById<TextView>(R.id.textViewError).text = getString(R.string.error_occurred, e.toString())
