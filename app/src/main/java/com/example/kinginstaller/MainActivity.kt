@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
                 rootTrickEnabled = false
                 saveMethodSelection()
                 syncSwitches()
-                oppoTrick()
+                updateComponentStates()
                 Toast.makeText(this, "Shizuku authorized", Toast.LENGTH_SHORT).show()
             } else {
                 shizukuTrickEnabled = false
@@ -128,11 +128,11 @@ class MainActivity : AppCompatActivity() {
                 Shizuku.removeBinderReceivedListener(binderListener)
                 syncSwitches()
                 saveMethodSelection()
-                oppoTrick()
+                updateComponentStates()
             } else if (oppoTrickEnabled) {
                 oppoTrickEnabled = false
                 saveMethodSelection()
-                oppoTrick()
+                updateComponentStates()
             }
         }
 
@@ -149,7 +149,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     syncSwitches()
                     saveMethodSelection()
-                    oppoTrick()
+                    updateComponentStates()
                 } else {
                     view.isChecked = false
                     Toast.makeText(this, R.string.device_not_rooted, Toast.LENGTH_SHORT).show()
@@ -157,7 +157,7 @@ class MainActivity : AppCompatActivity() {
             } else if (rootTrickEnabled) {
                 rootTrickEnabled = false
                 saveMethodSelection()
-                oppoTrick()
+                updateComponentStates()
             }
         }
 
@@ -172,7 +172,7 @@ class MainActivity : AppCompatActivity() {
                         rootTrickEnabled = false
                         saveMethodSelection()
                         syncSwitches()
-                        oppoTrick()
+                        updateComponentStates()
                     } else {
                         view.isChecked = false
                         Shizuku.requestPermission(shizukuRequestCode)
@@ -186,7 +186,7 @@ class MainActivity : AppCompatActivity() {
                 shizukuTrickEnabled = false
                 Shizuku.removeBinderReceivedListener(binderListener)
                 saveMethodSelection()
-                oppoTrick()
+                updateComponentStates()
             }
         }
 
@@ -268,6 +268,11 @@ class MainActivity : AppCompatActivity() {
         getSharedPreferences("shizuku_trick_value", MODE_PRIVATE).edit { putBoolean("shizuku_trick_value", shizukuTrickEnabled) }
     }
 
+    override fun onResume() {
+        super.onResume()
+        updateComponentStates(installing = false)
+    }
+
     private fun updateSelectedFile(path: String?) {
         selectedFilePath = path
         val fileNameText = findViewById<TextView>(R.id.selectedFileText)
@@ -345,13 +350,17 @@ class MainActivity : AppCompatActivity() {
     val isGooglePackageExist: Boolean
         get() = try { packageManager.getPackageInfo(InstallationUtils.GOOGLE_INSTALLER_PKG, 0); true } catch (e: Exception) { false }
 
-    fun oppoTrick() {
+    fun updateComponentStates(installing: Boolean = false) {
         val pm = applicationContext.packageManager
+        val apkHandler = ComponentName(packageName, "$packageName.ApkHandler")
         val oppoTrickFlagged = ComponentName(packageName, "$packageName.OppoTrick")
         try {
-            pm.setComponentEnabledSetting(oppoTrickFlagged, 
-                if (oppoTrickEnabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                PackageManager.DONT_KILL_APP)
+            val apkState = if (installing) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            val oppoState = if (installing && oppoTrickEnabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED 
+                            else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+            
+            pm.setComponentEnabledSetting(apkHandler, apkState, PackageManager.DONT_KILL_APP)
+            pm.setComponentEnabledSetting(oppoTrickFlagged, oppoState, PackageManager.DONT_KILL_APP)
         } catch (e: Exception) { Log.e("KingInstaller", "Error setting component state", e) }
     }
 
@@ -414,6 +423,7 @@ class MainActivity : AppCompatActivity() {
             val myFile = File(filepath)
             if (!myFile.exists()) return Toast.makeText(this, R.string.file_error, Toast.LENGTH_SHORT).show()
             
+            updateComponentStates(installing = true)
             startActivity(InstallationUtils.createInstallIntent(this, myFile))
             updateSelectedFile(null)
             findViewById<TextView>(R.id.textViewError).text = ""
