@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == shizukuRequestCode) {
             if (grantResult == PackageManager.PERMISSION_GRANTED) {
                 shizukuTrickEnabled = true
+                Shizuku.addBinderReceivedListenerSticky(binderListener)
                 oppoTrickEnabled = false
                 rootTrickEnabled = false
                 saveMethodSelection()
@@ -49,6 +50,7 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Shizuku authorized", Toast.LENGTH_SHORT).show()
             } else {
                 shizukuTrickEnabled = false
+                Shizuku.removeBinderReceivedListener(binderListener)
                 saveMethodSelection()
                 syncSwitches()
                 Toast.makeText(this, R.string.permission_not_granted, Toast.LENGTH_SHORT).show()
@@ -69,7 +71,6 @@ class MainActivity : AppCompatActivity() {
         title = "${getString(R.string.app_name)} v$version"
 
         Shizuku.addRequestPermissionResultListener(shizukuListener)
-        Shizuku.addBinderReceivedListenerSticky(binderListener)
 
         InstallationUtils.clearTempFiles(this)
         if (savedInstanceState == null) {
@@ -115,12 +116,16 @@ class MainActivity : AppCompatActivity() {
         shizukuTrickEnabled = getSharedPreferences("shizuku_trick_value", MODE_PRIVATE).getBoolean("shizuku_trick_value", false)
 
         syncSwitches()
+        if (shizukuTrickEnabled) {
+            Shizuku.addBinderReceivedListenerSticky(binderListener)
+        }
 
         findViewById<MaterialSwitch>(R.id.switchOppo).setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 oppoTrickEnabled = true
                 rootTrickEnabled = false
                 shizukuTrickEnabled = false
+                Shizuku.removeBinderReceivedListener(binderListener)
                 syncSwitches()
                 saveMethodSelection()
                 oppoTrick()
@@ -137,6 +142,7 @@ class MainActivity : AppCompatActivity() {
                     rootTrickEnabled = true
                     oppoTrickEnabled = false
                     shizukuTrickEnabled = false
+                    Shizuku.removeBinderReceivedListener(binderListener)
                     if (isGooglePackageExist && !forceRootEnabled) {
                         findViewById<TextView>(R.id.textViewError).setText(R.string.root_method_warning)
                         forceRootEnabled = true
@@ -158,13 +164,14 @@ class MainActivity : AppCompatActivity() {
         val switchShizuku = findViewById<MaterialSwitch>(R.id.switchShizuku)
         switchShizuku.setOnCheckedChangeListener { view, isChecked ->
             if (isChecked) {
+                Shizuku.addBinderReceivedListenerSticky(binderListener)
                 if (ShizukuUtils.isShizukuAvailable()) {
                     if (ShizukuUtils.hasShizukuPermission()) {
                         shizukuTrickEnabled = true
                         oppoTrickEnabled = false
                         rootTrickEnabled = false
-                        syncSwitches()
                         saveMethodSelection()
+                        syncSwitches()
                         oppoTrick()
                     } else {
                         view.isChecked = false
@@ -172,10 +179,12 @@ class MainActivity : AppCompatActivity() {
                     }
                 } else {
                     view.isChecked = false
+                    Shizuku.removeBinderReceivedListener(binderListener)
                     Toast.makeText(this, R.string.shizuku_not_available, Toast.LENGTH_SHORT).show()
                 }
             } else if (shizukuTrickEnabled) {
                 shizukuTrickEnabled = false
+                Shizuku.removeBinderReceivedListener(binderListener)
                 saveMethodSelection()
                 oppoTrick()
             }
@@ -239,8 +248,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkShizukuPermission() {
         if (ShizukuUtils.hasShizukuPermission()) {
-            shizukuTrickEnabled = getSharedPreferences("shizuku_trick_value", MODE_PRIVATE).getBoolean("shizuku_trick_value", false)
-            runOnUiThread { syncSwitches() }
+            val savedValue = getSharedPreferences("shizuku_trick_value", MODE_PRIVATE).getBoolean("shizuku_trick_value", false)
+            if (savedValue && !shizukuTrickEnabled) {
+                shizukuTrickEnabled = true
+                runOnUiThread { syncSwitches() }
+            }
         }
     }
 
