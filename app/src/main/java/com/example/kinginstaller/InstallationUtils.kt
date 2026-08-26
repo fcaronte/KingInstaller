@@ -3,8 +3,11 @@ package com.example.kinginstaller
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.OpenableColumns
+import android.util.Log
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import java.io.File
 import java.io.FileOutputStream
 
@@ -66,11 +69,35 @@ object InstallationUtils {
             "${context.packageName}.provider",
             apkFile
         )
+        
+        // Torniamo a ACTION_INSTALL_PACKAGE. Anche se deprecato, 
+        // è quello che il sistema processa con più "trucchi" legacy.
         return Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
             setData(fileUri)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            
             putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
             putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, VENDING_PKG)
+            
+            // Varianti Extra trovate in diverse versioni di PackageInstaller
+            putExtra("installerPackageName", VENDING_PKG)
+            putExtra("android.content.pm.extra.VERIFICATION_INSTALLER_PACKAGE", VENDING_PKG)
+            putExtra("android.content.pm.extra.VERIFICATION_INSTALLER_UID", 0) // UID di sistema
+            
+            // Ragione installazione (1 = STORE)
+            putExtra("android.intent.extra.INSTALL_REASON", 1)
+            
+            // Referrer completo
+            putExtra("android.intent.extra.REFERRER_NAME", "android-app://$VENDING_PKG")
+            putExtra(Intent.EXTRA_REFERRER, "android-app://$VENDING_PKG".toUri())
+            
+            // Originating Info
+            putExtra("android.intent.extra.ORIGINATING_PACKAGE", VENDING_PKG)
+            putExtra(Intent.EXTRA_ORIGINATING_URI, "https://play.google.com/store/apps/details?id=${context.packageName}".toUri())
+            
+            if (Build.VERSION.SDK_INT >= 34) {
+                putExtra("android.content.pm.extra.REQUEST_UPDATE_OWNERSHIP", true)
+            }
         }
     }
 }

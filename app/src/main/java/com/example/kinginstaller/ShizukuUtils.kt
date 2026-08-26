@@ -1,6 +1,7 @@
 package com.example.kinginstaller
 
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.util.Log
 import android.widget.Toast
@@ -123,27 +124,48 @@ object ShizukuUtils {
             return
         }
 
-        onStatusUpdate("Transferring APK via Shizuku...")
+        onStatusUpdate("Launching Shell Proxy Install...")
 
         thread {
             try {
-                val remotePath = "/data/local/tmp/king_install_temp.apk"
-                if (!transferFileToShizuku(File(filepath), remotePath)) {
-                    activity.runOnUiThread { onStatusUpdate("Failed to transfer APK") }
-                    return@thread
+                val apkFile = File(filepath)
+                // Usiamo il FileProvider per generare un URI sicuro
+                val context = activity.applicationContext
+                val fileUri = androidx.core.content.FileProvider.getUriForFile(
+                    context, "${context.packageName}.provider", apkFile
+                )
+
+                // 1. Concediamo i permessi alla Shell e all'installatore di sistema (senza loggare errori se fallisce)
+                val targetPackages = listOf("com.android.shell", "com.google.android.packageinstaller", "com.android.packageinstaller")
+                targetPackages.forEach { pkg ->
+                    try {
+                        context.grantUriPermission(pkg, fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    } catch (ignored: Exception) {}
                 }
-                
-                activity.runOnUiThread { onStatusUpdate("File transferred. Installing...") }
-                val (exitCode, output) = runShizukuShell("pm install -r -t -i ${InstallationUtils.VENDING_PKG} $remotePath")
-                runShizukuShell("rm $remotePath")
+
+                activity.runOnUiThread { onStatusUpdate("Opening system installation dialog...") }
+
+                // 2. Usiamo l'azione INSTALL_PACKAGE via Shell: è la più potente per lo spoofing su Android 15/17
+                // Non specifichiamo il componente (PackageInstallerActivity) per lasciare che il sistema 
+                // scelga la sua attività predefinita, evitando crash o errori di puntamento.
+                val amCommand = "am start " +
+                        "-a android.intent.action.INSTALL_PACKAGE " +
+                        "-d \"$fileUri\" " +
+                        "-t \"application/vnd.android.package-archive\" " +
+                        "-f 0x00000001 " + // FLAG_GRANT_READ_URI_PERMISSION
+                        "--es android.intent.extra.INSTALLER_PACKAGE_NAME \"${InstallationUtils.VENDING_PKG}\" " +
+                        "--es android.intent.extra.REFERRER_NAME \"android-app://${InstallationUtils.VENDING_PKG}\" " +
+                        "--ei android.intent.extra.INSTALL_REASON 1 " + // 1 = STORE
+                        "--ez android.intent.extra.NOT_UNKNOWN_SOURCE true"
+
+                val (exitCode, output) = runShizukuShell(amCommand)
 
                 activity.runOnUiThread {
-                    if (exitCode == 0 && output.contains("Success")) {
+                    if (exitCode == 0) {
+                        onStatusUpdate("Success! Dialog opened.\nSource: Play Store")
                         onSuccess()
-                        onStatusUpdate("Installation Successful!\n(Installer: ${InstallationUtils.VENDING_PKG})")
-                        Toast.makeText(activity, "App installed successfully", Toast.LENGTH_LONG).show()
                     } else {
-                        onStatusUpdate("Install Failed (Exit $exitCode):\n$output")
+                        onStatusUpdate("Error: $output")
                     }
                 }
             } catch (e: Exception) {
@@ -151,6 +173,18 @@ object ShizukuUtils {
                     onStatusUpdate(activity.getString(R.string.error_occurred, e.toString()))
                 }
             }
+        }
+    }
+
+    /**
+     * Forza l'impostazione dell'installer via Shizuku per un pacchetto già installato.
+     * Utile dopo un'installazione via Intent (Metodo King).
+     */
+    fun setInstallerViaShizuku(packageName: String) {
+        thread {
+            val cmd = "cmd package set-installer $packageName ${InstallationUtils.VENDING_PKG}"
+            runShizukuShell(cmd)
+            Log.d("KingInstaller", "Forced installer to Play Store for $packageName via Shizuku")
         }
     }
 }

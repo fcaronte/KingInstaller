@@ -1,8 +1,11 @@
 package com.example.kinginstaller
 
 import android.content.ActivityNotFoundException
+import android.content.BroadcastReceiver
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -36,6 +39,20 @@ class MainActivity : AppCompatActivity() {
     private var selectedFilePath: String? = null
 
     private val shizukuRequestCode = 1001
+
+    private val packageAddedReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == Intent.ACTION_PACKAGE_ADDED) {
+                val packageName = intent.data?.schemeSpecificPart ?: return
+                Log.d("KingInstaller", "Package added: $packageName")
+                if (shizukuTrickEnabled || ShizukuUtils.isShizukuAvailable()) {
+                    // Se Shizuku è disponibile, forziamo l'installer a Play Store
+                    // indipendentemente dal metodo usato per installare.
+                    ShizukuUtils.setInstallerViaShizuku(packageName)
+                }
+            }
+        }
+    }
 
     private val shizukuListener = Shizuku.OnRequestPermissionResultListener { requestCode, grantResult ->
         if (requestCode == shizukuRequestCode) {
@@ -71,6 +88,11 @@ class MainActivity : AppCompatActivity() {
         title = "${getString(R.string.app_name)} v$version"
 
         Shizuku.addRequestPermissionResultListener(shizukuListener)
+
+        val filter = IntentFilter(Intent.ACTION_PACKAGE_ADDED).apply {
+            addDataScheme("package")
+        }
+        registerReceiver(packageAddedReceiver, filter)
 
         InstallationUtils.clearTempFiles(this)
         if (savedInstanceState == null) {
@@ -423,7 +445,9 @@ class MainActivity : AppCompatActivity() {
             if (!myFile.exists()) return Toast.makeText(this, R.string.file_error, Toast.LENGTH_SHORT).show()
             
             updateComponentStates(installing = true)
-            startActivity(InstallationUtils.createInstallIntent(this, myFile))
+            val intent = InstallationUtils.createInstallIntent(this, myFile)
+            // Usiamo startActivityForResult (richiesto per EXTRA_NOT_UNKNOWN_SOURCE)
+            startActivityForResult(intent, 100)
             findViewById<TextView>(R.id.textViewError).text = ""
         } catch (e: Exception) {
             findViewById<TextView>(R.id.textViewError).text = getString(R.string.error_occurred, e.toString())
@@ -455,6 +479,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        unregisterReceiver(packageAddedReceiver)
         Shizuku.removeRequestPermissionResultListener(shizukuListener)
         Shizuku.removeBinderReceivedListener(binderListener)
         InstallationUtils.clearTempFiles(this)
