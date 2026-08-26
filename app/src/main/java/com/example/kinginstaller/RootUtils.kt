@@ -1,13 +1,13 @@
 package com.example.kinginstaller
 
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
-import java.io.BufferedReader
-import java.io.ByteArrayOutputStream
-import java.io.DataOutputStream
-import java.io.File
-import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
+import android.util.Log
+import androidx.core.content.FileProvider
+import java.io.*
+import kotlin.concurrent.thread
 
 object RootUtils {
 
@@ -113,5 +113,58 @@ object RootUtils {
             byteArrayOutputStream.write(buffer, 0, length)
         }
         return byteArrayOutputStream.toString("UTF-8")
+    }
+
+    fun installApk(activity: Activity, filepath: String?, onStatusUpdate: (String) -> Unit) {
+        if (filepath == null) return
+        
+        onStatusUpdate("Launching Root Hybrid Install...")
+
+        thread {
+            try {
+                val apkFile = File(filepath)
+                val context = activity.applicationContext
+                val fileUri = FileProvider.getUriForFile(
+                    context, "${context.packageName}.provider", apkFile
+                )
+
+                // 1. Concediamo i permessi (Root può farlo per chiunque)
+                val targetPackages = listOf("com.android.shell", "com.google.android.packageinstaller", "com.android.packageinstaller")
+                targetPackages.forEach { pkg ->
+                    try {
+                        context.grantUriPermission(pkg, fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    } catch (ignored: Exception) {}
+                }
+
+                // 2. Comando am start via Root (su)
+                val amCommand = "am start " +
+                        "-a android.intent.action.INSTALL_PACKAGE " +
+                        "-d \"$fileUri\" " +
+                        "-t \"application/vnd.android.package-archive\" " +
+                        "-f 0x00000001 " + // FLAG_GRANT_READ_URI_PERMISSION
+                        "--es android.intent.extra.INSTALLER_PACKAGE_NAME \"${InstallationUtils.VENDING_PKG}\" " +
+                        "--es android.intent.extra.REFERRER_NAME \"android-app://${InstallationUtils.VENDING_PKG}\" " +
+                        "--ei android.intent.extra.INSTALL_REASON 1 " + // 1 = STORE
+                        "--ez android.intent.extra.NOT_UNKNOWN_SOURCE true"
+
+                runSuWithCmd(amCommand)
+
+                activity.runOnUiThread {
+                    onStatusUpdate("Root Hybrid: System dialog opened.\nInstaller: Play Store")
+                }
+            } catch (e: Exception) {
+                activity.runOnUiThread {
+                    onStatusUpdate("Root Error: ${e.message}")
+                }
+            }
+        }
+    }
+
+    fun setInstallerViaRoot(packageName: String) {
+        thread {
+            val cmd = "cmd package set-installer $packageName ${InstallationUtils.VENDING_PKG}"
+            runSuWithCmd(cmd)
+            Log.d("KingInstaller", "Forced installer to Play Store for $packageName via Root")
+        }
     }
 }

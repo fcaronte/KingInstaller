@@ -45,10 +45,15 @@ class MainActivity : AppCompatActivity() {
             if (intent.action == Intent.ACTION_PACKAGE_ADDED) {
                 val packageName = intent.data?.schemeSpecificPart ?: return
                 Log.d("KingInstaller", "Package added: $packageName")
+                
+                // Fix post-installazione per Shizuku
                 if (shizukuTrickEnabled || ShizukuUtils.isShizukuAvailable()) {
-                    // Se Shizuku è disponibile, forziamo l'installer a Play Store
-                    // indipendentemente dal metodo usato per installare.
                     ShizukuUtils.setInstallerViaShizuku(packageName)
+                }
+                
+                // Fix post-installazione per Root
+                if (rootTrickEnabled || RootUtils.isDeviceRooted) {
+                    RootUtils.setInstallerViaRoot(packageName)
                 }
             }
         }
@@ -425,12 +430,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun installAsRoot() {
-        try {
-            val filepath = selectedFilePath ?: return
-            RootUtils.runSuWithCmd("pm install -t -i \"${InstallationUtils.VENDING_PKG}\" -r $filepath")
-            findViewById<TextView>(R.id.textViewError).text = ""
-        } catch (e: Exception) {
-            findViewById<TextView>(R.id.textViewError).text = getString(R.string.error_occurred, e.toString())
+        RootUtils.installApk(this, selectedFilePath) { status ->
+            findViewById<TextView>(R.id.textViewError).text = status
         }
     }
 
