@@ -271,6 +271,15 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.openAndroidAutoButton).setOnClickListener {
             openAndroidAutoSettings()
         }
+
+        findViewById<Button>(R.id.donateButton).setOnClickListener {
+            val url = "https://www.paypal.com/paypalme/FCaronte/2"
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+            } catch (e: Exception) {
+                Toast.makeText(this, R.string.error_occurred, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun checkShizukuPermission() {

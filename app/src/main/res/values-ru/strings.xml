@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="installer_trick">ИСПОЛЬЗУЙ ДРУГОЙ</string>
     <string name="app_name">KingInstaller</string>
     <string name="welcome_to_installer">Добро пожаловать в KingInstaller!</string>
@@ -26,6 +26,7 @@
     <string name="installation_method">Installation Method</string>
     <string name="none">None</string>
     <string name="device_not_rooted">Невозможно включить, устройство не рутировано</string>
+    <string name="shizuku_not_available">Can\'t enable, Shizuku is not running or authorized</string>
     <string name="missing_google_package_installer">ВНИМАНИЕ! НА ВАШЕМ УСТРОЙСТВЕ НЕ УСТАНОВЛЕНА ПРОГРАММА УСТАНОВКИ ПАКЕТОВ GOOGLE, ПОЭТОМУ МЕТОД KINGINSTALLER НЕ РАБОТАЕТ</string>
     <string name="google_package_installer_is_installed">PROGRAMMA USTANOVKI PAKETOV GOOGLE ISPOL\'ZUYETSYA NA VASHEM USTROYSTVE, POETOMU VAM SLEDUYET ISPOL\'ZOVAT\' METOD USTANOVKI NE ROOT KING</string>
     <string name="root_method_warning">ПРЕДУПРЕЖДЕНИЕ! Вы должны использовать метод NON Root, потому что у вас есть установщик пакетов Google. Корневой метод требует другого шага, чтобы заставить пользовательское приложение работать, прочитайте README на странице GitHub, чтобы получить больше информации. Если вы хотите попробовать режим Root, снова установите этот флажок.</string>
@@ -54,7 +55,9 @@
     <string name="aa_compatibility_ok">Это приложение должно работать в Android Auto</string>
     <string name="aa_compatibility_error">Это приложение может быть недоступно в Android Auto</string>
     <string name="open_android_auto">Open Android Auto Settings</string>
+    <string name="open_android_auto_short">AA</string>
     <string name="show_system_apps">Show System Apps</string>
+    <string name="search_apps">Search apps…</string>
     <string name="action_about">About</string>
     <string name="app_version">Version: %1$s</string>
     <string name="testing_info">Протестировано на:\n• Эмулятор Pixel на Android 16 (все ок) и 17 (в данный момент не работает)\n• Samsung S24 Ultra (с использованием AABrowser)\n\nОсобая благодарность Gemini ❤️\n\nПосмотрите AABrowser: https://github.com/fcaronte/AABrowser</string>
@@ -63,4 +66,5 @@
     <string name="download">Скачать</string>
     <string name="action_check_update">Проверить обновления</string>
     <string name="no_update_available">Обновлений нет</string>
+    <string name="support_my_work">Поддержать мою работу</string>
 </resources>
