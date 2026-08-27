@@ -40,7 +40,8 @@ KingInstaller is a utility designed to install APK files in a way that tricks th
 
 * **Android 10 - 17:** Now fully supported! Use the standard "Install as King" method for Android 10-16. 
 * **Android 17+:** Standard method is blocked by Google. **USE THE SHIZUKU TRICK.**
-* **Samsung/Oppo/Realme:** Use the specific tricks provided in the app switches.
+* **Samsung (One UI 6.0 to 8.5+):** Standard method works perfectly. **Avoid Shizuku on Samsung** unless necessary, as Samsung's "Auto Blocker" security feature often blocks ADB-based installations.
+* **Oppo/Realme/OnePlus:** Use the specific tricks provided in the app switches.
 
 ### 💉 Shizuku Method (Recommended for Android 15/17)
 If the standard installation doesn't work or doesn't show "Installed by: Play Store", use [Shizuku](https://github.com/rikkaapps/shizuku).
