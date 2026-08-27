@@ -19,11 +19,6 @@
     <string name="reset_default_description">Usa il tasto \"Resetta Default\" per aprire l\'installatore pacchetto di Google e poterlo resettare se lo hai impostato per sbaglio come default e non esce più il popup. Dopo aver cliccato il tasto di reset, cerca \"Cancella Preferenze Predefinite\" PS se quando clicchi non succede nulla e da errore, è perché il tuo telefono usa un altro \"Installatore Pacchetto\" e quindi dovrai cercarlo manualmente dalle impostazioni del telefono</string>
     <string name="root_trick">Root (LineageOS)</string>
     <string name="shizuku_trick">Shizuku (ADB)</string>
-    <string name="shizuku_desc">Pressione prolungata per installazione avanzata</string>
-    <string name="advanced_shizuku_title">Installazione Shizuku Avanzata</string>
-    <string name="advanced_shizuku_hint">Inserisci il tuo comando adb shell qui. Usa $APK per il percorso del file attuale.</string>
-    <string name="advanced_shizuku_default">pm install -r -t -i com.android.vending $APK</string>
-    <string name="execute">Esegui</string>
     <string name="installation_method">Metodo di Installazione</string>
     <string name="none">Nessuno</string>
     <string name="device_not_rooted">Non posso attivarlo, il dispositivo non ha Root</string>
@@ -61,11 +56,13 @@
     <string name="search_apps">Cerca app…</string>
     <string name="action_about">Info</string>
     <string name="app_version">Versione: %1$s</string>
-    <string name="testing_info">Testato su:\n• Emulatore Pixel con Android 16 (tutto ok) e 17 (al momento non funzionante)\n• Samsung S24 Ultra (usando AABrowser)\n\nUn ringraziamento speciale a Gemini ❤️\n\nScopri AABrowser: https://github.com/fcaronte/AABrowser</string>
+    <string name="testing_info">Testato su:\n• Emulatore Pixel con Android 16 e 17 (tutto ok)\n• Samsung S24 Ultra (usando AABrowser)\n\nUn ringraziamento speciale a Gemini ❤️\n\nScopri AABrowser: https://github.com/fcaronte/AABrowser</string>
     <string name="update_available_title">Aggiornamento Disponibile</string>
     <string name="update_available_msg">Una nuova versione (%1$s) è disponibile. Vuoi scaricarla ora?</string>
     <string name="download">Scarica</string>
     <string name="action_check_update">Controlla aggiornamenti</string>
     <string name="no_update_available">Nessun aggiornamento disponibile</string>
     <string name="support_my_work">Supporta il mio lavoro</string>
+    <string name="install_success_aa">App installata con successo! (Compatibile AA)</string>
+    <string name="install_success_no_aa">App installata, ma potrebbe NON essere compatibile AA. Verifica i dettagli.</string>
 </resources>

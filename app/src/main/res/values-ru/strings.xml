@@ -18,11 +18,6 @@
     <string name="reset_default_description">Используйте кнопку \"Сбросить значение по умолчанию\", чтобы открыть Google PackageInstaller по умолчанию, если вы неправильно установили значение по умолчанию и всплывающее окно больше не будет отображаться. После нажатия кнопки \"Сбросить настройки по умолчанию\" найдите \"Очистить настройки по умолчанию\" PS если кнопка выдает ошибку, это потому, что ваш телефон использует другой PackageInstaller, и поэтому вам нужно вручную выполнить поиск в настройках вашего телефона</string>
     <string name="root_trick">Root (LineageOS)</string>
     <string name="shizuku_trick">Shizuku (ADB)</string>
-    <string name="shizuku_desc">Long press for advanced installation</string>
-    <string name="advanced_shizuku_title">Advanced Shizuku Install</string>
-    <string name="advanced_shizuku_hint">Enter your adb shell command here. Use $APK for the current file path.</string>
-    <string name="advanced_shizuku_default">pm install -r -t -i com.android.vending $APK</string>
-    <string name="execute">Execute</string>
     <string name="installation_method">Installation Method</string>
     <string name="none">None</string>
     <string name="device_not_rooted">Невозможно включить, устройство не рутировано</string>
@@ -60,11 +55,13 @@
     <string name="search_apps">Search apps…</string>
     <string name="action_about">About</string>
     <string name="app_version">Version: %1$s</string>
-    <string name="testing_info">Протестировано на:\n• Эмулятор Pixel на Android 16 (все ок) и 17 (в данный момент не работает)\n• Samsung S24 Ultra (с использованием AABrowser)\n\nОсобая благодарность Gemini ❤️\n\nПосмотрите AABrowser: https://github.com/fcaronte/AABrowser</string>
+    <string name="testing_info">Протестировано на:\n• Эмулятор Pixel на Android 16 и 17 (все ок)\n• Samsung S24 Ultra (с использованием AABrowser)\n\nОсобая благодарность Gemini ❤️\n\nПосмотрите AABrowser: https://github.com/fcaronte/AABrowser</string>
     <string name="update_available_title">Доступно обновление</string>
     <string name="update_available_msg">Доступна новая версия (%1$s). Хотите скачать ее сейчас?</string>
     <string name="download">Скачать</string>
     <string name="action_check_update">Проверить обновления</string>
     <string name="no_update_available">Обновлений нет</string>
     <string name="support_my_work">Поддержать мою работу</string>
+    <string name="install_success_aa">App installed successfully! (AA Compatible)</string>
+    <string name="install_success_no_aa">App installed, but might NOT be AA compatible. Check details.</string>
 </resources>

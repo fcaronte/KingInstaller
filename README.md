@@ -38,7 +38,7 @@ KingInstaller is a utility designed to install APK files in a way that tricks th
 
 ### 📊 System Compatibility
 
-* **Android 10 - 16:** Standard "Install as King" method generally works.
+* **Android 10 - 17:** Now fully supported! Use the standard "Install as King" method for Android 10-16. 
 * **Android 17+:** Standard method is blocked by Google. **USE THE SHIZUKU TRICK.**
 * **Samsung/Oppo/Realme:** Use the specific tricks provided in the app switches.
 

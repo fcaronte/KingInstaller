@@ -115,7 +115,7 @@ object RootUtils {
         return byteArrayOutputStream.toString("UTF-8")
     }
 
-    fun installApk(activity: Activity, filepath: String?, onStatusUpdate: (String) -> Unit) {
+    fun installApk(activity: Activity, filepath: String?, onStatusUpdate: (String) -> Unit, onSuccess: () -> Unit) {
         if (filepath == null) return
         
         onStatusUpdate("Launching Root Hybrid Install...")
@@ -150,7 +150,8 @@ object RootUtils {
                 runSuWithCmd(amCommand)
 
                 activity.runOnUiThread {
-                    onStatusUpdate("Root Hybrid: System dialog opened.\nInstaller: Play Store")
+                    onStatusUpdate("")
+                    onSuccess()
                 }
             } catch (e: Exception) {
                 activity.runOnUiThread {

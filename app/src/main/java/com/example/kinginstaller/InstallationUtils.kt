@@ -100,4 +100,30 @@ object InstallationUtils {
             }
         }
     }
+
+    fun isAACompatible(context: Context, packageName: String): Boolean {
+        return try {
+            val pm = context.packageManager
+            var initiating: String? = null
+            var installing: String? = null
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val info = pm.getInstallSourceInfo(packageName)
+                initiating = info.initiatingPackageName
+                installing = info.installingPackageName
+            } else {
+                @Suppress("DEPRECATION")
+                installing = pm.getInstallerPackageName(packageName)
+            }
+
+            val isPlayStoreInstalling = installing == VENDING_PKG
+            val isValidInitiating = initiating == VENDING_PKG || 
+                                   initiating == "com.google.android.packageinstaller" ||
+                                   (initiating?.contains("packageinstaller") == true)
+
+            isPlayStoreInstalling && (initiating == null || isValidInitiating)
+        } catch (e: Exception) {
+            false
+        }
+    }
 }

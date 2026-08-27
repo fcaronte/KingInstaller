@@ -55,6 +55,22 @@ class MainActivity : AppCompatActivity() {
                 if (rootTrickEnabled || RootUtils.isDeviceRooted) {
                     RootUtils.setInstallerViaRoot(packageName)
                 }
+
+                // Eseguiamo un check reale della compatibilità dopo un breve ritardo per permettere al fix di agire
+                findViewById<View>(R.id.main).postDelayed({
+                    val isAACompatible = InstallationUtils.isAACompatible(this@MainActivity, packageName)
+                    val tvError = findViewById<TextView>(R.id.textViewError)
+                    
+                    runOnUiThread {
+                        if (isAACompatible) {
+                            tvError.text = getString(R.string.install_success_aa)
+                            tvError.setTextColor(getColor(R.color.aa_green_text))
+                        } else {
+                            tvError.text = getString(R.string.install_success_no_aa)
+                            tvError.setTextColor(getColor(R.color.aa_red_text))
+                        }
+                    }
+                }, 1500)
             }
         }
     }
@@ -217,28 +233,17 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        switchShizuku.setOnLongClickListener {
-            ShizukuUtils.showAdvancedDialog(this, selectedFilePath) { status ->
-                findViewById<TextView>(R.id.textViewError).text = status
-            }
-            true
-        }
-        findViewById<View>(R.id.shizukuDesc).setOnLongClickListener {
-            ShizukuUtils.showAdvancedDialog(this, selectedFilePath) { status ->
-                findViewById<TextView>(R.id.textViewError).text = status
-            }
-            true
-        }
-
         findViewById<Button>(R.id.installButton).setOnClickListener {
             try {
                 if (shizukuTrickEnabled) {
+                    updateComponentStates(installing = true)
                     ShizukuUtils.installApk(this, selectedFilePath, { status ->
                         findViewById<TextView>(R.id.textViewError).text = status
                     }, {
-                        updateSelectedFile(null)
+                        // Rimosso updateSelectedFile(null) per mantenere l'APK selezionato
                     })
                 } else if (rootTrickEnabled) {
+                    updateComponentStates(installing = true)
                     installAsRoot()
                 } else installAsKing()
             } catch (e: Exception) {
@@ -439,9 +444,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun installAsRoot() {
-        RootUtils.installApk(this, selectedFilePath) { status ->
+        RootUtils.installApk(this, selectedFilePath, { status ->
             findViewById<TextView>(R.id.textViewError).text = status
-        }
+        }, {
+            // Rimosso updateSelectedFile(null) per mantenere l'APK selezionato
+        })
     }
 
     private fun installAsKing() {

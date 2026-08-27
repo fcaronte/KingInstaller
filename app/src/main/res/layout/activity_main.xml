@@ -163,15 +163,6 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="@string/shizuku_trick" />
-
-                    <TextView
-                        android:id="@+id/shizukuDesc"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        android:text="@string/shizuku_desc"
-                        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                        android:textColor="?attr/colorOutline" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -181,7 +172,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="0dp"
                 android:minHeight="56dp"
                 android:text="@string/install_as_king"
                 app:icon="@android:drawable/ic_menu_upload" />
@@ -192,7 +183,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="4dp"
                 android:text="@string/support_my_work"
                 android:textColor="#003087"
                 app:icon="@android:drawable/ic_menu_send"
