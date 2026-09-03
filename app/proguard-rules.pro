@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# Regole ProGuard per Shizuku UserService
+-keep class rikka.shizuku.** { *; }
+-keep class * implements android.os.IInterface { *; }
+-keep class com.example.kinginstaller.MyUserService { *; }
+-keep class com.example.kinginstaller.IMyUserService* { *; }

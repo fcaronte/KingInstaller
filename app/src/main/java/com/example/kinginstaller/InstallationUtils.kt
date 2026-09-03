@@ -1,5 +1,6 @@
 package com.example.kinginstaller
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -35,6 +36,7 @@ object InstallationUtils {
         }
     }
 
+    @SuppressLint("UnsanitizedFilenameFromContentProvider")
     fun copyFileToInternalStorage(context: Context, uri: Uri, newDirName: String): String? {
         return try {
             val returnCursor = context.contentResolver.query(
@@ -63,6 +65,7 @@ object InstallationUtils {
         }
     }
 
+    @SuppressLint("RequestInstallPackagesPolicy")
     fun createInstallIntent(context: Context, apkFile: File): Intent {
         val fileUri = FileProvider.getUriForFile(
             context.applicationContext,

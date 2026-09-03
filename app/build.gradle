@@ -24,6 +24,10 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        aidl true
+    }
+
     signingConfigs {
         config {
             storeFile file("keysing.jks")
@@ -74,7 +78,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.14.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.2'
 
-    def shizuku_version = '13.1.0'
+    def shizuku_version = '13.1.5'
     implementation "dev.rikka.shizuku:api:$shizuku_version"
     implementation "dev.rikka.shizuku:provider:$shizuku_version"
 

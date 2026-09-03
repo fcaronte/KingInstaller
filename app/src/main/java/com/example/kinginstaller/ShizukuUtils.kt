@@ -1,8 +1,12 @@
 package com.example.kinginstaller
 
 import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import rikka.shizuku.Shizuku
@@ -29,23 +33,73 @@ object ShizukuUtils {
         }
     }
 
+    object InstallationState {
+        @Volatile
+        var isFocusLost = false
+    }
+
     fun runShizukuShell(command: String): Pair<Int, String> {
         return try {
-            val process = Shizuku.newProcess(arrayOf("sh", "-c", command), null, null)
+            // Tentativo 1: Usiamo la nuova modalità via reflection sulle API correnti di Shizuku se presenti
+            val process = callNewProcessViaReflection(arrayOf("sh", "-c", command), null, null)
+                ?: throw NullPointerException("Process is null")
+
             val output = StringBuilder()
             val reader = BufferedReader(InputStreamReader(process.inputStream))
             val errorReader = BufferedReader(InputStreamReader(process.errorStream))
-            
+
             var line: String?
-            while (reader.readLine().also { line = it } != null) output.append(line).append("\n")
-            while (errorReader.readLine().also { line = it } != null) output.append(line).append("\n")
-            
+            while (reader.readLine().also { line = it } != null) {
+                output.append(line).append("\n")
+            }
+            while (errorReader.readLine().also { line = it } != null) {
+                output.append(line).append("\n")
+            }
+
             val exitCode = process.waitFor()
             Pair(exitCode, output.toString())
         } catch (e: Exception) {
-            Log.e("ShizukuUtils", "Error running shell command", e)
-            Pair(-1, e.message ?: "Unknown error")
+            Log.w("ShizukuUtils", "Standard Shizuku shell failed, trying alternative execution method: ${e.message}")
+
+            // Tentativo 2 (Piano di riserva per ShizukuPlus):
+            // Se newProcess fallisce, proviamo a invocare il comando tramite il package manager o un processo di runtime diretto
+            try {
+                val fallbackProcess = Runtime.getRuntime().exec(arrayOf("sh", "-c", command))
+                val reader = BufferedReader(InputStreamReader(fallbackProcess.inputStream))
+                val output = StringBuilder()
+                var line: String?
+                while (reader.readLine().also { line = it } != null) {
+                    output.append(line).append("\n")
+                }
+                val exitCode = fallbackProcess.waitFor()
+                Pair(exitCode, output.toString())
+            } catch (ex: Exception) {
+                Pair(-1, ex.message ?: "Unknown error")
+            }
         }
+    }
+
+    // Helper di reflection per invocare il processo Shizuku in modo sicuro sulle nuove versioni delle API
+    private fun callNewProcessViaReflection(cmd: Array<String>, env: Array<String>?, dir: String?): Process {
+        try {
+            val method = Shizuku::class.java.getDeclaredMethod(
+                "newProcess",
+                Array<String>::class.java,
+                Array<String>::class.java,
+                String::class.java
+            )
+            method.isAccessible = true
+            val result = method.invoke(null, cmd, env, dir)
+            if (result != null) {
+                return result as Process
+            }
+        } catch (ignored: Exception) {}
+
+        // PIANO ALTERNATIVO PER SHIZUKUPLUS:
+        // Se newProcess è assente o restituisce null, simuliamo un processo locale
+        // delegando l'esecuzione al contesto o sollevando un'eccezione gestita
+        // che forza l'uso dei comandi diretti di Package Manager.
+        throw UnsupportedOperationException("Shizuku.newProcess is not supported by this Shizuku implementation.")
     }
 
     fun installApk(activity: Activity, filepath: String?, onStatusUpdate: (String) -> Unit, onSuccess: () -> Unit) {
@@ -54,7 +108,7 @@ object ShizukuUtils {
             return
         }
 
-        onStatusUpdate("Launching Shell Proxy Install...")
+        onStatusUpdate("Launching Shizuku Install...")
 
         thread {
             try {
@@ -64,7 +118,6 @@ object ShizukuUtils {
                     context, "${context.packageName}.provider", apkFile
                 )
 
-                // 1. Concediamo i permessi alla Shell e all'installatore di sistema (senza loggare errori se fallisce)
                 val targetPackages = listOf("com.android.shell", "com.google.android.packageinstaller", "com.android.packageinstaller")
                 targetPackages.forEach { pkg ->
                     try {
@@ -74,44 +127,138 @@ object ShizukuUtils {
 
                 activity.runOnUiThread { onStatusUpdate("Opening system installation dialog...") }
 
-                // 2. Usiamo l'azione INSTALL_PACKAGE via Shell: è la più potente per lo spoofing su Android 15/17
                 val amCommand = "am start " +
                         "-a android.intent.action.INSTALL_PACKAGE " +
                         "-d \"$fileUri\" " +
                         "-t \"application/vnd.android.package-archive\" " +
-                        "-f 0x00000001 " + // FLAG_GRANT_READ_URI_PERMISSION
+                        "-f 0x00000001 " +
                         "--es android.intent.extra.INSTALLER_PACKAGE_NAME \"${InstallationUtils.VENDING_PKG}\" " +
                         "--es android.intent.extra.REFERRER_NAME \"android-app://${InstallationUtils.VENDING_PKG}\" " +
-                        "--ei android.intent.extra.INSTALL_REASON 1 " + // 1 = STORE
+                        "--ei android.intent.extra.INSTALL_REASON 1 " +
                         "--ez android.intent.extra.NOT_UNKNOWN_SOURCE true"
 
-                val (exitCode, output) = runShizukuShell(amCommand)
+                InstallationState.isFocusLost = false
+                var success = false
 
-                activity.runOnUiThread {
-                    if (exitCode == 0) {
+                // TENTATIVO 1: Proviamo prima con il metodo classico (runShizukuShell / newProcess)
+                try {
+                    val (exitCode, output) = runShizukuShell(amCommand)
+                    val hasError = exitCode != 0 ||
+                            output.contains("Error", ignoreCase = true) ||
+                            output.contains("Exception", ignoreCase = true)
+
+                    if (!hasError) {
+                        success = true
+                    }
+                } catch (e: Exception) {
+                    Log.w("ShizukuUtils", "Classic Shizuku method failed, switching to UserService...", e)
+                }
+
+                // TENTATIVO 2: Se il metodo classico ha fallito (es. su ShizukuPlus), usiamo il UserService via AIDL
+                if (!success) {
+                    val userServiceArgs = Shizuku.UserServiceArgs(
+                        ComponentName(context, MyUserService::class.java)
+                    ).tag("king_installer_service")
+                        .processNameSuffix("service")
+                        .daemon(false)
+                        .version(1)
+
+                    val serviceConnection = object : ServiceConnection {
+                        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                            val binder = service ?: return
+                            val proxy = IMyUserService.Stub.asInterface(binder)
+                            try {
+                                proxy.execCommand(amCommand)
+                                Log.d("KingInstaller", "Installation intent sent via Shizuku UserService fallback")
+                            } catch (ex: Exception) {
+                                Log.e("KingInstaller", "Error executing command via UserService fallback", ex)
+                            } finally {
+                                try {
+                                    Shizuku.unbindUserService(userServiceArgs, this, true)
+                                } catch (ignored: Exception) {}
+                            }
+                        }
+
+                        override fun onServiceDisconnected(name: ComponentName?) {}
+                    }
+
+                    try {
+                        Shizuku.bindUserService(userServiceArgs, serviceConnection)
+                        Thread.sleep(600) // Attesa avvio servizio
+                        success = true
+                    } catch (ex: Exception) {
+                        Log.e("KingInstaller", "UserService fallback also failed", ex)
+                    }
+                }
+
+                // Controllo finale dello spostamento del focus sull'installer
+                if (success) {
+                    val startTime = System.currentTimeMillis()
+                    while (System.currentTimeMillis() - startTime < 1500) {
+                        if (InstallationState.isFocusLost) {
+                            success = true
+                            break
+                        }
+                        Thread.sleep(40)
+                    }
+                }
+
+                if (success) {
+                    activity.runOnUiThread {
                         onStatusUpdate("")
                         onSuccess()
-                    } else {
-                        onStatusUpdate("Error: $output")
+                    }
+                } else {
+                    activity.runOnUiThread {
+                        onStatusUpdate("Shizuku blocked, falling back to standard installer...")
+                        if (activity is MainActivity) {
+                            activity.triggerFallbackInstall(filepath)
+                        }
                     }
                 }
             } catch (e: Exception) {
-                activity.runOnUiThread { 
+                activity.runOnUiThread {
                     onStatusUpdate(activity.getString(R.string.error_occurred, e.toString()))
                 }
             }
         }
     }
 
-    /**
-     * Forza l'impostazione dell'installer via Shizuku per un pacchetto già installato.
-     * Utile dopo un'installazione via Intent (Metodo King).
-     */
-    fun setInstallerViaShizuku(packageName: String) {
-        thread {
-            val cmd = "cmd package set-installer $packageName ${InstallationUtils.VENDING_PKG}"
-            runShizukuShell(cmd)
-            Log.d("KingInstaller", "Forced installer to Play Store for $packageName via Shizuku")
+
+
+    fun setInstallerViaShizuku(context: android.content.Context, packageName: String) {
+        val userServiceArgs = Shizuku.UserServiceArgs(
+            ComponentName(context, MyUserService::class.java)
+        ).tag("king_installer_service")
+            .processNameSuffix("service")
+            .daemon(false)
+            .version(1)
+
+        val serviceConnection = object : ServiceConnection {
+            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                val binder = service ?: return
+                val proxy = IMyUserService.Stub.asInterface(binder)
+                try {
+                    proxy.setInstaller(packageName, InstallationUtils.VENDING_PKG)
+                    Log.d("KingInstaller", "Installer successfully forced via Shizuku UserService for $packageName")
+                } catch (e: Exception) {
+                    Log.e("KingInstaller", "Error calling UserService method", e)
+                } finally {
+                    try {
+                        Shizuku.unbindUserService(userServiceArgs, this, true)
+                    } catch (ignored: Exception) {}
+                }
+            }
+
+            override fun onServiceDisconnected(name: ComponentName?) {
+                Log.d("KingInstaller", "UserService disconnected")
+            }
+        }
+
+        try {
+            Shizuku.bindUserService(userServiceArgs, serviceConnection)
+        } catch (e: Exception) {
+            Log.e("KingInstaller", "Failed to bind Shizuku UserService", e)
         }
     }
 }

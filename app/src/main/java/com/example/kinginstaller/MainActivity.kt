@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -48,7 +47,7 @@ class MainActivity : AppCompatActivity() {
                 
                 // Fix post-installazione per Shizuku
                 if (shizukuTrickEnabled || ShizukuUtils.isShizukuAvailable()) {
-                    ShizukuUtils.setInstallerViaShizuku(packageName)
+                    ShizukuUtils.setInstallerViaShizuku(context, packageName)
                 }
                 
                 // Fix post-installazione per Root
@@ -157,6 +156,11 @@ class MainActivity : AppCompatActivity() {
         oppoTrickEnabled = getSharedPreferences("oppo_trick_value", MODE_PRIVATE).getBoolean("oppo_trick_value", false)
         rootTrickEnabled = getSharedPreferences("root_trick_value", MODE_PRIVATE).getBoolean("root_trick_value", false)
         shizukuTrickEnabled = getSharedPreferences("shizuku_trick_value", MODE_PRIVATE).getBoolean("shizuku_trick_value", false)
+
+        if (shizukuTrickEnabled && !ShizukuUtils.isShizukuAvailable()) {
+            shizukuTrickEnabled = false
+            saveMethodSelection()
+        }
 
         syncSwitches()
         if (shizukuTrickEnabled) {
@@ -285,6 +289,12 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, R.string.error_occurred, Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        // Imposta lo stato del focus in modo pulito
+        ShizukuUtils.InstallationState.isFocusLost = !hasFocus
     }
 
     private fun checkShizukuPermission() {
@@ -455,7 +465,8 @@ class MainActivity : AppCompatActivity() {
         try {
             val filepath = selectedFilePath ?: return Toast.makeText(this, R.string.select_a_file, Toast.LENGTH_SHORT).show()
             if (!packageManager.canRequestPackageInstalls()) {
-                startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply { data = Uri.parse("package:$packageName") })
+                startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply { data =
+                    "package:$packageName".toUri() })
                 return
             }
             val myFile = File(filepath)
@@ -464,6 +475,29 @@ class MainActivity : AppCompatActivity() {
             updateComponentStates(installing = true)
             val intent = InstallationUtils.createInstallIntent(this, myFile)
             // Usiamo startActivityForResult (richiesto per EXTRA_NOT_UNKNOWN_SOURCE)
+            startActivityForResult(intent, 100)
+            findViewById<TextView>(R.id.textViewError).text = ""
+        } catch (e: Exception) {
+            findViewById<TextView>(R.id.textViewError).text = getString(R.string.error_occurred, e.toString())
+        }
+    }
+
+    fun triggerFallbackInstall(filepath: String) {
+        try {
+            if (!packageManager.canRequestPackageInstalls()) {
+                startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply { data = "package:$packageName".toUri() })
+                return
+            }
+            val myFile = File(filepath)
+            if (!myFile.exists()) {
+                Toast.makeText(this, R.string.file_error, Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            // Nasconde correttamente l'app (come fa il tasto install)
+            updateComponentStates(installing = true)
+
+            val intent = InstallationUtils.createInstallIntent(this, myFile)
             startActivityForResult(intent, 100)
             findViewById<TextView>(R.id.textViewError).text = ""
         } catch (e: Exception) {
@@ -508,7 +542,7 @@ class MainActivity : AppCompatActivity() {
                 try {
                     @Suppress("InlinedApi")
                     val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply { 
-                        data = Uri.parse("package:$packageName") 
+                        data = "package:$packageName".toUri()
                     }
                     startActivityForResult(intent, 2)
                 } catch (e: Exception) {
