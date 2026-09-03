@@ -74,6 +74,7 @@ object InstallationUtils {
         // è quello che il sistema processa con più "trucchi" legacy.
         return Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
             setData(fileUri)
+            setPackage(GOOGLE_INSTALLER_PKG)
             flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
             
             putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
@@ -117,9 +118,8 @@ object InstallationUtils {
             }
 
             val isPlayStoreInstalling = installing == VENDING_PKG
-            val isValidInitiating = initiating == VENDING_PKG || 
-                                   initiating == "com.google.android.packageinstaller" ||
-                                   (initiating?.contains("packageinstaller") == true)
+            val isValidInitiating = initiating == VENDING_PKG ||
+                                   initiating?.contains("packageinstaller") == true
 
             isPlayStoreInstalling && (initiating == null || isValidInitiating)
         } catch (e: Exception) {

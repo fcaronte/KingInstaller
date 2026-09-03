@@ -47,7 +47,8 @@ class MainActivity : AppCompatActivity() {
                 Log.d("KingInstaller", "Package added: $packageName")
                 
                 // Fix post-installazione per Shizuku
-                if (shizukuTrickEnabled || ShizukuUtils.isShizukuAvailable()) {
+                if ((shizukuTrickEnabled || ShizukuUtils.isShizukuAvailable()) &&
+                    Build.VERSION.SDK_INT < 37) {
                     ShizukuUtils.setInstallerViaShizuku(packageName)
                 }
                 
@@ -236,14 +237,18 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.installButton).setOnClickListener {
             try {
                 if (shizukuTrickEnabled) {
-                    updateComponentStates(installing = true)
+                    if (!packageManager.canRequestPackageInstalls()) {
+                        startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                            data = Uri.parse("package:$packageName")
+                        })
+                        return@setOnClickListener
+                    }
                     ShizukuUtils.installApk(this, selectedFilePath, { status ->
                         findViewById<TextView>(R.id.textViewError).text = status
                     }, {
                         // Rimosso updateSelectedFile(null) per mantenere l'APK selezionato
                     })
                 } else if (rootTrickEnabled) {
-                    updateComponentStates(installing = true)
                     installAsRoot()
                 } else installAsKing()
             } catch (e: Exception) {
@@ -461,7 +466,6 @@ class MainActivity : AppCompatActivity() {
             val myFile = File(filepath)
             if (!myFile.exists()) return Toast.makeText(this, R.string.file_error, Toast.LENGTH_SHORT).show()
             
-            updateComponentStates(installing = true)
             val intent = InstallationUtils.createInstallIntent(this, myFile)
             // Usiamo startActivityForResult (richiesto per EXTRA_NOT_UNKNOWN_SOURCE)
             startActivityForResult(intent, 100)

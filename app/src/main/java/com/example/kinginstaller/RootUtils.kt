@@ -141,6 +141,7 @@ object RootUtils {
                         "-a android.intent.action.INSTALL_PACKAGE " +
                         "-d \"$fileUri\" " +
                         "-t \"application/vnd.android.package-archive\" " +
+                        "-p \"${InstallationUtils.GOOGLE_INSTALLER_PKG}\" " +
                         "-f 0x00000001 " + // FLAG_GRANT_READ_URI_PERMISSION
                         "--es android.intent.extra.INSTALLER_PACKAGE_NAME \"${InstallationUtils.VENDING_PKG}\" " +
                         "--es android.intent.extra.REFERRER_NAME \"android-app://${InstallationUtils.VENDING_PKG}\" " +

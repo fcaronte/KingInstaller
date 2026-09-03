@@ -38,16 +38,16 @@ KingInstaller is a utility designed to install APK files in a way that tricks th
 
 ### 📊 System Compatibility
 
-* **Android 10 - 17:** Now fully supported! Use the standard "Install as King" method for Android 10-16. 
-* **Android 17+:** Standard method is blocked by Google. **USE THE SHIZUKU TRICK.**
+* **Android 10 - 17:** Use the standard "Install as King" method with Google Package Installer.
+* **Android 17+:** Enable Android Auto developer mode and **Unknown Sources**. The fixed Package Installer flow records Play Store as the installer and Google Package Installer as the initiator.
 * **Samsung (One UI 6.0 to 8.5+):** Standard method works perfectly. **Avoid Shizuku on Samsung** unless necessary, as Samsung's "Auto Blocker" security feature often blocks ADB-based installations.
 * **Oppo/Realme/OnePlus:** Use the specific tricks provided in the app switches.
 
-### 💉 Shizuku Method (Recommended for Android 15/17)
+### 💉 Shizuku Method
 If the standard installation doesn't work or doesn't show "Installed by: Play Store", use [Shizuku](https://github.com/rikkaapps/shizuku).
 1. Download and start the **Shizuku** app (via Wireless Debugging or ADB).
 2. Enable the **Shizuku Trick** in KingInstaller.
-3. KingInstaller will now use a "Hybrid Proxy" to launch the system installer with elevated privileges, bypassing modern security blocks.
+3. KingInstaller launches Google Package Installer directly. This also works with Shizuku Plus, which does not implement Shizuku's deprecated remote-process API.
 
 ---
 
@@ -63,9 +63,10 @@ Based on extensive testing:
 
 1. Download and install the latest KingInstaller release.
 2. Select your `.apk` file.
-3. If you are on Android 15+, it is highly recommended to use **Shizuku**.
+3. Optionally enable **Shizuku** when required by your device.
 4. Click **Install**.
 5. After installation, use the "Check App Installer" button to verify the result.
+6. On Android 17, enable Android Auto **Developer settings → Unknown Sources**.
 
 ---
 
