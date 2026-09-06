@@ -1,6 +1,10 @@
 ---
 
-# KingInstaller
+[🇺🇸 English](https://www.google.com/search?q=%23-english) | [🇮🇹 Italiano](https://www.google.com/search?q=%23-italiano)
+
+---
+
+# KingInstaller (English)
 
 Install packages "as Google Play Store" to work around restrictions! Useful for Android Auto.
 
@@ -12,70 +16,117 @@ KingInstaller is a utility designed to install APK files in a way that tricks th
 
 ---
 
-## 📸 Screenshots
+## ✨ Features & Recent Updates (v1.9)
 
-<p align="center">
-  <img src="assets/1.png" width="200" />
-  <img src="assets/2.png" width="200" />
-  <img src="assets/3.png" width="200" />
-  <img src="assets/4.png" width="200" />
-</p>
-
----
-
-## ✨ Features & Recent Updates (v1.7)
-
-* **Hybrid Installation (Shizuku/Root):** New advanced method for Android 15/17 that ensures "Requested by: Package Installer" and "Installed by: Play Store".
+* **Hybrid Installation Architecture:** Combines direct intents, Shizuku remote `UserService` (supporting **Standard Shizuku**, **ShizukuPlus**, and **Plus Drop-In**), and Root execution.
+* **Smart Workflow:** Streamlined installation flow recommending the classic method first, falling back to Shizuku, and utilizing Root as the ultimate solution when needed.
 * **Auto-Fixer:** Automatically repairs the installer identity immediately after installation if Shizuku or Root is available.
 * **Material Design 3 UI:** Modernized interface embracing clean layouts and Material 3 guidelines.
-* **Support the Project:** Added a quick link to support development via PayPal.
 * **App Diagnostic Checker:** Built-in tool to inspect how the system perceives an installed application.
 * **Android Auto Settings Shortcut:** Quick shortcut button to jump straight into AA settings.
 
 ---
 
-## ⚠️ Compatibility & Android Auto Requirements
+## ⚠️ Compatibility & Recommended Installation Workflow
 
-### 📊 System Compatibility
+To get the best results across different devices and Android versions, follow this progressive approach:
 
-* **Android 10 - 17:** Now fully supported! Use the standard "Install as King" method for Android 10-16. 
-* **Android 17+:** Standard method is blocked by Google. **USE THE SHIZUKU TRICK.**
-* **Samsung (One UI 6.0 to 8.5+):** Standard method works perfectly. **Avoid Shizuku on Samsung** unless necessary, as Samsung's "Auto Blocker" security feature often blocks ADB-based installations.
-* **Oppo/Realme/OnePlus:** Use the specific tricks provided in the app switches.
+### 1️⃣ Step 1: The Classic Method (Recommended First)
 
-### 💉 Shizuku Method (Recommended for Android 15/17)
-If the standard installation doesn't work or doesn't show "Installed by: Play Store", use [Shizuku](https://github.com/rikkaapps/shizuku).
-1. Download and start the **Shizuku** app (via Wireless Debugging or ADB).
-2. Enable the **Shizuku Trick** in KingInstaller.
-3. KingInstaller will now use a "Hybrid Proxy" to launch the system installer with elevated privileges, bypassing modern security blocks.
+* **How to use:** Just select your APK and hit **Install** normally (without enabling any switches).
+* On many stock devices and custom ROMs (especially Android 10–16), the system installer handles the spoofing flags automatically. Always try this first.
+
+### 2️⃣ Step 2: The Shizuku Trick (If Step 1 fails)
+
+* **When to use:** If the classic installation doesn't flag the app as coming from the Play Store or Android Auto rejects it.
+* **How to use:** Start your preferred Shizuku implementation (**Standard**, **ShizukuPlus**, or **Plus Drop-In**), enable the **Shizuku Trick** switch in KingInstaller, and try again. KingInstaller will use a secure remote `UserService` via IPC binding to force the correct installer metadata.
+* **Xiaomi / MIUI / HyperOS Note:** If Shizuku commands appear blocked or fail to trigger the installer, ensure you have enabled both **USB Debugging** and **"Install via USB"** (or *USB Debugging (Security Settings)*) in your device's Developer Options.
+
+### 3️⃣ Step 3: The Root Method (Ultimate Fallback)
+
+* **When to use:** If both the classic method and Shizuku fail due to heavy vendor security restrictions.
+* **How to use:** Enable the **Root Trick** switch. This grants KingInstaller direct root-level execution via `su` to manipulate the package manager service directly.
 
 ---
 
 ## 🚗 Android Auto Rules & Insights
 
 Based on extensive testing:
+
 * **The Golden Rule:** For an app to work in Android Auto, the **"Requested by"** field should ideally be the Package Installer, while the **"Installed by"** field **MUST be the Play Store**.
-* **The ADB Trap:** Standard ADB installs (`com.android.shell`) are often ignored by Android Auto. v1.7 solves this via the Hybrid Shizuku method.
-
----
-
-## 🛠️ Usage
-
-1. Download and install the latest KingInstaller release.
-2. Select your `.apk` file.
-3. If you are on Android 15+, it is highly recommended to use **Shizuku**.
-4. Click **Install**.
-5. After installation, use the "Check App Installer" button to verify the result.
+* **Experimental Tweaks:** Due to the wide variety of custom ROMs and security patches across manufacturers, certain installation flags or behavior may require a trial-and-error approach.
 
 ---
 
 ## ☕ Support my work
+
 If KingInstaller helped you, consider supporting the project:
-[**Donate via PayPal**](https://www.paypal.com/paypalme/FCaronte/2)
+**[Donate via PayPal](https://www.paypal.com/paypalme/FCaronte/2)**
 
 ---
 
-## 📝 Notes & Limitations
+# KingInstaller (Italiano)
 
-* Make sure to enable **Unknown Sources** in Android Auto's Developer Settings.
-* Some apps carry hardcoded restrictions. Consider using Xposed modules if KingInstaller alone isn't enough.
+Installa pacchetti "come Google Play Store" per aggirare le restrizioni! Utile per Android Auto.
+
+---
+
+## 🚀 Cos'è KingInstaller?
+
+KingInstaller è un'utilità progettata per installare file APK ingannando il sistema (e Android Auto) facendogli credere che l'applicazione provenga direttamente dal Google Play Store ufficiale, aiutando ad aggirare le specifiche restrizioni di visibilità delle app.
+
+---
+
+## ✨ Funzionalità e Ulteriori Aggiornamenti (v1.9)
+
+* **Architettura di Installazione Ibrida:** Combina intent diretti, `UserService` remoto di Shizuku (con supporto a **Shizuku Standard**, **ShizukuPlus** e **Plus Drop-In**) ed esecuzione tramite Root.
+* **Flusso Intelligente:** Processo di installazione ottimizzato che consiglia prima il metodo classico, passando a Shizuku in caso di problemi e riservando il Root come soluzione definitiva.
+* **Auto-Fixer:** Ripara automaticamente l'identità dell'installer subito dopo l'installazione se Shizuku o il Root sono disponibili.
+* **Interfaccia Material Design 3:** Design moderno basato su linee pulite e linee guida Material 3.
+* **Diagnostica App Integrata:** Strumento integrato per verificare come il sistema percepisce l'applicazione installata.
+* **Scorciatoia Impostazioni Android Auto:** Pulsante rapido per accedere direttamente alle impostazioni di AA.
+
+---
+
+## ⚠️ Compatibilità e Flusso di Installazione Consigliato
+
+Per ottenere i risultati migliori su diversi dispositivi e versioni Android, segui questo approccio progressivo:
+
+### 1️⃣ Passo 1: Il Metodo Classico (Consigliato per primo)
+
+* **Come usarlo:** Seleziona semplicemente il tuo APK e premi **Installa** normalmente (senza attivare alcunché).
+* Su molti dispositivi stock e custom ROM (specialmente Android 10–16), il programma di installazione gestisce i flag di spoofing automaticamente. Prova sempre prima questo.
+
+### 2️⃣ Passo 2: Il Trucco Shizuku (Se il Passo 1 fallisce)
+
+* **Quando usarlo:** Se l'installazione classica non contrassegna l'app come proveniente dal Play Store o se Android Auto la rifiuta.
+* **Come usarlo:** Avvia la tua implementazione di Shizuku preferita (**Standard**, **ShizukuPlus** o **Plus Drop-In**), attiva l'interruttore **Shizuku** in KingInstaller e riprova. KingInstaller utilizzerà un `UserService` sicuro tramite IPC binding per forzare i metadati corretti dell'installer.
+* **Nota per Xiaomi / MIUI / HyperOS:** Se i comandi Shizuku sembrano bloccati o non attivano l'installazione, assicurati di aver abilitato sia **Debug USB** che **"Installa via USB"** (o *Debug USB (Impostazioni di sicurezza)*) nelle Opzioni sviluppatore del dispositivo.
+
+### 3️⃣ Passo 3: Il Metodo Root (Soluzione di riserva estrema)
+
+* **Quando usarlo:** Se sia il metodo classico che Shizuku falliscono a causa di rigide restrizioni di sicurezza del produttore.
+* **Come usarlo:** Attiva l'interruttore **Root**. Questo concederà a KingInstaller l'esecuzione diretta con privilegi di root tramite `su` per manipolare direttamente il servizio di package manager.
+
+---
+
+## 🚗 Regole e Consigli per Android Auto
+
+Basato su test approfonditi:
+
+* **La Regola d'Oro:** Affinché un'app funzioni in Android Auto, il campo **"Requested by"** (Richiesto da) dovrebbe idealmente essere il Package Installer, mentre il campo **"Installed by"** (Installato da) **DEVE essere il Play Store**.
+* **Modifiche Sperimentali:** A causa della grande varietà di custom ROM e patch di sicurezza tra i vari produttori, alcuni flag d'installazione potrebbero richiedere un approccio per tentativi ed errori.
+
+---
+
+## ☕ Supporta il mio lavoro
+
+Se KingInstaller ti è stato utile, considera l'idea di supportare il progetto:
+**[Dona tramite PayPal](https://www.paypal.com/paypalme/FCaronte/2)**
+
+---
+
+## 📝 Note e Limitazioni
+
+* Assicurati di abilitare le **Origini Sconosciute** nelle impostazioni sviluppatore di Android Auto.
+* Alcune app presentano restrizioni cablate. Prendi in considerazione l'utilizzo di moduli Xposed se KingInstaller da solo non dovesse bastare.
