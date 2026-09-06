@@ -13,9 +13,13 @@ import rikka.shizuku.Shizuku
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
 object ShizukuUtils {
+
+    // Guardia per evitare installazioni multiple o loop di esecuzione in parallelo
+    private val isInstalling = AtomicBoolean(false)
 
     fun isShizukuAvailable(): Boolean {
         return try {
@@ -108,6 +112,12 @@ object ShizukuUtils {
             return
         }
 
+        // Blocca richieste multiple simultanee (evita i loop di installazione su S24 e altri dispositivi)
+        if (!isInstalling.compareAndSet(false, true)) {
+            Log.w("ShizukuUtils", "Installation already in progress, ignoring duplicate request.")
+            return
+        }
+
         onStatusUpdate("Launching Shizuku Install...")
 
         thread {
@@ -138,7 +148,7 @@ object ShizukuUtils {
                         "--ez android.intent.extra.NOT_UNKNOWN_SOURCE true"
 
                 InstallationState.isFocusLost = false
-                var success = false
+                var commandSent = false
 
                 // TENTATIVO 1: Proviamo prima con il metodo classico (runShizukuShell / newProcess)
                 try {
@@ -148,14 +158,14 @@ object ShizukuUtils {
                             output.contains("Exception", ignoreCase = true)
 
                     if (!hasError) {
-                        success = true
+                        commandSent = true
                     }
                 } catch (e: Exception) {
                     Log.w("ShizukuUtils", "Classic Shizuku method failed, switching to UserService...", e)
                 }
 
                 // TENTATIVO 2: Se il metodo classico ha fallito (es. su ShizukuPlus), usiamo il UserService via AIDL
-                if (!success) {
+                if (!commandSent) {
                     val userServiceArgs = Shizuku.UserServiceArgs(
                         ComponentName(context, MyUserService::class.java)
                     ).tag("king_installer_service")
@@ -185,25 +195,27 @@ object ShizukuUtils {
                     try {
                         Shizuku.bindUserService(userServiceArgs, serviceConnection)
                         Thread.sleep(600) // Attesa avvio servizio
-                        success = true
+                        commandSent = true
                     } catch (ex: Exception) {
                         Log.e("KingInstaller", "UserService fallback also failed", ex)
                     }
                 }
 
-                // Controllo finale dello spostamento del focus sull'installer
-                if (success) {
+                // CONTROLLO EFFETTIVO DEL FOCUS:
+                // Se il dispositivo blocca silenziosamente l'intent (es. Xiaomi), isFocusLost resterà false e attiveremo il fallback.
+                var actualSuccess = false
+                if (commandSent) {
                     val startTime = System.currentTimeMillis()
                     while (System.currentTimeMillis() - startTime < 1500) {
                         if (InstallationState.isFocusLost) {
-                            success = true
+                            actualSuccess = true
                             break
                         }
                         Thread.sleep(40)
                     }
                 }
 
-                if (success) {
+                if (actualSuccess) {
                     activity.runOnUiThread {
                         onStatusUpdate("")
                         onSuccess()
@@ -220,11 +232,15 @@ object ShizukuUtils {
                 activity.runOnUiThread {
                     onStatusUpdate(activity.getString(R.string.error_occurred, e.toString()))
                 }
+            } finally {
+                // Rilasciamo la guardia dopo un breve delay per consentire nuove installazioni future
+                thread {
+                    Thread.sleep(2000)
+                    isInstalling.set(false)
+                }
             }
         }
     }
-
-
 
     fun setInstallerViaShizuku(context: android.content.Context, packageName: String) {
         val userServiceArgs = Shizuku.UserServiceArgs(
