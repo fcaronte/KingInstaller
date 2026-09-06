@@ -99,6 +99,19 @@ class MainActivity : AppCompatActivity() {
         checkShizukuPermission()
     }
 
+    private val binderDeadListener = Shizuku.OnBinderDeadListener {
+        // Eseguiamo i controlli solo se l'utente stava effettivamente usando Shizuku
+        if (shizukuTrickEnabled) {
+            runOnUiThread {
+                shizukuTrickEnabled = false
+                saveMethodSelection()
+                syncSwitches()
+                updateComponentStates()
+                findViewById<TextView>(R.id.textViewError).text = getString(R.string.shizuku_not_available)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -108,6 +121,7 @@ class MainActivity : AppCompatActivity() {
         title = "${getString(R.string.app_name)} v$version"
 
         Shizuku.addRequestPermissionResultListener(shizukuListener)
+        Shizuku.addBinderDeadListener(binderDeadListener)
 
         val filter = IntentFilter(Intent.ACTION_PACKAGE_ADDED).apply {
             addDataScheme("package")
