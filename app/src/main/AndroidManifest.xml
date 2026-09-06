@@ -82,11 +82,16 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
-        <service
-            android:name=".MyUserService"
+
+
+        <receiver
+            android:name=".InstallationResultReceiver"
             android:exported="true"
-            android:process=":remote"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="com.example.kinginstaller.INSTALL_COMPLETE" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

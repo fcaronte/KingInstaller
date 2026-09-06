@@ -7,8 +7,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.Menu
@@ -39,37 +42,69 @@ class MainActivity : AppCompatActivity() {
 
     private val shizukuRequestCode = 1001
 
+    private val processedPackages = mutableMapOf<String, Long>()
+
     private val packageAddedReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == Intent.ACTION_PACKAGE_ADDED) {
                 val packageName = intent.data?.schemeSpecificPart ?: return
+                val lastProcessed = processedPackages[packageName] ?: 0L
+                val currentTime = System.currentTimeMillis()
+                if (currentTime - lastProcessed < 5000) {
+                    return
+                }
+                processedPackages[packageName] = currentTime
+
                 Log.d("KingInstaller", "Package added: $packageName")
-                
-                // Fix post-installazione per Shizuku
-                if (shizukuTrickEnabled || ShizukuUtils.isShizukuAvailable()) {
-                    ShizukuUtils.setInstallerViaShizuku(context, packageName)
+
+                val tvError = findViewById<TextView>(R.id.textViewError)
+                val installButton = findViewById<Button>(R.id.installButton)
+
+                // 1. Feedback Visivo di Attesa Immediato (Anti-Freeze UI)
+                runOnUiThread {
+                    tvError.text = "Verifica e ottimizzazione compatibilità in corso..."
+                    tvError.setTextColor(Color.parseColor("#FFA000")) // Arancione/giallo
+                    installButton.isEnabled = false
                 }
                 
                 // Fix post-installazione per Root
                 if (rootTrickEnabled || RootUtils.isDeviceRooted) {
-                    RootUtils.setInstallerViaRoot(packageName)
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        RootUtils.setInstallerViaRoot(packageName)
+                    }, 200)
                 }
 
-                // Eseguiamo un check reale della compatibilità dopo un breve ritardo per permettere al fix di agire
-                findViewById<View>(R.id.main).postDelayed({
-                    val isAACompatible = InstallationUtils.isAACompatible(this@MainActivity, packageName)
-                    val tvError = findViewById<TextView>(R.id.textViewError)
-                    
-                    runOnUiThread {
-                        if (isAACompatible) {
-                            tvError.text = getString(R.string.install_success_aa)
-                            tvError.setTextColor(getColor(R.color.aa_green_text))
+                // 3. Reactive Polling (Zero Timer Fissi): ogni 150 ms per massimo 3 secondi
+                val handler = Handler(Looper.getMainLooper())
+                val startTime = System.currentTimeMillis()
+                val timeoutMillis = 3000L
+                val intervalMillis = 150L
+
+                val pollingRunnable = object : Runnable {
+                    override fun run() {
+                        val isCompatible = InstallationUtils.isAACompatible(context, packageName)
+                        val elapsed = System.currentTimeMillis() - startTime
+
+                        if (isCompatible) {
+                            runOnUiThread {
+                                tvError.text = getString(R.string.install_success_aa)
+                                tvError.setTextColor(getColor(R.color.aa_green_text))
+                                installButton.isEnabled = true
+                                updateComponentStates(installing = false)
+                            }
+                        } else if (elapsed >= timeoutMillis) {
+                            runOnUiThread {
+                                tvError.text = getString(R.string.install_success_no_aa)
+                                tvError.setTextColor(getColor(R.color.aa_red_text))
+                                installButton.isEnabled = true
+                                updateComponentStates(installing = false)
+                            }
                         } else {
-                            tvError.text = getString(R.string.install_success_no_aa)
-                            tvError.setTextColor(getColor(R.color.aa_red_text))
+                            handler.postDelayed(this, intervalMillis)
                         }
                     }
-                }, 1500)
+                }
+                handler.post(pollingRunnable)
             }
         }
     }
@@ -253,19 +288,10 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.installButton).setOnClickListener {
             try {
-                if (shizukuTrickEnabled) {
-                    updateComponentStates(installing = true)
-                    ShizukuUtils.installApk(this, selectedFilePath, { status ->
-                        findViewById<TextView>(R.id.textViewError).text = status
-                    }, {
-                        // Rimosso updateSelectedFile(null) per mantenere l'APK selezionato
-                    })
-                } else if (rootTrickEnabled) {
-                    updateComponentStates(installing = true)
-                    installAsRoot()
-                } else installAsKing()
+                startInstallation()
             } catch (e: Exception) {
                 findViewById<TextView>(R.id.textViewError).text = getString(R.string.error_occurred, e.toString())
+                updateComponentStates(installing = false)
             }
         }
 
@@ -376,7 +402,7 @@ class MainActivity : AppCompatActivity() {
                 val tempApk = File(dir, "google_installer.apk")
                 File(sourceDir).inputStream().use { input -> tempApk.outputStream().use { output -> input.copyTo(output) } }
                 updateSelectedFile(tempApk.absolutePath)
-                installAsKing()
+                startInstallation()
             } else {
                 findViewById<TextView>(R.id.textViewError).setText(R.string.error_google_installer_not_found)
             }
@@ -475,47 +501,61 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun installAsKing() {
-        try {
-            val filepath = selectedFilePath ?: return Toast.makeText(this, R.string.select_a_file, Toast.LENGTH_SHORT).show()
-            if (!packageManager.canRequestPackageInstalls()) {
-                startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply { data =
-                    "package:$packageName".toUri() })
-                return
-            }
-            val myFile = File(filepath)
-            if (!myFile.exists()) return Toast.makeText(this, R.string.file_error, Toast.LENGTH_SHORT).show()
-            
-            updateComponentStates(installing = true)
-            val intent = InstallationUtils.createInstallIntent(this, myFile)
-            // Usiamo startActivityForResult (richiesto per EXTRA_NOT_UNKNOWN_SOURCE)
-            startActivityForResult(intent, 100)
-            findViewById<TextView>(R.id.textViewError).text = ""
-        } catch (e: Exception) {
-            findViewById<TextView>(R.id.textViewError).text = getString(R.string.error_occurred, e.toString())
+    private fun startInstallation() {
+        val filepath = selectedFilePath 
+        if (filepath == null) {
+            Toast.makeText(this, R.string.select_a_file, Toast.LENGTH_SHORT).show()
+            return
         }
-    }
 
-    fun triggerFallbackInstall(filepath: String) {
-        try {
+        val myFile = File(filepath)
+        if (!myFile.exists()) {
+            Toast.makeText(this, R.string.file_error, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        updateComponentStates(installing = true)
+        findViewById<TextView>(R.id.textViewError).text = ""
+
+        if (shizukuTrickEnabled) {
+            // FLUSSO SHIZUKU PURO (Nessun fallback al classico se fallisce)
+            Log.d("MainActivity", "Avvio installazione tramite Metodo Shizuku (scelta utente).")
+            
+            if (!ShizukuUtils.isShizukuAvailable() || !ShizukuUtils.hasShizukuPermission()) {
+                findViewById<TextView>(R.id.textViewError).text = "Errore: Shizuku non attivo o permessi negati."
+                updateComponentStates(installing = false)
+                return
+            }
+
+            ShizukuUtils.installApk(this, filepath, { status ->
+                findViewById<TextView>(R.id.textViewError).text = status
+            }, {
+                // Successo Shizuku
+            })
+            
+        } else if (rootTrickEnabled) {
+            // FLUSSO ROOT PURO
+            Log.d("MainActivity", "Avvio installazione tramite Metodo Root (scelta utente).")
+            installAsRoot()
+        } else {
+            // FLUSSO CLASSICO / NATIVO PURO (Nessun tentativo con Shizuku)
+            Log.d("MainActivity", "Avvio installazione tramite Metodo Classico (scelta utente).")
+            
             if (!packageManager.canRequestPackageInstalls()) {
-                startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply { data = "package:$packageName".toUri() })
-                return
-            }
-            val myFile = File(filepath)
-            if (!myFile.exists()) {
-                Toast.makeText(this, R.string.file_error, Toast.LENGTH_SHORT).show()
+                startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply { 
+                    data = "package:$packageName".toUri() 
+                })
+                updateComponentStates(installing = false)
                 return
             }
 
-            // Nasconde correttamente l'app (come fa il tasto install)
-            updateComponentStates(installing = true)
-
-            val intent = InstallationUtils.createInstallIntent(this, myFile)
-            startActivityForResult(intent, 100)
-            findViewById<TextView>(R.id.textViewError).text = ""
-        } catch (e: Exception) {
-            findViewById<TextView>(R.id.textViewError).text = getString(R.string.error_occurred, e.toString())
+            try {
+                val intent = InstallationUtils.createInstallIntent(this, myFile)
+                startActivityForResult(intent, 100)
+            } catch (e: Exception) {
+                findViewById<TextView>(R.id.textViewError).text = getString(R.string.error_occurred, e.toString())
+                updateComponentStates(installing = false)
+            }
         }
     }
 
@@ -539,6 +579,8 @@ class MainActivity : AppCompatActivity() {
         } else if (requestCode == 2) {
             Toast.makeText(this, R.string.permission_not_granted, Toast.LENGTH_SHORT).show()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) requestPermissions()
+        } else if (requestCode == 100) {
+            updateComponentStates(installing = false)
         }
     }
 
