@@ -40,11 +40,11 @@ To get the best results across different devices and Android versions, follow th
 
 * **When to use:** If the classic installation doesn't flag the app as coming from the Play Store or Android Auto rejects it.
 * **How to use:** Start your preferred Shizuku implementation (**Standard**, **ShizukuPlus**, or **Plus Drop-In**), enable the **Shizuku Trick** switch in KingInstaller, and try again. KingInstaller will use a secure remote `UserService` via IPC binding to force the correct installer metadata.
-* **Xiaomi / MIUI / HyperOS Note:** If Shizuku commands appear blocked or fail to trigger the installer, ensure you have enabled both **USB Debugging** and **"Install via USB"** (or *USB Debugging (Security Settings)*) in your device's Developer Options.
+* **Xiaomi / POCO / Redmi Note:** On recent Xiaomi, POCO, and Redmi devices running MIUI or HyperOS, deep vendor restrictions block standard installation hooks and Shizuku methods. On these devices, **Shizuku usually fails**, and **Root access is currently the only reliable method** to achieve successful installation spoofing.
 
 ### 3️⃣ Step 3: The Root Method (Ultimate Fallback)
 
-* **When to use:** If both the classic method and Shizuku fail due to heavy vendor security restrictions.
+* **When to use:** If both the classic method and Shizuku fail due to heavy vendor security restrictions (mandatory for Xiaomi / POCO / Redmi).
 * **How to use:** Enable the **Root Trick** switch. This grants KingInstaller direct root-level execution via `su` to manipulate the package manager service directly.
 
 ---
@@ -101,11 +101,11 @@ Per ottenere i risultati migliori su diversi dispositivi e versioni Android, seg
 
 * **Quando usarlo:** Se l'installazione classica non contrassegna l'app come proveniente dal Play Store o se Android Auto la rifiuta.
 * **Come usarlo:** Avvia la tua implementazione di Shizuku preferita (**Standard**, **ShizukuPlus** o **Plus Drop-In**), attiva l'interruttore **Shizuku** in KingInstaller e riprova. KingInstaller utilizzerà un `UserService` sicuro tramite IPC binding per forzare i metadati corretti dell'installer.
-* **Nota per Xiaomi / MIUI / HyperOS:** Se i comandi Shizuku sembrano bloccati o non attivano l'installazione, assicurati di aver abilitato sia **Debug USB** che **"Installa via USB"** (o *Debug USB (Impostazioni di sicurezza)*) nelle Opzioni sviluppatore del dispositivo.
+* **Nota per Xiaomi / POCO / Redmi:** Sui dispositivi recenti della famiglia Xiaomi, POCO e Redmi con MIUI o HyperOS, le rigide personalizzazioni del produttore bloccano i metodi di installazione alternativi. Su questi dispositivi **il metodo Shizuku non funziona**, rendendo i **permessi di Root** l'unico metodo realmente funzionante.
 
 ### 3️⃣ Passo 3: Il Metodo Root (Soluzione di riserva estrema)
 
-* **Quando usarlo:** Se sia il metodo classico che Shizuku falliscono a causa di rigide restrizioni di sicurezza del produttore.
+* **Quando usarlo:** Se sia il metodo classico che Shizuku falliscono (obbligatorio su dispositivi Xiaomi / POCO / Redmi).
 * **Come usarlo:** Attiva l'interruttore **Root**. Questo concederà a KingInstaller l'esecuzione diretta con privilegi di root tramite `su` per manipolare direttamente il servizio di package manager.
 
 ---
@@ -121,12 +121,13 @@ Basato su test approfonditi:
 
 ## ☕ Supporta il mio lavoro
 
-Se KingInstaller ti è stato utile, considera l'idea di supportare il progetto:
-**[Dona tramite PayPal](https://www.paypal.com/paypalme/FCaronte/2)**
+If KingInstaller ti è stato utile, considera l'idea di supportare il progetto:
+**[Dona via PayPal](https://www.paypal.com/paypalme/FCaronte/2)**
 
 ---
 
 ## 📝 Note e Limitazioni
 
 * Assicurati di abilitare le **Origini Sconosciute** nelle impostazioni sviluppatore di Android Auto.
+* **Dispositivi Xiaomi / POCO / Redmi:** Su questi dispositivi (MIUI/HyperOS), i metodi standard e Shizuku non sono supportati dal sistema e falliscono regolarmente; è richiesto l'uso dei permessi di **Root**.
 * Alcune app presentano restrizioni cablate. Prendi in considerazione l'utilizzo di moduli Xposed se KingInstaller da solo non dovesse bastare.
