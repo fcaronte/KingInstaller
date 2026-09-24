@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -180,6 +181,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         handleIntent(intent)
+        updateComponentStates(installing = false)
         val tvStatus = findViewById<TextView>(R.id.textViewError)
         if (isGooglePackageExist) {
             tvStatus.setText(R.string.google_package_installer_is_installed)
@@ -417,24 +419,71 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        val data = intent?.data ?: return
+        if (intent == null) return
         val action = intent.action
-        var type = intent.type
 
         if (action == Intent.ACTION_VIEW || action == Intent.ACTION_INSTALL_PACKAGE) {
+            val data = intent.data ?: return
             if (data.toString().contains("king_install")) return
-            
-            if (type == null) type = contentResolver.getType(data)
-            if (type == null && data.toString().lowercase().endsWith(".apk")) type = "application/vnd.android.package-archive"
 
-            if (type == "application/vnd.android.package-archive" || type == "application/octet-stream" || type == null) {
+            val tvError = findViewById<TextView>(R.id.textViewError)
+            tvError.text = getString(R.string.processing_apk)
+
+            Thread {
                 try {
-                    val path = if (data.scheme == "file") data.path else InstallationUtils.copyFileToInternalStorage(this, data, "apk")
-                    if (path != null) updateSelectedFile(path)
+                    var type = intent.type
+                    if (type == null) type = contentResolver.getType(data)
+                    if (type == null && data.toString().lowercase().endsWith(".apk")) type = "application/vnd.android.package-archive"
+
+                    if (type == "application/vnd.android.package-archive" || type == "application/octet-stream" || type == null) {
+                        val path = if (data.scheme == "file") data.path else InstallationUtils.copyFileToInternalStorage(this, data, "apk")
+                        runOnUiThread {
+                            if (path != null) {
+                                updateSelectedFile(path)
+                                tvError.text = ""
+                            } else {
+                                tvError.text = getString(R.string.error_loading_apk, getString(R.string.error_copying_file))
+                            }
+                        }
+                    }
                 } catch (e: Exception) {
-                    findViewById<TextView>(R.id.textViewError).text = getString(R.string.error_loading_apk, e.message ?: "")
+                    runOnUiThread {
+                        tvError.text = getString(R.string.error_loading_apk, e.message ?: "")
+                    }
                 }
-            }
+            }.start()
+        } else if (action == Intent.ACTION_SEND) {
+            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+            } ?: return
+
+            val tvError = findViewById<TextView>(R.id.textViewError)
+            tvError.text = getString(R.string.processing_shared_apk)
+
+            Thread {
+                try {
+                    val path = if (uri.scheme == "file") uri.path else InstallationUtils.copyFileToInternalStorage(this, uri, "apk")
+                    runOnUiThread {
+                        if (path != null) {
+                            if (path.lowercase().endsWith(".apk") || InstallationUtils.getPackageNameFromApk(this, File(path)) != null) {
+                                updateSelectedFile(path)
+                                tvError.text = ""
+                            } else {
+                                tvError.text = getString(R.string.error_loading_apk, getString(R.string.error_not_valid_apk))
+                            }
+                        } else {
+                            tvError.text = getString(R.string.error_loading_apk, getString(R.string.error_copying_file))
+                        }
+                    }
+                } catch (e: Exception) {
+                    runOnUiThread {
+                        tvError.text = getString(R.string.error_loading_apk, e.message ?: "")
+                    }
+                }
+            }.start()
         }
     }
 
@@ -447,7 +496,7 @@ class MainActivity : AppCompatActivity() {
         val oppoTrickFlagged = ComponentName(packageName, "$packageName.OppoTrick")
         try {
             val apkState = if (installing) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-            val oppoState = if (installing && oppoTrickEnabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED 
+            val oppoState = if (installing && oppoTrickEnabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
                             else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
             
             pm.setComponentEnabledSetting(apkHandler, apkState, PackageManager.DONT_KILL_APP)

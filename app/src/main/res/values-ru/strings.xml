@@ -64,4 +64,8 @@
     <string name="support_my_work">Поддержать мою работу</string>
     <string name="install_success_aa">App installed successfully! (AA Compatible)</string>
     <string name="install_success_no_aa">App installed, but might NOT be AA compatible. Check details.</string>
+    <string name="processing_apk">Обработка файла APK…</string>
+    <string name="processing_shared_apk">Обработка общего файла APK…</string>
+    <string name="error_copying_file">Ошибка копирования файла</string>
+    <string name="error_not_valid_apk">Неверный файл APK</string>
 </resources>
