@@ -496,7 +496,7 @@ class MainActivity : AppCompatActivity() {
         val oppoTrickFlagged = ComponentName(packageName, "$packageName.OppoTrick")
         try {
             val apkState = if (installing) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-            val oppoState = if (installing && oppoTrickEnabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            val oppoState = if (installing && oppoTrickEnabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED 
                             else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
             
             pm.setComponentEnabledSetting(apkHandler, apkState, PackageManager.DONT_KILL_APP)
@@ -565,6 +565,10 @@ class MainActivity : AppCompatActivity() {
 
         updateComponentStates(installing = true)
         findViewById<TextView>(R.id.textViewError).text = ""
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            updateComponentStates(installing = false)
+        }, 1000L)
 
         if (shizukuTrickEnabled) {
             // FLUSSO SHIZUKU PURO (Nessun fallback al classico se fallisce)
