@@ -77,7 +77,7 @@ dependencies {
     implementation libs.core.ktx
     implementation libs.material
     implementation libs.constraintlayout
-    implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:4.3'
+    implementation libs.hiddenapibypass
 
     def shizuku_version = '13.1.5'
     implementation libs.api
