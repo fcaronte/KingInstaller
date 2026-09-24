@@ -16,11 +16,9 @@ KingInstaller is a utility designed to install APK files in a way that tricks th
 
 ---
 
-## ✨ Features & Recent Updates
+## ✨ Features & Recent Updates (v1.9)
 
 * **Hybrid Installation Architecture:** Combines direct intents, Shizuku remote `UserService` (supporting **Standard Shizuku**, **ShizukuPlus**, and **Plus Drop-In**), and Root execution.
-* **Open With & Share With Support:** Seamlessly open or share APK files from file managers, download managers, or messaging apps directly to KingInstaller with automatic path selection.
-* **Large APK Optimization & Robust Handling:** Asynchronous background file processing for large APKs preventing ANR/crashes, paired with smart auto-recovery handlers.
 * **Smart Workflow:** Streamlined installation flow recommending the classic method first, falling back to Shizuku, and utilizing Root as the ultimate solution when needed.
 * **Auto-Fixer:** Automatically repairs the installer identity immediately after installation if Shizuku or Root is available.
 * **Material Design 3 UI:** Modernized interface embracing clean layouts and Material 3 guidelines.
@@ -79,11 +77,9 @@ KingInstaller è un'utilità progettata per installare file APK ingannando il si
 
 ---
 
-## ✨ Funzionalità e Ulteriori Aggiornamenti
+## ✨ Funzionalità e Ulteriori Aggiornamenti (v1.9)
 
 * **Architettura di Installazione Ibrida:** Combina intent diretti, `UserService` remoto di Shizuku (con supporto a **Shizuku Standard**, **ShizukuPlus** e **Plus Drop-In**) ed esecuzione tramite Root.
-* **Supporto "Apri con" e "Condividi con":** Apri o condividi file APK direttamente da file manager, gestori di download o app di messaggistica con selezione automatica del percorso.
-* **Ottimizzazione APK Grandi & Gestione Robusta:** Elaborazione asincrona in background per APK di grandi dimensioni (evitando crash/ANR) e recupero automatico dello stato.
 * **Flusso Intelligente:** Processo di installazione ottimizzato che consiglia prima il metodo classico, passando a Shizuku in caso di problemi e riservando il Root come soluzione definitiva.
 * **Auto-Fixer:** Ripara automaticamente l'identità dell'installer subito dopo l'installazione se Shizuku o il Root sono disponibili.
 * **Interfaccia Material Design 3:** Design moderno basato su linee pulite e linee guida Material 3.
@@ -109,7 +105,7 @@ Per ottenere i risultati migliori su diversi dispositivi e versioni Android, seg
 
 ### 3️⃣ Passo 3: Il Metodo Root (Soluzione di riserva estrema)
 
-* **Когда usarlo:** Se sia il metodo classico che Shizuku falliscono (obbligatorio su dispositivi Xiaomi / POCO / Redmi).
+* **Quando usarlo:** Se sia il metodo classico che Shizuku falliscono (obbligatorio su dispositivi Xiaomi / POCO / Redmi).
 * **Come usarlo:** Attiva l'interruttore **Root**. Questo concederà a KingInstaller l'esecuzione diretta con privilegi di root tramite `su` per manipolare direttamente il servizio di package manager.
 
 ---

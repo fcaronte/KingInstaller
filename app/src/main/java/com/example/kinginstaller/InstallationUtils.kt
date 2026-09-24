@@ -44,8 +44,15 @@ object InstallationUtils {
             )
             val nameIndex = returnCursor?.getColumnIndex(OpenableColumns.DISPLAY_NAME) ?: -1
             returnCursor?.moveToFirst()
-            val name = if (nameIndex != -1) returnCursor?.getString(nameIndex) else "temp.apk"
+            var name = if (nameIndex != -1) returnCursor?.getString(nameIndex) else "temp.apk"
             returnCursor?.close()
+
+            if (name.isNullOrEmpty()) {
+                name = "temp.apk"
+            }
+            if (!name.lowercase().endsWith(".apk")) {
+                name = "$name.apk"
+            }
 
             val dir = if (newDirName.isNotEmpty()) {
                 File(context.filesDir, newDirName).apply { if (!exists()) mkdir() }
@@ -53,7 +60,7 @@ object InstallationUtils {
                 context.filesDir
             }
             
-            val output = File(dir, name ?: "temp.apk")
+            val output = File(dir, name)
             context.contentResolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(output).use { out ->
                     input.copyTo(out)
@@ -65,6 +72,7 @@ object InstallationUtils {
         }
     }
 
+    @Suppress("DEPRECATION")
     @SuppressLint("RequestInstallPackagesPolicy")
     fun createInstallIntent(context: Context, apkFile: File): Intent {
         val fileUri = FileProvider.getUriForFile(
@@ -74,8 +82,8 @@ object InstallationUtils {
         )
         
         return Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
-            setData(fileUri)
-            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            setDataAndType(fileUri, "application/vnd.android.package-archive")
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
             
             putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
             putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, VENDING_PKG)
