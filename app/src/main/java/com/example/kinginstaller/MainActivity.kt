@@ -120,7 +120,7 @@ class MainActivity : AppCompatActivity() {
                 saveMethodSelection()
                 syncSwitches()
                 updateComponentStates()
-                Toast.makeText(this, "Shizuku authorized", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.shizuku_authorized, Toast.LENGTH_SHORT).show()
             } else {
                 shizukuTrickEnabled = false
                 Shizuku.removeBinderReceivedListener(binderListener)
@@ -575,7 +575,7 @@ class MainActivity : AppCompatActivity() {
             Log.d("MainActivity", "Avvio installazione tramite Metodo Shizuku (scelta utente).")
             
             if (!ShizukuUtils.isShizukuAvailable() || !ShizukuUtils.hasShizukuPermission()) {
-                findViewById<TextView>(R.id.textViewError).text = "Errore: Shizuku non attivo o permessi negati."
+                findViewById<TextView>(R.id.textViewError).text = getString(R.string.shizuku_error_inactive)
                 updateComponentStates(installing = false)
                 return
             }

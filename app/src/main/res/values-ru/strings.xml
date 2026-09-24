@@ -68,4 +68,12 @@
     <string name="processing_shared_apk">Обработка общего файла APK…</string>
     <string name="error_copying_file">Ошибка копирования файла</string>
     <string name="error_not_valid_apk">Неверный файл APK</string>
+    <string name="shizuku_authorized">Shizuku авторизован</string>
+    <string name="shizuku_error_inactive">Ошибка: Shizuku не активен или в разрешениях отказано.</string>
+    <string name="shizuku_install_start">Запуск установки Shizuku…</string>
+    <string name="file_apk_not_found">APK файл не найден</string>
+    <string name="opening_package_installer">Открытие окна PackageInstaller…</string>
+    <string name="shizuku_shell_error">ОШИБКА: Shizuku не удалось запустить установщик с правами Shell.</string>
+    <string name="launching_root_install">Запуск гибридной установки Root…</string>
+    <string name="root_error">Ошибка Root: %1$s</string>
 </resources>

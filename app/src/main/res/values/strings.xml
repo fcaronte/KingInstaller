@@ -68,4 +68,12 @@
     <string name="processing_shared_apk">Processing shared APK file…</string>
     <string name="error_copying_file">Error copying file</string>
     <string name="error_not_valid_apk">Not a valid APK</string>
+    <string name="shizuku_authorized">Shizuku authorized</string>
+    <string name="shizuku_error_inactive">Error: Shizuku not active or permissions denied.</string>
+    <string name="shizuku_install_start">Starting Shizuku installation…</string>
+    <string name="file_apk_not_found">APK file not found</string>
+    <string name="opening_package_installer">Opening PackageInstaller window…</string>
+    <string name="shizuku_shell_error">ERROR: Shizuku failed to launch installer with Shell privileges.</string>
+    <string name="launching_root_install">Launching Root Hybrid Install…</string>
+    <string name="root_error">Root Error: %1$s</string>
 </resources>

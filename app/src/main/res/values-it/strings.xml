@@ -69,4 +69,12 @@
     <string name="processing_shared_apk">Elaborazione file APK condiviso…</string>
     <string name="error_copying_file">Errore copia file</string>
     <string name="error_not_valid_apk">File APK non valido</string>
+    <string name="shizuku_authorized">Shizuku autorizzato</string>
+    <string name="shizuku_error_inactive">Errore: Shizuku non attivo o permessi negati.</string>
+    <string name="shizuku_install_start">Avvio installazione Shizuku…</string>
+    <string name="file_apk_not_found">File APK non trovato</string>
+    <string name="opening_package_installer">Apertura finestra PackageInstaller…</string>
+    <string name="shizuku_shell_error">ERRORE: Shizuku non è riuscito a lanciare l\'installatore con privilegi Shell.</string>
+    <string name="launching_root_install">Avvio installazione ibrida Root…</string>
+    <string name="root_error">Errore Root: %1$s</string>
 </resources>

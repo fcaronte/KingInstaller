@@ -118,7 +118,7 @@ object RootUtils {
     fun installApk(activity: Activity, filepath: String?, onStatusUpdate: (String) -> Unit, onSuccess: () -> Unit) {
         if (filepath == null) return
         
-        onStatusUpdate("Launching Root Hybrid Install...")
+        onStatusUpdate(activity.getString(R.string.launching_root_install))
 
         thread {
             try {
@@ -155,7 +155,7 @@ object RootUtils {
                 }
             } catch (e: Exception) {
                 activity.runOnUiThread {
-                    onStatusUpdate("Root Error: ${e.message}")
+                    onStatusUpdate(activity.getString(R.string.root_error, e.message ?: ""))
                 }
             }
         }

@@ -88,7 +88,7 @@ object ShizukuUtils {
             return
         }
 
-        onStatusUpdate("Avvio installazione Shizuku...")
+        onStatusUpdate(activity.getString(R.string.shizuku_install_start))
 
         thread {
             try {
@@ -96,7 +96,7 @@ object ShizukuUtils {
                 val context = activity.applicationContext
                 if (!apkFile.exists()) {
                     activity.runOnUiThread {
-                        showError(activity, onStatusUpdate, "File APK non trovato")
+                        showError(activity, onStatusUpdate, activity.getString(R.string.file_apk_not_found))
                         isInstalling.set(false)
                     }
                     return@thread
@@ -118,7 +118,7 @@ object ShizukuUtils {
                     } catch (_: Exception) {}
                 }
 
-                activity.runOnUiThread { onStatusUpdate("Apertura finestra PackageInstaller...") }
+                activity.runOnUiThread { onStatusUpdate(activity.getString(R.string.opening_package_installer)) }
 
                 // 2. Costruzione Intent nativo con gli extra necessari per Play Store
                 val installIntent = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
@@ -151,7 +151,7 @@ object ShizukuUtils {
                         showError(
                             activity,
                             onStatusUpdate,
-                            "ERRORE: Shizuku non è riuscito a lanciare l'installatore con privilegi Shell."
+                            activity.getString(R.string.shizuku_shell_error)
                         )
                     }
                     isInstalling.set(false)
@@ -160,7 +160,7 @@ object ShizukuUtils {
             } catch (e: Exception) {
                 Log.e("ShizukuUtils", "Errore procedura Shizuku", e)
                 activity.runOnUiThread {
-                    showError(activity, onStatusUpdate, "ERRORE: ${e.localizedMessage ?: e.message}")
+                    showError(activity, onStatusUpdate, activity.getString(R.string.error_occurred, e.localizedMessage ?: e.message))
                     isInstalling.set(false)
                 }
             }
