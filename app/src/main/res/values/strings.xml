@@ -16,8 +16,8 @@
     <string name="file_error">Error: file not exists</string>
     <string name="reset_default">Reset Default</string>
     <string name="reset_default_description">Use \"Reset Default\" button to open default Google PackageInstaller\nif you wrongly set as default and popup won\'t show anymore.\n\nAfter touch \"Reset Default\" button,\nsearch for \"Clear Default Preference\" PS.\n\nIf the button gives an error,\nit is because your phone use a different PackageInstaller\nand so you need to manually search on your phone setting.</string>
-    <string name="root_trick">Root (LineageOS)</string>
-    <string name="shizuku_trick">Shizuku (ADB)</string>
+    <string name="root_trick">Root</string>
+    <string name="shizuku_trick">Shizuku</string>
     <string name="installation_method">Installation Method</string>
     <string name="none">None</string>
     <string name="device_not_rooted">Can\'t enable, device is not Rooted</string>

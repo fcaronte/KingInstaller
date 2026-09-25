@@ -16,8 +16,8 @@
     <string name="file_error">Ошибка: файл не существует</string>
     <string name="reset_default">Сбросить значение по умолчанию</string>
     <string name="reset_default_description">Используйте кнопку \"Сбросить значение по умолчанию\", чтобы открыть Google PackageInstaller по умолчанию, если вы неправильно установили значение по умолчанию и всплывающее окно больше не будет отображаться. После нажатия кнопки \"Сбросить настройки по умолчанию\" найдите \"Очистить настройки по умолчанию\" PS если кнопка выдает ошибку, это потому, что ваш телефон использует другой PackageInstaller, и поэтому вам нужно вручную выполнить поиск в настройках вашего телефона</string>
-    <string name="root_trick">Root (LineageOS)</string>
-    <string name="shizuku_trick">Shizuku (ADB)</string>
+    <string name="root_trick">Root</string>
+    <string name="shizuku_trick">Shizuku</string>
     <string name="installation_method">Installation Method</string>
     <string name="none">None</string>
     <string name="device_not_rooted">Невозможно включить, устройство не рутировано</string>
