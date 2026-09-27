@@ -64,6 +64,8 @@
     <string name="action_check_update">Frissítések keresése</string>
     <string name="no_update_available">Nincsenek elérhető frissítések</string>
     <string name="support_my_work">Támogasd a munkámat</string>
+    <string name="donate_paypal">PayPal</string>
+    <string name="donate_buymeacoffee">Egy kávé</string>
     <string name="install_success_aa">Az alkalmazás sikeresen telepítve! (AA kompatibilis)</string>
     <string name="install_success_no_aa">Az alkalmazás telepítve van, de lehet, hogy NEM AA kompatibilis. Nézze meg a részleteket.</string>
     <string name="processing_apk">APK-fájl feldolgozása…</string>

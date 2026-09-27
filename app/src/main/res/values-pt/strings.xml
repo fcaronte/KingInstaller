@@ -63,6 +63,8 @@
     <string name="action_check_update">Verificar atualizações</string>
     <string name="no_update_available">Sem atualizações disponíveis</string>
     <string name="support_my_work">Apoiar o meu trabalho</string>
+    <string name="donate_paypal">PayPal</string>
+    <string name="donate_buymeacoffee">Pague-me um café</string>
     <string name="install_success_aa">Aplicação instalada com sucesso! (`Compatível com AA`)</string>
     <string name="install_success_no_aa">Aplicação instalada, mas pode NÃO ser compatível com AA. Verifique os detalhes.</string>
     <string name="processing_apk">A processar ficheiro APK…</string>

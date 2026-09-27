@@ -63,6 +63,8 @@
     <string name="action_check_update">Controlla aggiornamenti</string>
     <string name="no_update_available">Nessun aggiornamento disponibile</string>
     <string name="support_my_work">Supporta il mio lavoro</string>
+    <string name="donate_paypal">PayPal</string>
+    <string name="donate_buymeacoffee">Offrimi un caffè</string>
     <string name="install_success_aa">App installata con successo! (Compatibile AA)</string>
     <string name="install_success_no_aa">App installata, ma potrebbe NON essere compatibile AA. Verifica i dettagli.</string>
     <string name="processing_apk">Elaborazione file APK in corso…</string>

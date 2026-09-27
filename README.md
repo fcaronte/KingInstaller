@@ -61,7 +61,8 @@ Based on extensive testing:
 ## ☕ Support my work
 
 If KingInstaller helped you, consider supporting the project:
-**[Donate via PayPal](https://www.paypal.com/paypalme/FCaronte/2)**
+* **[Donate via PayPal](https://www.paypal.com/paypalme/FCaronte/2)**
+* **[Buy Me a Coffee](http://buymeacoffee.com/fcaronte)**
 
 ---
 
@@ -121,8 +122,9 @@ Basato su test approfonditi:
 
 ## ☕ Supporta il mio lavoro
 
-If KingInstaller ti è stato utile, considera l'idea di supportare il progetto:
-**[Dona via PayPal](https://www.paypal.com/paypalme/FCaronte/2)**
+Se KingInstaller ti è stato utile, considera l'idea di supportare il progetto:
+* **[Dona via PayPal](https://www.paypal.com/paypalme/FCaronte/2)**
+* **[Offrimi un caffè (Buy Me a Coffee)](http://buymeacoffee.com/fcaronte)**
 
 ---
 

@@ -19,6 +19,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -323,8 +324,17 @@ class MainActivity : AppCompatActivity() {
             openAndroidAutoSettings()
         }
 
-        findViewById<Button>(R.id.donateButton).setOnClickListener {
+        findViewById<ImageButton>(R.id.donatePayPalButton).setOnClickListener {
             val url = "https://www.paypal.com/paypalme/FCaronte/2"
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+            } catch (e: Exception) {
+                Toast.makeText(this, R.string.error_occurred, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        findViewById<ImageButton>(R.id.donateCoffeeButton).setOnClickListener {
+            val url = "http://buymeacoffee.com/fcaronte"
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
             } catch (e: Exception) {

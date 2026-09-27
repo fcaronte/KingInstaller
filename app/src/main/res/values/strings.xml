@@ -62,6 +62,8 @@
     <string name="action_check_update">Check for updates</string>
     <string name="no_update_available">No updates available</string>
     <string name="support_my_work">Support my work</string>
+    <string name="donate_paypal">PayPal</string>
+    <string name="donate_buymeacoffee">Buy Me a Coffee</string>
     <string name="install_success_aa">App installed successfully! (AA Compatible)</string>
     <string name="install_success_no_aa">App installed, but might NOT be AA compatible. Check details.</string>
     <string name="processing_apk">Processing APK file…</string>

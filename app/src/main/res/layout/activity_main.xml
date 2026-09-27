@@ -177,17 +177,43 @@
                 android:text="@string/install_as_king"
                 app:icon="@android:drawable/ic_menu_upload" />
 
-            <Button
-                android:id="@+id/donateButton"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginBottom="4dp"
-                android:text="@string/support_my_work"
-                android:textColor="#003087"
-                app:icon="@android:drawable/ic_menu_send"
-                app:iconTint="#003087" />
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:padding="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/support_my_work"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:layout_marginEnd="16dp" />
+
+                <ImageButton
+                    android:id="@+id/donatePayPalButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginEnd="12dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/donate_paypal"
+                    android:src="@drawable/ic_paypal"
+                    android:scaleType="fitCenter"
+                    android:padding="6dp" />
+
+                <ImageButton
+                    android:id="@+id/donateCoffeeButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/donate_buymeacoffee"
+                    android:src="@drawable/ic_buymeacoffee"
+                    android:scaleType="fitCenter"
+                    android:padding="6dp" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"

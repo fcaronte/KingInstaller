@@ -63,6 +63,8 @@
     <string name="action_check_update">अपडेट के लिए जांचें</string>
     <string name="no_update_available">कोई अपडेट उपलब्ध नहीं है</string>
     <string name="support_my_work">मेरे काम का समर्थन करें</string>
+    <string name="donate_paypal">पेपैल</string>
+    <string name="donate_buymeacoffee">मुझे एक कॉफी खरीदें</string>
     <string name="install_success_aa">ऐप सफलतापूर्वक स्थापित हो गया! (AA संगत)</string>
     <string name="install_success_no_aa">ऐप स्थापित हो गया, लेकिन AA संगत नहीं हो सकता है।</string>
     <string name="processing_apk">APK फ़ाइल संसाधित हो रही है…</string>

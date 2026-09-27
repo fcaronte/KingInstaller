@@ -63,6 +63,8 @@
     <string name="action_check_update">التحقق من وجود تحديثات</string>
     <string name="no_update_available">لا توجد تحديثات متوفرة</string>
     <string name="support_my_work">ادعم عملي</string>
+    <string name="donate_paypal">بايبال</string>
+    <string name="donate_buymeacoffee">اشتري لي قهوة</string>
     <string name="install_success_aa">تم تثبيت التطبيق بنجاح! (متوافق مع AA)</string>
     <string name="install_success_no_aa">تم تثبيت التطبيق، ولكن قد لا يكون متوافقاً مع AA. تحقق من التفاصيل.</string>
     <string name="processing_apk">جاري معالجة ملف APK…</string>
