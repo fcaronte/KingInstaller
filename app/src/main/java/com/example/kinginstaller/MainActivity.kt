@@ -516,6 +516,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.user_info_menu, menu)
+        menu?.findItem(R.id.action_change_language)?.isVisible = isAppLanguageSettingsSupported()
         return true
     }
 
@@ -525,12 +526,32 @@ class MainActivity : AppCompatActivity() {
             R.id.action_search2 -> "https://github.com/fcaronte/KingInstaller"
             R.id.action_search3 -> "https://github.com/Rikj000/KingInstaller"
             R.id.action_site -> "https://inceptive.ru"
+            R.id.action_change_language -> {
+                openAppLanguageSettings()
+                return true
+            }
             R.id.action_check_update -> { UpdateChecker.checkForUpdates(this, manual = true); return true }
             R.id.action_about -> { showAboutDialog(); return true }
             else -> return super.onOptionsItemSelected(item)
         }
         startActivity(Intent(Intent.ACTION_VIEW).apply { data = url.toUri() })
         return true
+    }
+
+    private fun isAppLanguageSettingsSupported(): Boolean {
+        val intent = AppLanguageSettings.createSettingsIntent(packageName)
+        return AppLanguageSettings.isSupported(
+            Build.VERSION.SDK_INT,
+            intent.resolveActivity(packageManager) != null
+        )
+    }
+
+    private fun openAppLanguageSettings() {
+        try {
+            startActivity(AppLanguageSettings.createSettingsIntent(packageName))
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(this, getString(R.string.error_occurred, e.toString()), Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun showAboutDialog() {

@@ -54,6 +54,7 @@
     <string name="show_system_apps">System-Apps anzeigen</string>
     <string name="search_apps">Apps suchen…</string>
     <string name="action_about">Über</string>
+    <string name="action_change_language">Sprache ändern</string>
     <string name="app_version">Version: %1$s</string>
     <string name="testing_info">Getestet auf:\n• Pixel Emulator unter Android 16 und 17 (alles ok)\n• Samsung S24 Ultra (mit AABrowser)\n\nBesonderen Dank an Gemini ❤️\n\nBesuche AABrowser: https://github.com/fcaronte/AABrowser</string>
     <string name="update_available_title">Update verfügbar</string>

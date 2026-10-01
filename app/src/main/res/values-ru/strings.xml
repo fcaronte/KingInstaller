@@ -53,6 +53,7 @@
     <string name="show_system_apps">Show System Apps</string>
     <string name="search_apps">Search apps…</string>
     <string name="action_about">About</string>
+    <string name="action_change_language">Сменить язык</string>
     <string name="app_version">Version: %1$s</string>
     <string name="testing_info">Протестировано на:\n• Эмулятор Pixel на Android 16 и 17 (все ок)\n• Samsung S24 Ultra (с использованием AABrowser)\n\nОсобая благодарность Gemini ❤️\n\nПосмотрите AABrowser: https://github.com/fcaronte/AABrowser</string>
     <string name="update_available_title">Доступно обновление</string>

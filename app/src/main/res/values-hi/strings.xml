@@ -54,6 +54,7 @@
     <string name="show_system_apps">सिस्टम ऐप्स दिखाएं</string>
     <string name="search_apps">ऐप्स खोजें…</string>
     <string name="action_about">के बारे में</string>
+    <string name="action_change_language">भाषा बदलें</string>
     <string name="app_version">संस्करण: %1$s</string>
     <string name="testing_info">पर परीक्षण किया गया:\n• Android 16 और 17 पर पिक्सेल एमुलेटर\n• Samsung S24 Ultra\n\nGemini को विशेष धन्यवाद ❤️</string>
     <string name="update_available_title">अपडेट उपलब्ध है</string>

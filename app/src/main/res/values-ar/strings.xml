@@ -54,6 +54,7 @@
     <string name="show_system_apps">إظهار تطبيقات النظام</string>
     <string name="search_apps">البحث عن التطبيقات…</string>
     <string name="action_about">حول</string>
+    <string name="action_change_language">تغيير اللغة</string>
     <string name="app_version">الإصدار: %1$s</string>
     <string name="testing_info">تم الاختبار على:\n• محاكي Pixel على Android 16 و 17 (كل شيء جيد)\n• Samsung S24 Ultra (باستخدام AABrowser)\n\nشكر خاص لـ Gemini ❤️\n\nتحقق من AABrowser: https://github.com/fcaronte/AABrowser</string>
     <string name="update_available_title">التحديث متوفر</string>
