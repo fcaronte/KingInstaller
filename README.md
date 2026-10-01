@@ -16,12 +16,13 @@ KingInstaller is a utility designed to install APK files in a way that tricks th
 
 ---
 
-## ✨ Features & Recent Updates (v1.9)
+## ✨ Features & Recent Updates
 
-* **Hybrid Installation Architecture:** Combines direct intents, Shizuku remote `UserService` (supporting **Standard Shizuku**, **ShizukuPlus**, and **Plus Drop-In**), and Root execution.
+* **Hybrid Installation Architecture:** Combines direct intents, Shizuku remote `UserService` (supporting **Shizuku-Next**, **Standard Shizuku**, **ShizukuPlus**, and **Plus Drop-In**), and Root execution.
 * **Smart Workflow:** Streamlined installation flow recommending the classic method first, falling back to Shizuku, and utilizing Root as the ultimate solution when needed.
 * **Auto-Fixer:** Automatically repairs the installer identity immediately after installation if Shizuku or Root is available.
 * **Material Design 3 UI:** Modernized interface embracing clean layouts and Material 3 guidelines.
+* **🌍 Multilingual Experience:** KingInstaller supports multiple languages and automatically adapts the interface to the user's preferred system language for a more intuitive experience.
 * **App Diagnostic Checker:** Built-in tool to inspect how the system perceives an installed application.
 * **Android Auto Settings Shortcut:** Quick shortcut button to jump straight into AA settings.
 
@@ -39,7 +40,8 @@ To get the best results across different devices and Android versions, follow th
 ### 2️⃣ Step 2: The Shizuku Trick (If Step 1 fails)
 
 * **When to use:** If the classic installation doesn't flag the app as coming from the Play Store or Android Auto rejects it.
-* **How to use:** Start your preferred Shizuku implementation (**Standard**, **ShizukuPlus**, or **Plus Drop-In**), enable the **Shizuku Trick** switch in KingInstaller, and try again. KingInstaller will use a secure remote `UserService` via IPC binding to force the correct installer metadata.
+* **Recommended Shizuku:** Use **[Shizuku-Next](https://github.com/rushiranpise/Shizuku-Next)** by [rushiranpise](https://github.com/rushiranpise). This fork makes daily use much easier because it can **start automatically even without Wi‑Fi**. Official Shizuku on unrooted devices usually depends on Wireless debugging, so it often needs a network connection after each reboot.
+* **How to use:** Start **Shizuku-Next** (or another compatible Shizuku implementation such as Standard, ShizukuPlus, or Plus Drop-In), enable the **Shizuku Trick** switch in KingInstaller, and try again. KingInstaller will use a secure remote `UserService` via IPC binding to force the correct installer metadata.
 * **Xiaomi / POCO / Redmi Note:** On recent Xiaomi, POCO, and Redmi devices running MIUI or HyperOS, deep vendor restrictions block standard installation hooks and Shizuku methods. On these devices, **Shizuku usually fails**, and **Root access is currently the only reliable method** to achieve successful installation spoofing.
 
 ### 3️⃣ Step 3: The Root Method (Ultimate Fallback)
@@ -80,10 +82,11 @@ KingInstaller è un'utilità progettata per installare file APK ingannando il si
 
 ## ✨ Funzionalità e Ulteriori Aggiornamenti (v1.9)
 
-* **Architettura di Installazione Ibrida:** Combina intent diretti, `UserService` remoto di Shizuku (con supporto a **Shizuku Standard**, **ShizukuPlus** e **Plus Drop-In**) ed esecuzione tramite Root.
+* **Architettura di Installazione Ibrida:** Combina intent diretti, `UserService` remoto di Shizuku (con supporto a **Shizuku-Next**, **Shizuku Standard**, **ShizukuPlus** e **Plus Drop-In**) ed esecuzione tramite Root.
 * **Flusso Intelligente:** Processo di installazione ottimizzato che consiglia prima il metodo classico, passando a Shizuku in caso di problemi e riservando il Root come soluzione definitiva.
 * **Auto-Fixer:** Ripara automaticamente l'identità dell'installer subito dopo l'installazione se Shizuku o il Root sono disponibili.
 * **Interfaccia Material Design 3:** Design moderno basato su linee pulite e linee guida Material 3.
+* **🌍 Esperienza Multilingua:** KingInstaller supporta ora più lingue e adatta automaticamente l'interfaccia alla lingua preferita del sistema per un'esperienza più intuitiva.
 * **Diagnostica App Integrata:** Strumento integrato per verificare come il sistema percepisce l'applicazione installata.
 * **Scorciatoia Impostazioni Android Auto:** Pulsante rapido per accedere direttamente alle impostazioni di AA.
 
@@ -101,7 +104,8 @@ Per ottenere i risultati migliori su diversi dispositivi e versioni Android, seg
 ### 2️⃣ Passo 2: Il Trucco Shizuku (Se il Passo 1 fallisce)
 
 * **Quando usarlo:** Se l'installazione classica non contrassegna l'app come proveniente dal Play Store o se Android Auto la rifiuta.
-* **Come usarlo:** Avvia la tua implementazione di Shizuku preferita (**Standard**, **ShizukuPlus** o **Plus Drop-In**), attiva l'interruttore **Shizuku** in KingInstaller e riprova. KingInstaller utilizzerà un `UserService` sicuro tramite IPC binding per forzare i metadati corretti dell'installer.
+* **Shizuku consigliato:** Usa **[Shizuku-Next](https://github.com/rushiranpise/Shizuku-Next)** di [rushiranpise](https://github.com/rushiranpise). Questo fork rende la vita più facile perché supporta **l'avvio automatico anche senza Wi‑Fi**. Lo Shizuku ufficiale, sui dispositivi non root, di solito dipende dal Wireless debugging e dopo ogni riavvio spesso richiede una connessione di rete.
+* **Come usarlo:** Avvia **Shizuku-Next** (oppure un'altra implementazione compatibile come Standard, ShizukuPlus o Plus Drop-In), attiva l'interruttore **Shizuku** in KingInstaller e riprova. KingInstaller utilizzerà un `UserService` sicuro tramite IPC binding per forzare i metadati corretti dell'installer.
 * **Nota per Xiaomi / POCO / Redmi:** Sui dispositivi recenti della famiglia Xiaomi, POCO e Redmi con MIUI o HyperOS, le rigide personalizzazioni del produttore bloccano i metodi di installazione alternativi. Su questi dispositivi **il metodo Shizuku non funziona**, rendendo i **permessi di Root** l'unico metodo realmente funzionante.
 
 ### 3️⃣ Passo 3: Il Metodo Root (Soluzione di riserva estrema)
