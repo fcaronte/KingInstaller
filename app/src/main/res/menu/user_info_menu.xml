@@ -13,6 +13,12 @@
         android:id="@+id/action_site"
         android:title="inceptive.ru"/>
     <item
+        android:id="@+id/action_download_shizuku_next"
+        android:title="@string/download_shizuku_next"/>
+    <item
+        android:id="@+id/action_readme"
+        android:title="@string/action_readme"/>
+    <item
         android:id="@+id/action_change_language"
         android:title="@string/action_change_language"
         android:icon="@android:drawable/ic_menu_manage"/>

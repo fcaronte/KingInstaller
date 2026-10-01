@@ -526,6 +526,8 @@ class MainActivity : AppCompatActivity() {
             R.id.action_search2 -> "https://github.com/fcaronte/KingInstaller"
             R.id.action_search3 -> "https://github.com/Rikj000/KingInstaller"
             R.id.action_site -> "https://inceptive.ru"
+            R.id.action_download_shizuku_next -> "https://github.com/rushiranpise/Shizuku-Next/releases"
+            R.id.action_readme -> "https://github.com/fcaronte/KingInstaller/blob/master/README.md"
             R.id.action_change_language -> {
                 openAppLanguageSettings()
                 return true

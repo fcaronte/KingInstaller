@@ -56,6 +56,8 @@
     <string name="search_apps">Alkalmazások keresése…</string>
     <string name="action_about">Névjegy</string>
     <string name="action_change_language">Nyelv módosítása</string>
+    <string name="download_shizuku_next">Shizuku Next letöltése</string>
+    <string name="action_readme">README megnyitása</string>
     <string name="app_version">Verzió: %1$s</string>
     <string name="testing_info">Tesztelve:\n• Pixel Emulator Android 16-on és 17-en (minden rendben)\n• Samsung S24 Ultra (AABrowser használatával)\n\nKülön köszönet a Gemininek ❤️\n\nNézze meg az AABrowsert: https://github.com/fcaronte/AABrowser</string>
     <string name="update_available_title">Elérhető frissítés</string>

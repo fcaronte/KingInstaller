@@ -55,6 +55,8 @@
     <string name="search_apps">搜索应用…</string>
     <string name="action_about">关于</string>
     <string name="action_change_language">更改语言</string>
+    <string name="download_shizuku_next">下载 Shizuku Next</string>
+    <string name="action_readme">打开 README</string>
     <string name="app_version">版本：%1$s</string>
     <string name="testing_info">测试设备：\n• Pixel 模拟器，Android 16 和 17（均正常）\n• Samsung S24 Ultra（使用 AABrowser）\n\n特别感谢 Gemini ❤️\n\n了解 AABrowser：https://github.com/fcaronte/AABrowser</string>
     <string name="update_available_title">有可用更新</string>

@@ -55,6 +55,8 @@
     <string name="search_apps">Pesquisar apps…</string>
     <string name="action_about">Acerca de</string>
     <string name="action_change_language">Alterar idioma</string>
+    <string name="download_shizuku_next">Descarregar Shizuku Next</string>
+    <string name="action_readme">Abrir README</string>
     <string name="app_version">Versão: %1$s</string>
     <string name="testing_info">Testado em:\n• Emulador Pixel no Android 16 e 17 (tudo ok)\n• Samsung S24 Ultra (usando AABrowser)\n\nUm agradecimento especial à Gemini ❤️\n\nVisite o AABrowser: https://github.com/fcaronte/AABrowser</string>
     <string name="update_available_title">Atualização disponível</string>
