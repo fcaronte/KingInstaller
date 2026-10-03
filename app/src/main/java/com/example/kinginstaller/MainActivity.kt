@@ -430,6 +430,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleIntent(intent: Intent?) {
         if (intent == null) return
+        val extraPath = intent.getStringExtra("selected_apk_path")
+        if (extraPath != null) {
+            updateSelectedFile(extraPath)
+            findViewById<TextView>(R.id.textViewError).text = ""
+            return
+        }
         val action = intent.action
 
         if (action == Intent.ACTION_VIEW || action == Intent.ACTION_INSTALL_PACKAGE) {

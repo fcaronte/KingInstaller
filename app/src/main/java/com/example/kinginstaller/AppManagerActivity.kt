@@ -1,5 +1,6 @@
 package com.example.kinginstaller
 
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.graphics.drawable.Drawable
 import android.os.Build
@@ -27,6 +28,7 @@ import com.google.android.material.color.DynamicColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.textfield.TextInputEditText
+import java.io.File
 import java.util.Locale
 import kotlin.concurrent.thread
 
@@ -182,7 +184,37 @@ class AppManagerActivity : AppCompatActivity() {
             MaterialAlertDialogBuilder(this)
                 .setView(dialogView)
                 .setPositiveButton(android.R.string.ok, null)
+                .setNeutralButton(getString(R.string.reinstall_with_kinginstaller)) { _, _ ->
+                    reinstallWithKingInstaller(app)
+                }
                 .show()
+        } catch (e: Exception) {
+            Toast.makeText(this, getString(R.string.error_occurred, e.message ?: e.toString()), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun reinstallWithKingInstaller(app: AppItem) {
+        try {
+            val pm = packageManager
+            val appInfo = pm.getApplicationInfo(app.packageName, 0)
+            val sourceDir = appInfo.sourceDir
+            if (sourceDir != null) {
+                val dir = File(filesDir, "apk")
+                if (!dir.exists()) dir.mkdir()
+                val targetApk = File(dir, "${app.packageName}.apk")
+                File(sourceDir).inputStream().use { input ->
+                    targetApk.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    putExtra("selected_apk_path", targetApk.absolutePath)
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                }
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, getString(R.string.error_occurred, "APK path not found"), Toast.LENGTH_SHORT).show()
+            }
         } catch (e: Exception) {
             Toast.makeText(this, getString(R.string.error_occurred, e.message ?: e.toString()), Toast.LENGTH_SHORT).show()
         }

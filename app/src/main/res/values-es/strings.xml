@@ -34,7 +34,8 @@
     <string name="permission_not_granted">Permiso no concedido</string>
     <string name="error_occurred">Error: %1$s</string>
     <string name="site_url_text">inceptive.ru</string>
-    <string name="check_app_installer">Comprobar instalador de app</string>
+    <string name="check_app_installer">Comprobar y reinstalar app</string>
+    <string name="reinstall_with_kinginstaller">Reinstalar con KingInstaller</string>
     <string name="select_app_to_check">Selecciona una app para comprobar su instalador:</string>
     <string name="app_installer_info">Info del instalador: %1$s</string>
     <string name="initiating_installer">Iniciado por: %1$s</string>

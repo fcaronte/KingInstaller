@@ -34,7 +34,8 @@
     <string name="permission_not_granted">अनुमति नहीं दी गई</string>
     <string name="error_occurred">त्रुटि: %1$s</string>
     <string name="site_url_text">inceptive.ru</string>
-    <string name="check_app_installer">ऐप इंस्टॉलर जांचें</string>
+    <string name="check_app_installer">ऐप जांचें और पुनः स्थापित करें</string>
+    <string name="reinstall_with_kinginstaller">KingInstaller के साथ पुनः स्थापित करें</string>
     <string name="select_app_to_check">इंस्टॉलर जांचने के लिए ऐप चुनें:</string>
     <string name="app_installer_info">इंस्टॉलर जानकारी: %1$s</string>
     <string name="initiating_installer">आरंभकर्ता: %1$s</string>

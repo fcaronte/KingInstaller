@@ -34,7 +34,8 @@
     <string name="permission_not_granted">未授予权限</string>
     <string name="error_occurred">错误：%1$s</string>
     <string name="site_url_text">inceptive.ru</string>
-    <string name="check_app_installer">检查应用安装来源</string>
+    <string name="check_app_installer">检查并重新安装应用</string>
+    <string name="reinstall_with_kinginstaller">使用 KingInstaller 重新安装</string>
     <string name="select_app_to_check">选择一个应用以检查其安装来源：</string>
     <string name="app_installer_info">安装来源信息：%1$s</string>
     <string name="initiating_installer">发起安装：%1$s</string>

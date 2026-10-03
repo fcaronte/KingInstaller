@@ -34,7 +34,8 @@
     <string name="permission_not_granted">لم يتم منح الإذن</string>
     <string name="error_occurred">خطأ: %1$s</string>
     <string name="site_url_text">inceptive.ru</string>
-    <string name="check_app_installer">فحص مثبت التطبيقات</string>
+    <string name="check_app_installer">فحص وإعادة تثبيت التطبيقات</string>
+    <string name="reinstall_with_kinginstaller">إعادة تثبيت باستخدام KingInstaller</string>
     <string name="select_app_to_check">اختر تطبيقاً لفحص المثبت الخاص به:</string>
     <string name="app_installer_info">معلومات المثبت: %1$s</string>
     <string name="initiating_installer">المبدئ: %1$s</string>

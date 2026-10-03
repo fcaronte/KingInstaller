@@ -34,7 +34,8 @@
     <string name="permission_not_granted">Berechtigung verweigert</string>
     <string name="error_occurred">Fehler: %1$s</string>
     <string name="site_url_text">inceptive.ru</string>
-    <string name="check_app_installer">App-Installer prüfen</string>
+    <string name="check_app_installer">App prüfen und neu installieren</string>
+    <string name="reinstall_with_kinginstaller">Mit KingInstaller neu installieren</string>
     <string name="select_app_to_check">App auswählen, um den Installer zu prüfen:</string>
     <string name="app_installer_info">Installer-Info: %1$s</string>
     <string name="initiating_installer">Initiiert von: %1$s</string>
