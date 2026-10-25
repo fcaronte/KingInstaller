@@ -23,6 +23,12 @@ object ShizukuUtils {
 
     private val isInstalling = AtomicBoolean(false)
 
+    // UserService Shizuku tenuto "caldo": lo avviamo presto (all'inizio dell'installazione)
+    // così è già connesso quando serve il fix post-installazione. Il bind tardivo (subito dopo
+    // l'installazione) su One UI/HyperOS può non connettersi in tempo — vedi log S24.
+    @Volatile private var cachedService: IMyUserService? = null
+    @Volatile private var warmConnection: ServiceConnection? = null
+
     fun isShizukuAvailable(): Boolean = try { Shizuku.pingBinder() } catch (_: Exception) { false }
 
     fun hasShizukuPermission(): Boolean = try {
@@ -104,6 +110,9 @@ object ShizukuUtils {
                     return@thread
                 }
 
+                // Pre-avvia (warm-up) il UserService così sarà pronto per il fix post-installazione.
+                prewarmUserService(context)
+
                 // 1. Condivisione URI con FileProvider
                 val fileUri = FileProvider.getUriForFile(
                     context, "${context.packageName}.provider", apkFile
@@ -178,17 +187,49 @@ object ShizukuUtils {
         }
     }
 
+    private fun buildUserServiceArgs(context: Context): Shizuku.UserServiceArgs =
+        Shizuku.UserServiceArgs(ComponentName(context.applicationContext, MyUserService::class.java))
+            .tag("king_installer_service")
+            .processNameSuffix("service")
+            .daemon(false)
+            .version(1)
+
     /**
-     * Corregge l'identità dell'installer DOPO l'installazione, eseguendo un comando diretto
-     * al package manager con privilegi Shell/Root tramite il UserService di Shizuku (AIDL).
+     * Avvia in anticipo il UserService di Shizuku e ne memorizza il binder, così la correzione
+     * dell'installer subito dopo l'installazione è immediata. Sui device che ignorano gli extra
+     * (Xiaomi MIUI/HyperOS, One UI) il bind "al volo" dopo l'installazione può non connettersi
+     * in tempo: avviarlo all'inizio dell'installazione risolve. Idempotente.
+     */
+    fun prewarmUserService(context: Context) {
+        if (!isShizukuAvailable() || !hasShizukuPermission()) return
+        if (cachedService?.asBinder()?.pingBinder() == true) return
+        try {
+            val conn = object : ServiceConnection {
+                override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+                    cachedService = if (binder != null && binder.pingBinder())
+                        IMyUserService.Stub.asInterface(binder) else null
+                    Log.d("ShizukuUtils", "UserService pronto (warm-up): ${cachedService != null}")
+                }
+
+                override fun onServiceDisconnected(name: ComponentName?) {
+                    cachedService = null
+                }
+            }
+            warmConnection = conn
+            Shizuku.bindUserService(buildUserServiceArgs(context), conn)
+        } catch (e: Exception) {
+            Log.e("ShizukuUtils", "prewarm bindUserService fallito", e)
+        }
+    }
+
+    /**
+     * Corregge l'identità dell'installer DOPO l'installazione eseguendo un comando diretto al
+     * package manager con privilegi Shell tramite il UserService di Shizuku (AIDL).
      *
-     * È il fix per le ROM cinesi (Xiaomi MIUI/HyperOS, ecc.): il loro package installer
-     * (com.miui.packageinstaller) ignora gli extra dell'intent come EXTRA_INSTALLER_PACKAGE_NAME,
-     * perciò l'unico modo affidabile per impostare "Installed by" = Play Store è un comando
-     * `set-installer` post-installazione, non un flag passato nell'intent.
-     *
-     * La chiamata binder è bloccante (esegue shell nel processo remoto) e viene fatta fuori
-     * dal main thread per non bloccare la UI.
+     * È il fix per i device che ignorano gli extra dell'intent (Xiaomi MIUI/HyperOS, One UI):
+     * l'unico modo affidabile per impostare "Installed by" = Play Store è un `set-installer`
+     * post-installazione, non un flag nell'intent. Usa il servizio già "caldo" se disponibile,
+     * altrimenti fa un bind al volo. La chiamata binder è bloccante e gira fuori dal main thread.
      */
     fun setInstallerViaShizuku(context: Context, packageName: String, onDone: ((Boolean) -> Unit)? = null) {
         if (!isShizukuAvailable() || !hasShizukuPermission()) {
@@ -196,39 +237,53 @@ object ShizukuUtils {
             return
         }
 
-        val userServiceArgs = Shizuku.UserServiceArgs(
-            ComponentName(context, MyUserService::class.java)
-        ).tag("king_installer_service")
-            .processNameSuffix("service")
-            .daemon(false)
-            .version(1)
-
-        val connection = object : ServiceConnection {
-            override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
-                val conn = this
-                thread {
-                    var success = false
-                    try {
-                        if (binder != null && binder.pingBinder()) {
-                            IMyUserService.Stub.asInterface(binder)
-                                .setInstaller(packageName, InstallationUtils.VENDING_PKG)
-                            success = true
-                            Log.d("ShizukuUtils", "Installer forzato a Play Store per $packageName via UserService")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("ShizukuUtils", "setInstaller via UserService fallito", e)
-                    } finally {
-                        try { Shizuku.unbindUserService(userServiceArgs, conn, true) } catch (_: Exception) {}
-                        onDone?.invoke(success)
-                    }
+        // Percorso rapido: servizio già connesso (warm-up).
+        val warm = cachedService
+        if (warm?.asBinder()?.pingBinder() == true) {
+            thread {
+                var ok = false
+                try {
+                    warm.setInstaller(packageName, InstallationUtils.VENDING_PKG)
+                    ok = true
+                    Log.d("ShizukuUtils", "Installer forzato a Play Store (warm) per $packageName")
+                } catch (e: Exception) {
+                    Log.e("ShizukuUtils", "setInstaller (warm) fallito", e)
+                    cachedService = null
                 }
+                onDone?.invoke(ok)
             }
-
-            override fun onServiceDisconnected(name: ComponentName?) {}
+            return
         }
 
+        // Fallback: bind al volo (memorizzando il servizio per i prossimi usi).
         try {
-            Shizuku.bindUserService(userServiceArgs, connection)
+            val connection = object : ServiceConnection {
+                override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+                    thread {
+                        var ok = false
+                        try {
+                            if (binder != null && binder.pingBinder()) {
+                                val svc = IMyUserService.Stub.asInterface(binder)
+                                cachedService = svc
+                                svc.setInstaller(packageName, InstallationUtils.VENDING_PKG)
+                                ok = true
+                                Log.d("ShizukuUtils", "Installer forzato a Play Store per $packageName via UserService")
+                            } else {
+                                Log.w("ShizukuUtils", "UserService binder nullo/non attivo per $packageName")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("ShizukuUtils", "setInstaller via UserService fallito", e)
+                        } finally {
+                            onDone?.invoke(ok)
+                        }
+                    }
+                }
+
+                override fun onServiceDisconnected(name: ComponentName?) {
+                    cachedService = null
+                }
+            }
+            Shizuku.bindUserService(buildUserServiceArgs(context), connection)
         } catch (e: Exception) {
             Log.e("ShizukuUtils", "bindUserService fallito", e)
             onDone?.invoke(false)
