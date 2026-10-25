@@ -27,6 +27,23 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
 - **`com.android.shell` + `com.android.vending`**: **FALLISCE**. Se il pacchetto risulta installato da Play Store ma avviato da Shell ADB, Android Auto rifiuta l'app e la nasconde dalla dashboard dell'auto.
 - **`Package Installer` + `com.android.vending`**: **SUCCESSO**. L'app viene correttamente riconosciuta e mostrata in Android Auto.
 
+### 1.4. ROM Cinesi (Xiaomi / MIUI / HyperOS) — Gli Extra dell'Intent Vengono Ignorati
+- **Causa**: su MIUI/HyperOS gli intent di installazione sono dirottati verso `com.miui.packageinstaller`, che **ignora gli extra** (`EXTRA_INSTALLER_PACKAGE_NAME`, `REFERRER_NAME`, `ORIGINATING_PACKAGE`, ecc.). L'app viene quindi installata con "Installed by" errato **sia col metodo classico sia con Shizuku**.
+- **Fix affidabile**: impostare l'installer **dopo** l'installazione, con un comando diretto al package manager eseguito con privilegi (Shell via Shizuku `UserService`, oppure Root):
+  `cmd package set-installer-package --user 0 <pkg> com.android.vending` (con fallback `pm set-installer <pkg> com.android.vending`).
+- **Implementazione**: `ShizukuUtils.setInstallerViaShizuku()` fa il bind di `MyUserService` (AIDL) ed esegue il comando; `RootUtils.setInstallerViaRoot()` fa lo stesso via `su`. Il `packageAddedReceiver` in `MainActivity` lancia il fix in modo **reattivo**: solo se, dopo un breve margine (`fixGraceMillis`), l'app non risulta già `isAACompatible`. Timeout del polling esteso a 4 s per dare tempo al cold-start del `UserService`.
+- **Limite del metodo classico puro**: senza privilegi (né Root né Shizuku) su Xiaomi NON è possibile correggere "Installed by" dopo che l'installer MIUI ha ignorato gli extra. Root/Shizuku restano necessari.
+- **Nota su "Requested by"**: `set-installer` cambia solo "Installed by" (`installingPackageName`). "Requested by" (`initiatingPackageName`) resta quello del dialog (es. `com.miui.packageinstaller`, che contiene "packageinstaller" e quindi supera `isAACompatible`). Non è modificabile dopo l'installazione.
+
+### 1.5. Invarianti UI Installer (NON regredire)
+- Il **finto installer di King** (activity-alias `.OppoTrick`, schema `package`) deve essere **visibile solo** durante l'installazione in **modalità Oppo**. Fuori da quella modalità resta disabilitato.
+- Durante "Installa con King" l'alias `.ApkHandler` viene **disabilitato** così King non compare nel chooser dell'installer di sistema (evita tap per errore). Gestito da `updateComponentStates(installing)`.
+- Aprendo un APK **dall'esterno** (file manager / "condividi con"), King **deve** restare tra le app con cui aprire, caricando l'APK pronto all'installazione: l'alias `.ApkHandler` è abilitato a riposo e riabilitato in `onResume`.
+
+### 1.6. Policy per Versione Android
+- **Android 15+ (API 35)**: lo switch **Oppo/Realme/OnePlus** è nascosto (non più utile) e disattivato se residuo da sessioni precedenti.
+- **Fino ad Android 14 (API 34)**: il suggerimento iniziale basato sul package installer rilevato (`isGooglePackageExist`) viene mostrato; su API ≥ 35 è soppresso perché l'euristica non è più attendibile.
+
 ---
 
 ## 2. Current Status & Milestone
@@ -38,6 +55,8 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
   - Supporto nativo per la selezione della lingua per-app (Android 13+ / API 33).
   - Diagnostic Checker integrato per verificare "Installed By" e "Requested By".
   - Gestione sicura di file di grandi dimensioni tramite URI `FileProvider` asincroni.
+  - Fix installer **post-installazione reattivo** per Xiaomi via Shizuku (oltre che Root): vedi §1.4.
+  - **Policy per versione Android** (vedi §1.6): switch Oppo nascosto su Android 15+; suggerimento package installer solo fino ad Android 14.
 
 ---
 
@@ -54,8 +73,13 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
 
 ## 4. Modified / Maintained Files Checklist
 - `app/build.gradle`: Configurato con `applicationId "com.example.kinginstaller"` e la firma di debug predefinita.
-- `app/src/main/AndroidManifest.xml`: Configurazione `FileProvider`, filtri Intent `ACTION_VIEW` e `ACTION_SEND`.
-- `PROJECT_MEMORY.md`: Questo file di memoria continua per la persistenza del contesto e delle linee guida di sviluppo.
+- `app/src/main/AndroidManifest.xml`: Configurazione `FileProvider`, filtri Intent `ACTION_VIEW` e `ACTION_SEND`, alias `.ApkHandler` e `.OppoTrick`.
+- `ShizukuUtils.kt`: Installazione via Shizuku (dialog come shell) + `setInstallerViaShizuku()` (fix post-installazione via `UserService`).
+- `RootUtils.kt`: Installazione via `su` + `setInstallerViaRoot()`.
+- `MyUserService.kt` / `IMyUserService.aidl`: `UserService` remoto che esegue `set-installer` con privilegi Shell/Root.
+- `MainActivity.kt`: Selezione metodo, `packageAddedReceiver` con polling reattivo + fix, `updateComponentStates()`, policy per versione Android.
+- `KingInstaller.md`: Questo file di memoria continua per la persistenza del contesto e delle linee guida di sviluppo.
+- `CLAUDE.md`: Istruzioni operative per le sessioni Claude (workflow, invarianti da non regredire).
 
 ---
 
