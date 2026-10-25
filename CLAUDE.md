@@ -6,8 +6,9 @@
 ## Workflow (sempre)
 - **Un commit per ogni fix diverso.** Niente commit "misti": ogni correzione/feature logicamente distinta ha il suo commit con messaggio chiaro (in italiano).
 - **Aggiorna `KingInstaller.md`** quando cambi comportamento, architettura o aggiungi un fix: è la memoria viva del progetto.
-- Compila prima di committare: `./gradlew :app:compileDebugKotlin --offline` (deve uscire con codice 0).
+- Compila prima di committare: `./gradlew :app:compileDebugKotlin --offline` (deve uscire con codice 0). Per le stringhe valida anche `:app:processDebugResources --offline`.
 - Rispondi e commenta il codice in **italiano**.
+- **App multilingue: ogni nuova stringa va tradotta in TUTTE le lingue.** File: `values/` (EN, default), `values-it`, `values-de`, `values-es`, `values-fr`, `values-ru`, `values-hu`, `values-hi`, `values-pt`, `values-ar`, `values-zh-rCN`. Lascia invariati i termini tecnici (Shizuku, Root, KingInstaller, logcat) ed escludi l'apostrofo in francese con `\'`.
 
 ## Vincoli di progetto (NON modificare)
 - **Package name**: `com.example.kinginstaller` resta invariato (compatibilità firma/aggiornamenti). Idem `namespace` e firma di debug.
