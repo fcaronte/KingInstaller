@@ -82,4 +82,6 @@
     <string name="shizuku_shell_error">ERRORE: Shizuku non è riuscito a lanciare l\'installatore con privilegi Shell.</string>
     <string name="launching_root_install">Avvio installazione ibrida Root…</string>
     <string name="root_error">Errore Root: %1$s</string>
+    <string name="fixing_installer_shizuku">Metadati non validi: correzione installer via Shizuku…</string>
+    <string name="fixing_installer_root">Metadati non validi: correzione installer via Root…</string>
 </resources>

@@ -144,6 +144,26 @@ object InstallationUtils {
         }
     }
 
+    /**
+     * Riepilogo leggibile dei campi di origine installazione, per diagnostica.
+     * Utile su Xiaomi/One UI per capire perché un'app non risulta compatibile con AA
+     * (es. "Requested by" = com.android.shell, oppure "Installed by" != com.android.vending).
+     */
+    fun getInstallSourceSummary(context: Context, packageName: String): String {
+        return try {
+            val pm = context.packageManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val info = pm.getInstallSourceInfo(packageName)
+                "Installed by: ${info.installingPackageName ?: "-"} | Requested by: ${info.initiatingPackageName ?: "-"}"
+            } else {
+                @Suppress("DEPRECATION")
+                "Installed by: ${pm.getInstallerPackageName(packageName) ?: "-"}"
+            }
+        } catch (e: Exception) {
+            "install source n/d (${e.message})"
+        }
+    }
+
     fun getPackageNameFromApk(context: Context, apkFile: File): String? {
         return try {
             val pm = context.packageManager

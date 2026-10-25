@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     var shizukuTrickEnabled: Boolean = false
     var forceRootEnabled: Boolean = false
     private var selectedFilePath: String? = null
+    private var lastInstalledPackage: String? = null
 
     private val shizukuRequestCode = 1001
 
@@ -58,6 +59,7 @@ class MainActivity : AppCompatActivity() {
                 processedPackages[packageName] = currentTime
 
                 Log.d("KingInstaller", "Package added: $packageName")
+                lastInstalledPackage = packageName
 
                 val tvError = findViewById<TextView>(R.id.textViewError)
                 val installButton = findViewById<Button>(R.id.installButton)
@@ -69,14 +71,15 @@ class MainActivity : AppCompatActivity() {
                     installButton.isEnabled = false
                 }
                 
-                // 3. Polling reattivo: ogni 150 ms verifichiamo la compatibilità AA.
-                //    Se dopo un breve margine i metadati NON risultano corretti (tipico di
-                //    Xiaomi/MIUI/HyperOS, che ignora gli extra dell'intent), forziamo UNA
-                //    volta l'installer a Play Store con privilegi Root o Shizuku, poi
-                //    continuiamo a controllare che la correzione sia andata a buon fine.
+                // 3. Polling reattivo CON FEEDBACK VISIBILE: ogni 150 ms verifichiamo la
+                //    compatibilità AA. Se dopo un breve margine i metadati NON risultano
+                //    corretti (tipico di Xiaomi/MIUI/HyperOS che ignora gli extra dell'intent,
+                //    ma possibile anche su One UI), forziamo UNA volta l'installer a Play Store
+                //    con privilegi Root o Shizuku mostrando lo stato, poi controlliamo l'esito.
+                //    In caso di fallimento mostriamo i valori reali di install-source per diagnosi.
                 val handler = Handler(Looper.getMainLooper())
                 val startTime = System.currentTimeMillis()
-                val timeoutMillis = 4000L
+                val timeoutMillis = 6000L
                 val intervalMillis = 150L
                 val fixGraceMillis = 500L
 
@@ -95,19 +98,38 @@ class MainActivity : AppCompatActivity() {
                                 updateComponentStates(installing = false)
                             }
                         } else if (!fixAttempted && elapsed >= fixGraceMillis) {
-                            // L'installazione non ha prodotto l'identità corretta: proviamo
-                            // il fix privilegiato una sola volta, poi lasciamo proseguire il polling.
+                            // Identità non corretta: tentiamo UNA volta il fix privilegiato,
+                            // segnalandolo in UI così è chiaro che il fix è stato avviato.
                             fixAttempted = true
                             when {
-                                rootTrickEnabled || RootUtils.isDeviceRooted ->
+                                rootTrickEnabled || RootUtils.isDeviceRooted -> {
+                                    runOnUiThread {
+                                        tvError.text = getString(R.string.fixing_installer_root)
+                                        tvError.setTextColor(Color.parseColor("#FFA000"))
+                                    }
                                     RootUtils.setInstallerViaRoot(packageName)
-                                shizukuTrickEnabled || (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission()) ->
-                                    ShizukuUtils.setInstallerViaShizuku(applicationContext, packageName)
+                                    handler.postDelayed(this, intervalMillis)
+                                }
+                                shizukuTrickEnabled || (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission()) -> {
+                                    runOnUiThread {
+                                        tvError.text = getString(R.string.fixing_installer_shizuku)
+                                        tvError.setTextColor(Color.parseColor("#FFA000"))
+                                    }
+                                    ShizukuUtils.setInstallerViaShizuku(applicationContext, packageName) { ok ->
+                                        if (!ok) Log.w("KingInstaller", "setInstallerViaShizuku: UserService non raggiungibile per $packageName")
+                                    }
+                                    handler.postDelayed(this, intervalMillis)
+                                }
+                                else -> {
+                                    // Nessun metodo privilegiato attivo: non possiamo correggere i metadati.
+                                    handler.postDelayed(this, intervalMillis)
+                                }
                             }
-                            handler.postDelayed(this, intervalMillis)
                         } else if (elapsed >= timeoutMillis) {
+                            val summary = InstallationUtils.getInstallSourceSummary(context, packageName)
+                            Log.w("KingInstaller", "AA non compatibile per $packageName -> $summary")
                             runOnUiThread {
-                                tvError.text = getString(R.string.install_success_no_aa)
+                                tvError.text = getString(R.string.install_success_no_aa) + "\n" + summary
                                 tvError.setTextColor(getColor(R.color.aa_red_text))
                                 installButton.isEnabled = true
                                 updateComponentStates(installing = false)
