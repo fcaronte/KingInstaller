@@ -223,20 +223,58 @@ object ShizukuUtils {
     }
 
     /**
-     * Corregge l'identità dell'installer DOPO l'installazione eseguendo un comando diretto al
-     * package manager con privilegi Shell tramite il UserService di Shizuku (AIDL).
-     *
-     * È il fix per i device che ignorano gli extra dell'intent (Xiaomi MIUI/HyperOS, One UI):
-     * l'unico modo affidabile per impostare "Installed by" = Play Store è un `set-installer`
-     * post-installazione, non un flag nell'intent. Usa il servizio già "caldo" se disponibile,
-     * altrimenti fa un bind al volo. La chiamata binder è bloccante e gira fuori dal main thread.
+     * Imposta "Installed by" = Play Store chiamando direttamente
+     * `IPackageManager.setInstallerPackageName` tramite il binder di sistema wrappato da Shizuku —
+     * la STESSA tecnica usata per l'installazione (`startInstallActivityAsShell`), senza dover
+     * avviare un UserService. È la via più affidabile: funziona ovunque funzioni il binder di
+     * Shizuku, anche dove il UserService non si connette (es. l'S24 di test). `method.invoke`
+     * senza eccezioni = comando accettato; un rifiuto (SecurityException) viene propagato e
+     * gestito dal chiamante come fallimento.
+     */
+    @SuppressLint("PrivateApi")
+    private fun setInstallerViaBinder(targetPackage: String): Boolean {
+        val pmBinder = SystemServiceHelper.getSystemService("package") ?: return false
+        val wrapped = ShizukuBinderWrapper(pmBinder)
+        val ipmStub = Class.forName("android.content.pm.IPackageManager\$Stub")
+        val asInterface = ipmStub.getMethod("asInterface", IBinder::class.java)
+        val ipm = asInterface.invoke(null, wrapped) ?: return false
+        val method = ipm.javaClass.methods.firstOrNull {
+            it.name == "setInstallerPackageName" &&
+                it.parameterTypes.size == 2 &&
+                it.parameterTypes.all { p -> p == String::class.java }
+        } ?: return false
+        method.invoke(ipm, targetPackage, InstallationUtils.VENDING_PKG)
+        return true
+    }
+
+    /**
+     * Corregge l'identità dell'installer DOPO l'installazione. Prova prima la via diretta via binder
+     * (`setInstallerViaBinder`); se fallisce, ripiega sul UserService (`set-installer` via shell).
+     * Entrambe girano fuori dal main thread.
      */
     fun setInstallerViaShizuku(context: Context, packageName: String, onDone: ((Boolean) -> Unit)? = null) {
         if (!isShizukuAvailable() || !hasShizukuPermission()) {
             onDone?.invoke(false)
             return
         }
+        thread {
+            val viaBinder = try {
+                setInstallerViaBinder(packageName).also {
+                    Log.d("ShizukuUtils", "setInstaller via binder per $packageName: $it")
+                }
+            } catch (e: Throwable) {
+                Log.w("ShizukuUtils", "setInstaller via binder fallito, provo UserService: ${e.message}")
+                false
+            }
+            if (viaBinder) onDone?.invoke(true) else setInstallerViaUserService(context, packageName, onDone)
+        }
+    }
 
+    /**
+     * Fallback: imposta l'installer tramite il UserService di Shizuku (AIDL → `set-installer` via
+     * shell). Usa il servizio già "caldo" se disponibile, altrimenti fa un bind al volo.
+     */
+    private fun setInstallerViaUserService(context: Context, packageName: String, onDone: ((Boolean) -> Unit)? = null) {
         // Percorso rapido: servizio già connesso (warm-up).
         val warm = cachedService
         if (warm?.asBinder()?.pingBinder() == true) {
