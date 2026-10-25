@@ -389,6 +389,14 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, R.string.error_occurred, Toast.LENGTH_SHORT).show()
             }
         }
+
+        // Funzione diagnostica nascosta: long-press sul titolo in cima condivide un report
+        // (device, ROM, stato, install-source, logcat) per raccogliere log dagli utenti Xiaomi.
+        findViewById<TextView>(R.id.titleText).setOnLongClickListener {
+            Toast.makeText(this, R.string.share_log_preparing, Toast.LENGTH_SHORT).show()
+            DiagnosticsUtils.shareDiagnostics(this, lastInstalledPackage)
+            true
+        }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

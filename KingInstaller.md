@@ -57,6 +57,8 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
   - Gestione sicura di file di grandi dimensioni tramite URI `FileProvider` asincroni.
   - Fix installer **post-installazione reattivo** per Xiaomi via Shizuku (oltre che Root): vedi §1.4.
   - **Policy per versione Android** (vedi §1.6): switch Oppo nascosto su Android 15+; suggerimento package installer solo fino ad Android 14.
+  - **Feedback del fix installer**: durante la correzione post-installazione la UI mostra lo stato (arancione) e, in caso di fallimento, i valori reali di install-source ("Installed by / Requested by").
+  - **Condivisione log diagnostico**: long-press sul titolo "Welcome to Installer!" genera e condivide un report (device, ROM MIUI/HyperOS via `getprop`, stato metodo/Shizuku/root, install-source dell'ultima app, logcat del processo) — `DiagnosticsUtils.kt`.
 
 ---
 

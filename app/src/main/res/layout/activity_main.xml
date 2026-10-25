@@ -34,6 +34,7 @@
                     android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/titleText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/welcome_to_installer"

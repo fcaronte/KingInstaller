@@ -84,4 +84,7 @@
     <string name="root_error">Errore Root: %1$s</string>
     <string name="fixing_installer_shizuku">Metadati non validi: correzione installer via Shizuku…</string>
     <string name="fixing_installer_root">Metadati non validi: correzione installer via Root…</string>
+    <string name="share_log_chooser">Condividi log KingInstaller</string>
+    <string name="share_log_error">Errore condivisione log: %1$s</string>
+    <string name="share_log_preparing">Generazione log diagnostico…</string>
 </resources>
