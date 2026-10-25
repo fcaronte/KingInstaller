@@ -44,11 +44,11 @@ To get the best results across different devices and Android versions, follow th
 * **Recommended Shizuku:** Use **[Shizuku-Next](https://github.com/rushiranpise/Shizuku-Next)** by [rushiranpise](https://github.com/rushiranpise). This fork makes daily use much easier because it can **start automatically even without Wi‑Fi**. Official Shizuku on unrooted devices usually depends on Wireless debugging, so it often needs a network connection after each reboot.
 * **How to use:** Start **Shizuku-Next** (or another compatible Shizuku implementation such as Standard, ShizukuPlus, or Plus Drop-In), enable the **Shizuku Trick** switch in KingInstaller, and try again. KingInstaller will use a secure remote `UserService` via IPC binding to force the correct installer metadata.
 * **Where Shizuku works:** On Pixel (including Android 17), Honor, Realme, RedMagic and many other devices the Shizuku trick works well — the install dialog honors the Play Store metadata directly.
-* **Xiaomi / POCO / Redmi (MIUI/HyperOS) & Vivo:** these vendors either ignore the installer metadata at install time, or block a non-root shell from setting it afterwards (Android throws `SecurityException: Caller does not have same cert as new installer package com.android.vending`). On these devices, **Shizuku without root cannot set the Play Store installer** — **Root is the only reliable method** (or start Shizuku *with* root). KingInstaller detects this and suggests trying the Classic method first, then Root.
+* **Xiaomi / POCO / Redmi (MIUI/HyperOS):** these vendors either ignore the installer metadata at install time, or block a non-root shell from setting it afterwards (Android throws `SecurityException: Caller does not have same cert as new installer package com.android.vending`). On these devices, **Shizuku without root cannot set the Play Store installer** — **Root is the only reliable method** (or start Shizuku *with* root). KingInstaller detects this and suggests trying the Classic method first, then Root. *(Vivo has also been reported as problematic, but this is unconfirmed — it may still work.)*
 
 ### 3️⃣ Step 3: The Root Method (Ultimate Fallback)
 
-* **When to use:** If both the classic method and Shizuku fail due to heavy vendor security restrictions (mandatory for Xiaomi / POCO / Redmi on MIUI/HyperOS and for Vivo).
+* **When to use:** If both the classic method and Shizuku fail due to heavy vendor security restrictions (mandatory for Xiaomi / POCO / Redmi on MIUI/HyperOS; Vivo reported but unconfirmed).
 * **How to use:** Enable the **Root Trick** switch. This grants KingInstaller direct root-level execution via `su` to manipulate the package manager service directly.
 
 ---
@@ -110,11 +110,11 @@ Per ottenere i risultati migliori su diversi dispositivi e versioni Android, seg
 * **Shizuku consigliato:** Usa **[Shizuku-Next](https://github.com/rushiranpise/Shizuku-Next)** di [rushiranpise](https://github.com/rushiranpise). Questo fork rende la vita più facile perché supporta **l'avvio automatico anche senza Wi‑Fi**. Lo Shizuku ufficiale, sui dispositivi non root, di solito dipende dal Wireless debugging e dopo ogni riavvio spesso richiede una connessione di rete.
 * **Come usarlo:** Avvia **Shizuku-Next** (oppure un'altra implementazione compatibile come Standard, ShizukuPlus o Plus Drop-In), attiva l'interruttore **Shizuku** in KingInstaller e riprova. KingInstaller utilizzerà un `UserService` sicuro tramite IPC binding per forzare i metadati corretti dell'installer.
 * **Dove Shizuku funziona:** Su Pixel (anche Android 17), Honor, Realme, RedMagic e molti altri dispositivi il trucco Shizuku funziona bene — il dialog di installazione onora direttamente i metadati del Play Store.
-* **Xiaomi / POCO / Redmi (MIUI/HyperOS) e Vivo:** questi produttori ignorano i metadati dell'installer al momento dell'installazione, oppure impediscono a uno shell non-root di impostarli dopo (Android restituisce `SecurityException: Caller does not have same cert as new installer package com.android.vending`). Su questi dispositivi **Shizuku senza root non può impostare l'installer Play Store**: serve il **Root** (oppure Shizuku avviato *con* permessi di root). KingInstaller lo rileva e suggerisce di provare prima il metodo Classico e poi il Root.
+* **Xiaomi / POCO / Redmi (MIUI/HyperOS):** questi produttori ignorano i metadati dell'installer al momento dell'installazione, oppure impediscono a uno shell non-root di impostarli dopo (Android restituisce `SecurityException: Caller does not have same cert as new installer package com.android.vending`). Su questi dispositivi **Shizuku senza root non può impostare l'installer Play Store**: serve il **Root** (oppure Shizuku avviato *con* permessi di root). KingInstaller lo rileva e suggerisce di provare prima il metodo Classico e poi il Root. *(Anche Vivo è stato segnalato come problematico, ma non è confermato — potrebbe comunque funzionare.)*
 
 ### 3️⃣ Passo 3: Il Metodo Root (Soluzione di riserva estrema)
 
-* **Quando usarlo:** Se sia il metodo classico che Shizuku falliscono per restrizioni del produttore (obbligatorio su Xiaomi / POCO / Redmi con MIUI/HyperOS e su Vivo).
+* **Quando usarlo:** Se sia il metodo classico che Shizuku falliscono per restrizioni del produttore (obbligatorio su Xiaomi / POCO / Redmi con MIUI/HyperOS; Vivo segnalato ma non confermato).
 * **Come usarlo:** Attiva l'interruttore **Root**. Questo concederà a KingInstaller l'esecuzione diretta con privilegi di root tramite `su` per manipolare direttamente il servizio di package manager.
 
 ---
@@ -139,5 +139,5 @@ Se KingInstaller ti è stato utile, considera l'idea di supportare il progetto:
 ## 📝 Note e Limitazioni
 
 * Assicurati di abilitare le **Origini Sconosciute** nelle impostazioni sviluppatore di Android Auto.
-* **Dispositivi Xiaomi / POCO / Redmi (MIUI/HyperOS) e Vivo:** su questi dispositivi i metodi standard e Shizuku (senza root) non sono supportati dal sistema e falliscono regolarmente; è richiesto l'uso dei permessi di **Root**.
+* **Dispositivi Xiaomi / POCO / Redmi (MIUI/HyperOS)** (e forse Vivo, segnalato ma non confermato): su questi dispositivi i metodi standard e Shizuku (senza root) non sono supportati dal sistema e falliscono regolarmente; è richiesto l'uso dei permessi di **Root**.
 * Alcune app presentano restrizioni cablate. Prendi in considerazione l'utilizzo di moduli Xposed se KingInstaller da solo non dovesse bastare.
