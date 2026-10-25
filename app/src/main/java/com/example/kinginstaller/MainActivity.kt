@@ -390,12 +390,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Funzione diagnostica nascosta: long-press sul titolo in cima condivide un report
-        // (device, ROM, stato, install-source, logcat) per raccogliere log dagli utenti Xiaomi.
-        findViewById<TextView>(R.id.titleText).setOnLongClickListener {
+        // Icona di condivisione accanto al titolo: genera e condivide il report diagnostico,
+        // utile per farsi mandare i log dagli utenti (Xiaomi, One UI, ecc.).
+        findViewById<ImageButton>(R.id.shareLogButton).setOnClickListener {
             Toast.makeText(this, R.string.share_log_preparing, Toast.LENGTH_SHORT).show()
             DiagnosticsUtils.shareDiagnostics(this, lastInstalledPackage)
-            true
         }
     }
 
