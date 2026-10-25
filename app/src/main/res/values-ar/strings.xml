@@ -87,4 +87,8 @@
     <string name="share_log_chooser">مشاركة سجل KingInstaller</string>
     <string name="share_log_error">خطأ في مشاركة السجل: %1$s</string>
     <string name="share_log_preparing">جارٍ إنشاء سجل التشخيص…</string>
+    <string name="not_aa_title">غير متوافق مع Android Auto</string>
+    <string name="not_aa_message">لم يتمكّن أسلوب Shizuku من تعيين المثبّت على هذا الجهاز. جرّب أولاً الأسلوب الكلاسيكي (بدون Shizuku)؛ وإن لم يكفِ فالأسلوب Root مطلوب.</string>
+    <string name="try_classic">جرّب الكلاسيكي</string>
+    <string name="fix_with_root_confirm">الإصلاح عبر Root</string>
 </resources>

@@ -88,4 +88,8 @@
     <string name="share_log_chooser">KingInstaller napló megosztása</string>
     <string name="share_log_error">Hiba a napló megosztásakor: %1$s</string>
     <string name="share_log_preparing">Diagnosztikai napló készítése…</string>
+    <string name="not_aa_title">Nem Android Auto-kompatibilis</string>
+    <string name="not_aa_message">A Shizuku módszer nem tudta beállítani a telepítőt ezen az eszközön. Próbáld előbb a Klasszikus módszert (Shizuku nélkül); ha nem elég, a Root módszer szükséges.</string>
+    <string name="try_classic">Klasszikus</string>
+    <string name="fix_with_root_confirm">Javítás Roottal</string>
 </resources>

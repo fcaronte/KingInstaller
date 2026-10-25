@@ -87,4 +87,8 @@
     <string name="share_log_chooser">分享 KingInstaller 日志</string>
     <string name="share_log_error">分享日志出错：%1$s</string>
     <string name="share_log_preparing">正在生成诊断日志…</string>
+    <string name="not_aa_title">与 Android Auto 不兼容</string>
+    <string name="not_aa_message">Shizuku 方式无法在此设备上设置安装来源。请先尝试经典方式（不使用 Shizuku）；若仍不行，则需要 Root 方式。</string>
+    <string name="try_classic">试试经典方式</string>
+    <string name="fix_with_root_confirm">用 Root 修复</string>
 </resources>

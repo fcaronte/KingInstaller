@@ -87,4 +87,8 @@
     <string name="share_log_chooser">KingInstaller-Protokoll teilen</string>
     <string name="share_log_error">Fehler beim Teilen des Protokolls: %1$s</string>
     <string name="share_log_preparing">Diagnoseprotokoll wird erstellt…</string>
+    <string name="not_aa_title">Nicht Android-Auto-kompatibel</string>
+    <string name="not_aa_message">Die Shizuku-Methode konnte den Installer auf diesem Gerät nicht setzen. Probiere zuerst die klassische Methode (ohne Shizuku); reicht das nicht, ist die Root-Methode nötig.</string>
+    <string name="try_classic">Klassische Methode</string>
+    <string name="fix_with_root_confirm">Mit Root korrigieren</string>
 </resources>

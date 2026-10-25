@@ -87,4 +87,8 @@
     <string name="share_log_chooser">KingInstaller लॉग साझा करें</string>
     <string name="share_log_error">लॉग साझा करने में त्रुटि: %1$s</string>
     <string name="share_log_preparing">डायग्नोस्टिक लॉग तैयार किया जा रहा है…</string>
+    <string name="not_aa_title">Android Auto के साथ असंगत</string>
+    <string name="not_aa_message">Shizuku तरीका इस डिवाइस पर इंस्टॉलर सेट नहीं कर सका। पहले Classic तरीका (Shizuku के बिना) आज़माएँ; अगर काफी न हो, तो Root तरीका ज़रूरी है।</string>
+    <string name="try_classic">Classic आज़माएँ</string>
+    <string name="fix_with_root_confirm">Root से ठीक करें</string>
 </resources>

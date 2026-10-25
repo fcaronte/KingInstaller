@@ -87,4 +87,8 @@
     <string name="share_log_chooser">Partager le journal KingInstaller</string>
     <string name="share_log_error">Erreur lors du partage du journal : %1$s</string>
     <string name="share_log_preparing">Génération du journal de diagnostic…</string>
+    <string name="not_aa_title">Non compatible Android Auto</string>
+    <string name="not_aa_message">La méthode Shizuku n\'a pas pu définir l\'installateur sur cet appareil. Essaie d\'abord la méthode Classique (sans Shizuku) ; si cela ne suffit pas, la méthode Root est nécessaire.</string>
+    <string name="try_classic">Essayer Classique</string>
+    <string name="fix_with_root_confirm">Corriger avec Root</string>
 </resources>

@@ -87,4 +87,8 @@
     <string name="share_log_chooser">Compartilhar registro do KingInstaller</string>
     <string name="share_log_error">Erro ao compartilhar o registro: %1$s</string>
     <string name="share_log_preparing">Gerando registro de diagnóstico…</string>
+    <string name="not_aa_title">Não compatível com o Android Auto</string>
+    <string name="not_aa_message">O método Shizuku não conseguiu definir o instalador neste dispositivo. Tente primeiro o método Clássico (sem Shizuku); se não bastar, o método Root é necessário.</string>
+    <string name="try_classic">Tentar Clássico</string>
+    <string name="fix_with_root_confirm">Corrigir com Root</string>
 </resources>
