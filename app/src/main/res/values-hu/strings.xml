@@ -83,4 +83,9 @@
     <string name="shizuku_shell_error">HIBA: A Shizuku nem tudta elindítani a telepítőt Shell jogosultságokkal.</string>
     <string name="launching_root_install">A Root Hybrid telepítés indítása…</string>
     <string name="root_error">Root hiba: %1$s</string>
+    <string name="fixing_installer_shizuku">Érvénytelen metaadatok: a telepítő javítása Shizukun keresztül…</string>
+    <string name="fixing_installer_root">Érvénytelen metaadatok: a telepítő javítása Rooton keresztül…</string>
+    <string name="share_log_chooser">KingInstaller napló megosztása</string>
+    <string name="share_log_error">Hiba a napló megosztásakor: %1$s</string>
+    <string name="share_log_preparing">Diagnosztikai napló készítése…</string>
 </resources>

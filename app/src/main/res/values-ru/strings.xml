@@ -81,4 +81,9 @@
     <string name="shizuku_shell_error">ОШИБКА: Shizuku не удалось запустить установщик с правами Shell.</string>
     <string name="launching_root_install">Запуск гибридной установки Root…</string>
     <string name="root_error">Ошибка Root: %1$s</string>
+    <string name="fixing_installer_shizuku">Неверные метаданные: исправление установщика через Shizuku…</string>
+    <string name="fixing_installer_root">Неверные метаданные: исправление установщика через Root…</string>
+    <string name="share_log_chooser">Поделиться журналом KingInstaller</string>
+    <string name="share_log_error">Ошибка отправки журнала: %1$s</string>
+    <string name="share_log_preparing">Создание диагностического журнала…</string>
 </resources>

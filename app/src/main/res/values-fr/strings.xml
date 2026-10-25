@@ -82,4 +82,9 @@
     <string name="shizuku_shell_error">ERREUR : Shizuku n\'a pas pu lancer l\'installateur avec les privilèges Shell.</string>
     <string name="launching_root_install">Lancement de l\'installation hybride Root…</string>
     <string name="root_error">Erreur Root : %1$s</string>
+    <string name="fixing_installer_shizuku">Métadonnées non valides : correction de l\'installateur via Shizuku…</string>
+    <string name="fixing_installer_root">Métadonnées non valides : correction de l\'installateur via Root…</string>
+    <string name="share_log_chooser">Partager le journal KingInstaller</string>
+    <string name="share_log_error">Erreur lors du partage du journal : %1$s</string>
+    <string name="share_log_preparing">Génération du journal de diagnostic…</string>
 </resources>

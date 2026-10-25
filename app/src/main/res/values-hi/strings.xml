@@ -82,4 +82,9 @@
     <string name="shizuku_shell_error">त्रुटि: Shizuku शेल विशेषाधिकारों के साथ इंस्टॉलर लॉन्च करने में विफल रहा।</string>
     <string name="launching_root_install">रूट हाइब्रिड इंस्टॉलेशन शुरू हो रहा है…</string>
     <string name="root_error">रूट त्रुटि: %1$s</string>
+    <string name="fixing_installer_shizuku">मेटाडेटा मान्य नहीं: Shizuku के ज़रिए इंस्टॉलर ठीक किया जा रहा है…</string>
+    <string name="fixing_installer_root">मेटाडेटा मान्य नहीं: Root के ज़रिए इंस्टॉलर ठीक किया जा रहा है…</string>
+    <string name="share_log_chooser">KingInstaller लॉग साझा करें</string>
+    <string name="share_log_error">लॉग साझा करने में त्रुटि: %1$s</string>
+    <string name="share_log_preparing">डायग्नोस्टिक लॉग तैयार किया जा रहा है…</string>
 </resources>

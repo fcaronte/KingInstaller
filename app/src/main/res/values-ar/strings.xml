@@ -82,4 +82,9 @@
     <string name="shizuku_shell_error">خطأ: فشل Shizuku في تشغيل المثبت بصلاحيات Shell.</string>
     <string name="launching_root_install">جاري بدء تثبيت الروت الهجين…</string>
     <string name="root_error">خطأ الروت: %1$s</string>
+    <string name="fixing_installer_shizuku">بيانات وصفية غير صالحة: جارٍ إصلاح المثبّت عبر Shizuku…</string>
+    <string name="fixing_installer_root">بيانات وصفية غير صالحة: جارٍ إصلاح المثبّت عبر Root…</string>
+    <string name="share_log_chooser">مشاركة سجل KingInstaller</string>
+    <string name="share_log_error">خطأ في مشاركة السجل: %1$s</string>
+    <string name="share_log_preparing">جارٍ إنشاء سجل التشخيص…</string>
 </resources>

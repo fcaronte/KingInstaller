@@ -82,4 +82,9 @@
     <string name="shizuku_shell_error">FEHLER: Shizuku konnte den Installer nicht mit Shell-Rechten starten.</string>
     <string name="launching_root_install">Starte Root-Hybrid-Installation…</string>
     <string name="root_error">Root-Fehler: %1$s</string>
+    <string name="fixing_installer_shizuku">Metadaten ungültig: Installer wird über Shizuku korrigiert…</string>
+    <string name="fixing_installer_root">Metadaten ungültig: Installer wird über Root korrigiert…</string>
+    <string name="share_log_chooser">KingInstaller-Protokoll teilen</string>
+    <string name="share_log_error">Fehler beim Teilen des Protokolls: %1$s</string>
+    <string name="share_log_preparing">Diagnoseprotokoll wird erstellt…</string>
 </resources>
