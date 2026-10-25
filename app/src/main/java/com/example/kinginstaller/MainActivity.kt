@@ -325,7 +325,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<ImageButton>(R.id.donatePayPalButton).setOnClickListener {
-            val url = "https://www.paypal.com/paypalme/FCaronte/2"
+            val url = "https://www.paypal.com/paypalme/FCaronte/4"
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
             } catch (e: Exception) {
