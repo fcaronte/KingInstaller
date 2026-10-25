@@ -69,20 +69,20 @@ class MainActivity : AppCompatActivity() {
                     installButton.isEnabled = false
                 }
                 
-                // Fix post-installazione per Root
-                if (rootTrickEnabled || RootUtils.isDeviceRooted) {
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        RootUtils.setInstallerViaRoot(packageName)
-                    }, 200)
-                }
-
-                // 3. Reactive Polling (Zero Timer Fissi): ogni 150 ms per massimo 3 secondi
+                // 3. Polling reattivo: ogni 150 ms verifichiamo la compatibilità AA.
+                //    Se dopo un breve margine i metadati NON risultano corretti (tipico di
+                //    Xiaomi/MIUI/HyperOS, che ignora gli extra dell'intent), forziamo UNA
+                //    volta l'installer a Play Store con privilegi Root o Shizuku, poi
+                //    continuiamo a controllare che la correzione sia andata a buon fine.
                 val handler = Handler(Looper.getMainLooper())
                 val startTime = System.currentTimeMillis()
-                val timeoutMillis = 3000L
+                val timeoutMillis = 4000L
                 val intervalMillis = 150L
+                val fixGraceMillis = 500L
 
                 val pollingRunnable = object : Runnable {
+                    var fixAttempted = false
+
                     override fun run() {
                         val isCompatible = InstallationUtils.isAACompatible(context, packageName)
                         val elapsed = System.currentTimeMillis() - startTime
@@ -94,6 +94,17 @@ class MainActivity : AppCompatActivity() {
                                 installButton.isEnabled = true
                                 updateComponentStates(installing = false)
                             }
+                        } else if (!fixAttempted && elapsed >= fixGraceMillis) {
+                            // L'installazione non ha prodotto l'identità corretta: proviamo
+                            // il fix privilegiato una sola volta, poi lasciamo proseguire il polling.
+                            fixAttempted = true
+                            when {
+                                rootTrickEnabled || RootUtils.isDeviceRooted ->
+                                    RootUtils.setInstallerViaRoot(packageName)
+                                shizukuTrickEnabled || (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission()) ->
+                                    ShizukuUtils.setInstallerViaShizuku(applicationContext, packageName)
+                            }
+                            handler.postDelayed(this, intervalMillis)
                         } else if (elapsed >= timeoutMillis) {
                             runOnUiThread {
                                 tvError.text = getString(R.string.install_success_no_aa)

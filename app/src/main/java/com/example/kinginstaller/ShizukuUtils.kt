@@ -2,8 +2,10 @@ package com.example.kinginstaller
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
 import android.util.Log
@@ -173,6 +175,63 @@ object ShizukuUtils {
             activity.findViewById<TextView>(R.id.textViewError)?.setTextColor(
                 activity.getColor(R.color.aa_red_text)
             )
+        }
+    }
+
+    /**
+     * Corregge l'identità dell'installer DOPO l'installazione, eseguendo un comando diretto
+     * al package manager con privilegi Shell/Root tramite il UserService di Shizuku (AIDL).
+     *
+     * È il fix per le ROM cinesi (Xiaomi MIUI/HyperOS, ecc.): il loro package installer
+     * (com.miui.packageinstaller) ignora gli extra dell'intent come EXTRA_INSTALLER_PACKAGE_NAME,
+     * perciò l'unico modo affidabile per impostare "Installed by" = Play Store è un comando
+     * `set-installer` post-installazione, non un flag passato nell'intent.
+     *
+     * La chiamata binder è bloccante (esegue shell nel processo remoto) e viene fatta fuori
+     * dal main thread per non bloccare la UI.
+     */
+    fun setInstallerViaShizuku(context: Context, packageName: String, onDone: ((Boolean) -> Unit)? = null) {
+        if (!isShizukuAvailable() || !hasShizukuPermission()) {
+            onDone?.invoke(false)
+            return
+        }
+
+        val userServiceArgs = Shizuku.UserServiceArgs(
+            ComponentName(context, MyUserService::class.java)
+        ).tag("king_installer_service")
+            .processNameSuffix("service")
+            .daemon(false)
+            .version(1)
+
+        val connection = object : ServiceConnection {
+            override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+                val conn = this
+                thread {
+                    var success = false
+                    try {
+                        if (binder != null && binder.pingBinder()) {
+                            IMyUserService.Stub.asInterface(binder)
+                                .setInstaller(packageName, InstallationUtils.VENDING_PKG)
+                            success = true
+                            Log.d("ShizukuUtils", "Installer forzato a Play Store per $packageName via UserService")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("ShizukuUtils", "setInstaller via UserService fallito", e)
+                    } finally {
+                        try { Shizuku.unbindUserService(userServiceArgs, conn, true) } catch (_: Exception) {}
+                        onDone?.invoke(success)
+                    }
+                }
+            }
+
+            override fun onServiceDisconnected(name: ComponentName?) {}
+        }
+
+        try {
+            Shizuku.bindUserService(userServiceArgs, connection)
+        } catch (e: Exception) {
+            Log.e("ShizukuUtils", "bindUserService fallito", e)
+            onDone?.invoke(false)
         }
     }
 }
