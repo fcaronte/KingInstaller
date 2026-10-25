@@ -83,6 +83,10 @@
     <string name="root_error">Root Error: %1$s</string>
     <string name="fixing_installer_shizuku">Metadata not valid: fixing installer via Shizuku…</string>
     <string name="fixing_installer_root">Metadata not valid: fixing installer via Root…</string>
+    <string name="not_aa_title">Not Android Auto-compatible</string>
+    <string name="not_aa_message">The Shizuku method couldn\'t set the installer on this device. Try the Classic method (without Shizuku) first; if that\'s not enough, the Root method is required.</string>
+    <string name="try_classic">Try Classic</string>
+    <string name="fix_with_root_confirm">Fix with Root</string>
     <string name="share_log_chooser">Share KingInstaller log</string>
     <string name="share_log_error">Log share error: %1$s</string>
     <string name="share_log_preparing">Generating diagnostic log…</string>

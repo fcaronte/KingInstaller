@@ -129,10 +129,15 @@ class MainActivity : AppCompatActivity() {
                             val summary = InstallationUtils.getInstallSourceSummary(context, packageName)
                             Log.w("KingInstaller", "AA non compatibile per $packageName -> $summary")
                             runOnUiThread {
-                                tvError.text = getString(R.string.install_success_no_aa) + "\n" + summary
-                                tvError.setTextColor(getColor(R.color.aa_red_text))
                                 installButton.isEnabled = true
                                 updateComponentStates(installing = false)
+                                tvError.setTextColor(getColor(R.color.aa_red_text))
+                                tvError.text = getString(R.string.install_success_no_aa) + "\n" + summary
+                                // Se il metodo Shizuku non è bastato su questo device, suggeriamo prima
+                                // il Classico (senza Shizuku) e, se rootato, offriamo anche l'opzione Root.
+                                if (shizukuTrickEnabled) {
+                                    promptNotCompatibleAfterShizuku(packageName)
+                                }
                             }
                         } else {
                             handler.postDelayed(this, intervalMillis)
@@ -642,6 +647,60 @@ class MainActivity : AppCompatActivity() {
         }, {
             // Rimosso updateSelectedFile(null) per mantenere l'APK selezionato
         })
+    }
+
+    /**
+     * Quando il metodo Shizuku non rende l'app compatibile su questo device (es. blocco "same cert"
+     * dello shell), suggeriamo di provare PRIMA il metodo Classico (senza Shizuku); solo se il device
+     * è rootato offriamo anche la correzione via Root (uid 0 aggira il controllo di firma).
+     */
+    private fun promptNotCompatibleAfterShizuku(packageName: String) {
+        val builder = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.not_aa_title)
+            .setMessage(R.string.not_aa_message)
+            .setPositiveButton(R.string.try_classic) { _, _ -> retryWithClassic() }
+            .setNegativeButton(android.R.string.cancel, null)
+        if (RootUtils.isDeviceRooted) {
+            builder.setNeutralButton(R.string.fix_with_root_confirm) { _, _ -> fixViaRootAndRecheck(packageName) }
+        }
+        builder.show()
+    }
+
+    /** Ripiega sul metodo Classico (senza Shizuku/Root) e riavvia l'installazione sullo stesso APK. */
+    private fun retryWithClassic() {
+        shizukuTrickEnabled = false
+        rootTrickEnabled = false
+        oppoTrickEnabled = false
+        Shizuku.removeBinderReceivedListener(binderListener)
+        saveMethodSelection()
+        syncSwitches()
+        startInstallation()
+    }
+
+    private fun fixViaRootAndRecheck(packageName: String) {
+        val tv = findViewById<TextView>(R.id.textViewError)
+        tv.text = getString(R.string.fixing_installer_root)
+        tv.setTextColor(Color.parseColor("#FFA000"))
+        RootUtils.setInstallerViaRoot(packageName)
+
+        val handler = Handler(Looper.getMainLooper())
+        val start = System.currentTimeMillis()
+        handler.postDelayed(object : Runnable {
+            override fun run() {
+                when {
+                    InstallationUtils.isAACompatible(this@MainActivity, packageName) -> {
+                        tv.text = getString(R.string.install_success_aa)
+                        tv.setTextColor(getColor(R.color.aa_green_text))
+                    }
+                    System.currentTimeMillis() - start >= 3000 -> {
+                        tv.text = getString(R.string.install_success_no_aa) + "\n" +
+                            InstallationUtils.getInstallSourceSummary(this@MainActivity, packageName)
+                        tv.setTextColor(getColor(R.color.aa_red_text))
+                    }
+                    else -> handler.postDelayed(this, 150)
+                }
+            }
+        }, 400)
     }
 
     private fun startInstallation() {

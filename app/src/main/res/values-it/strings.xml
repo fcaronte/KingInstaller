@@ -84,6 +84,10 @@
     <string name="root_error">Errore Root: %1$s</string>
     <string name="fixing_installer_shizuku">Metadati non validi: correzione installer via Shizuku…</string>
     <string name="fixing_installer_root">Metadati non validi: correzione installer via Root…</string>
+    <string name="not_aa_title">Non compatibile con Android Auto</string>
+    <string name="not_aa_message">Il metodo Shizuku non ha impostato l\'installer su questo dispositivo. Prova prima il metodo Classico (senza Shizuku); se non basta, serve il metodo Root.</string>
+    <string name="try_classic">Prova Classico</string>
+    <string name="fix_with_root_confirm">Correggi con Root</string>
     <string name="share_log_chooser">Condividi log KingInstaller</string>
     <string name="share_log_error">Errore condivisione log: %1$s</string>
     <string name="share_log_preparing">Generazione log diagnostico…</string>
