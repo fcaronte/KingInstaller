@@ -225,6 +225,16 @@ class MainActivity : AppCompatActivity() {
             saveMethodSelection()
         }
 
+        // La vecchia modalità Oppo/Realme/OnePlus non è più utile su Android 15+ (API 35):
+        // nascondiamo lo switch e ci assicuriamo che non resti attivo da sessioni precedenti.
+        if (Build.VERSION.SDK_INT >= 35) {
+            findViewById<MaterialSwitch>(R.id.switchOppo).visibility = View.GONE
+            if (oppoTrickEnabled) {
+                oppoTrickEnabled = false
+                saveMethodSelection()
+            }
+        }
+
         syncSwitches()
         if (shizukuTrickEnabled) {
             Shizuku.addBinderReceivedListenerSticky(binderListener)
