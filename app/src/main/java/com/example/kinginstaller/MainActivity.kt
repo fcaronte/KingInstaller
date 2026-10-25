@@ -195,10 +195,15 @@ class MainActivity : AppCompatActivity() {
         handleIntent(intent)
         updateComponentStates(installing = false)
         val tvStatus = findViewById<TextView>(R.id.textViewError)
-        if (isGooglePackageExist) {
-            tvStatus.setText(R.string.google_package_installer_is_installed)
-        } else {
-            tvStatus.setText(R.string.missing_google_package_installer)
+        // Il suggerimento basato sul package installer rilevato ("hai il Google installer
+        // -> usa il metodo no-root") ha senso solo fino ad Android 14 (API 34). Su Android 15+
+        // quell'euristica non è più attendibile, quindi non mostriamo alcun suggerimento iniziale.
+        if (Build.VERSION.SDK_INT <= 34) {
+            if (isGooglePackageExist) {
+                tvStatus.setText(R.string.google_package_installer_is_installed)
+            } else {
+                tvStatus.setText(R.string.missing_google_package_installer)
+            }
         }
 
         try {
