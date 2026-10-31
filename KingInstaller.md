@@ -44,7 +44,7 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
 - Il **finto installer di King** (activity-alias `.OppoTrick`, schema `package`) deve essere **visibile solo** durante l'installazione in **modalità Oppo**. Fuori da quella modalità resta disabilitato.
 - Durante "Installa con King" l'alias `.ApkHandler` viene **disabilitato** così King non compare nel chooser dell'installer di sistema (evita tap per errore). Gestito da `updateComponentStates(installing)`.
 - Aprendo un APK **dall'esterno** (file manager / "condividi con"), King **deve** restare tra le app con cui aprire, caricando l'APK pronto all'installazione: l'alias `.ApkHandler` è abilitato a riposo e riabilitato in `onResume`.
-- **Metodo Root**: l'`am start` dell'installazione Root deve puntare **esplicitamente** al package installer di sistema (risolto con `queryIntentActivities`, escludendo KingInstaller), altrimenti l'intent risolve su `.ApkHandler` e apre KingInstaller (nessuna installazione). L'APK va passato come **`file://`** (staging in `/data/local/tmp`, `chmod 644`): da root `am start` (uid 0) **non** può delegare il permesso di un URI `content://` (`UriGrantsManagerService: cannot issue a Uri permission grant … use startActivityAsCaller`), mentre il file staged viene letto direttamente dall'installer.
+- **Metodo Root (design)**: l'**installazione** usa lo **stesso lancio del metodo Classico** (è l'APP a lanciare il dialog di sistema e a consegnare l'APK col proprio grant URI come caller → "Requested by" = package installer). Il Root interviene **solo dopo**, nel `packageAddedReceiver`, con `setInstallerViaRoot` (uid 0 aggira il check "same cert" e imposta "Installed by" = Play Store). **NON** si lancia l'installer come root: da uid 0 l'`am start` non riesce a consegnare l'APK all'installer — né `content://` (grant non delegabile: `UriGrantsManagerService … use startActivityAsCaller`) né `file://` (rifiutato su Android recente). Questo era il bug per cui "con Root non installava".
 
 ### 1.6. Policy per Versione Android
 - **Android 15+ (API 35)**: lo switch **Oppo/Realme/OnePlus** è nascosto (non più utile) e disattivato se residuo da sessioni precedenti.
@@ -83,7 +83,7 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
 - `app/build.gradle`: Configurato con `applicationId "com.example.kinginstaller"` e la firma di debug predefinita.
 - `app/src/main/AndroidManifest.xml`: Configurazione `FileProvider`, filtri Intent `ACTION_VIEW` e `ACTION_SEND`, alias `.ApkHandler` e `.OppoTrick`.
 - `ShizukuUtils.kt`: Installazione via Shizuku (dialog come shell) + `setInstallerViaShizuku()` (fix post-installazione via `UserService`).
-- `RootUtils.kt`: Installazione via `su` + `setInstallerViaRoot()`.
+- `RootUtils.kt`: Esecuzione comandi `su` (`runSuWithCmd`) + `setInstallerViaRoot()` (fix installer post-installazione). L'installazione usa il lancio classico (vedi §1.5), non `am start` come root.
 - `MyUserService.kt` / `IMyUserService.aidl`: `UserService` remoto che esegue `set-installer` con privilegi Shell/Root.
 - `MainActivity.kt`: Selezione metodo, `packageAddedReceiver` con polling reattivo + fix, `updateComponentStates()`, policy per versione Android.
 - `KingInstaller.md`: Questo file di memoria continua per la persistenza del contesto e delle linee guida di sviluppo.

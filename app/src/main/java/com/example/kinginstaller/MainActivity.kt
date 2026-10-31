@@ -641,14 +641,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun installAsRoot() {
-        RootUtils.installApk(this, selectedFilePath, { status ->
-            findViewById<TextView>(R.id.textViewError).text = status
-        }, {
-            // Rimosso updateSelectedFile(null) per mantenere l'APK selezionato
-        })
-    }
-
     /**
      * Quando il metodo Shizuku non rende l'app compatibile su questo device (es. blocco "same cert"
      * dello shell), suggeriamo di provare PRIMA il metodo Classico (senza Shizuku); solo se il device
@@ -739,17 +731,22 @@ class MainActivity : AppCompatActivity() {
                 // Successo Shizuku
             })
             
-        } else if (rootTrickEnabled) {
-            // FLUSSO ROOT PURO
-            Log.d("MainActivity", "Avvio installazione tramite Metodo Root (scelta utente).")
-            installAsRoot()
         } else {
-            // FLUSSO CLASSICO / NATIVO PURO (Nessun tentativo con Shizuku)
-            Log.d("MainActivity", "Avvio installazione tramite Metodo Classico (scelta utente).")
-            
+            // Metodo CLASSICO e ROOT: in entrambi è l'APP a lanciare il dialog di sistema e a
+            // consegnare l'APK col proprio grant URI (come caller), quindi l'installer lo legge e
+            // "Requested by" risulta il package installer. Per il ROOT la correzione a Play Store
+            // ("Installed by") avviene DOPO, nel packageAddedReceiver via setInstallerViaRoot (uid 0
+            // aggira il check "same cert"). NON lanciamo l'installer come root: da uid 0 l'am start
+            // non riesce a consegnare l'APK/URI all'installer.
+            Log.d(
+                "MainActivity",
+                if (rootTrickEnabled) "Avvio installazione (Classico + fix installer post-installazione via Root)."
+                else "Avvio installazione tramite Metodo Classico (scelta utente)."
+            )
+
             if (!packageManager.canRequestPackageInstalls()) {
-                startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply { 
-                    data = "package:$packageName".toUri() 
+                startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                    data = "package:$packageName".toUri()
                 })
                 updateComponentStates(installing = false)
                 return
