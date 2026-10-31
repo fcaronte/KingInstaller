@@ -44,6 +44,7 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
 - Il **finto installer di King** (activity-alias `.OppoTrick`, schema `package`) deve essere **visibile solo** durante l'installazione in **modalità Oppo**. Fuori da quella modalità resta disabilitato.
 - Durante "Installa con King" l'alias `.ApkHandler` viene **disabilitato** così King non compare nel chooser dell'installer di sistema (evita tap per errore). Gestito da `updateComponentStates(installing)`.
 - Aprendo un APK **dall'esterno** (file manager / "condividi con"), King **deve** restare tra le app con cui aprire, caricando l'APK pronto all'installazione: l'alias `.ApkHandler` è abilitato a riposo e riabilitato in `onResume`.
+- **Metodo Root**: l'`am start` dell'installazione Root deve puntare **esplicitamente** al package installer di sistema (risolto con `queryIntentActivities`, escludendo KingInstaller) e usare un URI `content://` (FileProvider). Senza componente esplicito l'intent risolve su `.ApkHandler` e apre KingInstaller invece dell'installer (nessuna installazione).
 
 ### 1.6. Policy per Versione Android
 - **Android 15+ (API 35)**: lo switch **Oppo/Realme/OnePlus** è nascosto (non più utile) e disattivato se residuo da sessioni precedenti.

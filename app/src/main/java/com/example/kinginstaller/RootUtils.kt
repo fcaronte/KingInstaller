@@ -115,21 +115,48 @@ object RootUtils {
         return byteArrayOutputStream.toString("UTF-8")
     }
 
+    @Suppress("DEPRECATION")
     fun installApk(activity: Activity, filepath: String?, onStatusUpdate: (String) -> Unit, onSuccess: () -> Unit) {
         if (filepath == null) return
-        
+
         onStatusUpdate(activity.getString(R.string.launching_root_install))
 
         thread {
             try {
-                // Staging dell'APK in /data/local/tmp/ (leggibile dal package installer di sistema)
-                val tempPath = "/data/local/tmp/king_installer_temp.apk"
+                val context = activity.applicationContext
+                val apkFile = File(filepath)
 
-                // Dialog di installazione via Root: così "Requested by" resta il package installer
-                // (non shell). "Installed by" viene poi forzato a Play Store da setInstallerViaRoot.
-                val amCommand = "am start " +
+                // URI content:// via FileProvider (come il flusso Shizuku): più compatibile del file://.
+                val fileUri = FileProvider.getUriForFile(context, "${context.packageName}.provider", apkFile)
+
+                // Risolviamo l'activity del package installer DI SISTEMA (escludendo KingInstaller):
+                // senza componente esplicito, l'am start potrebbe risolvere sul nostro .ApkHandler e
+                // aprire KingInstaller invece dell'installer, senza installare nulla.
+                val probe = Intent(Intent.ACTION_INSTALL_PACKAGE)
+                    .setDataAndType(fileUri, "application/vnd.android.package-archive")
+                val myPkg = context.packageName
+                val handlers = context.packageManager.queryIntentActivities(probe, 0).map { it.activityInfo }
+                val target = handlers.firstOrNull { it.packageName != myPkg && it.packageName.contains("packageinstaller") }
+                    ?: handlers.firstOrNull { it.packageName != myPkg }
+
+                // Permesso di lettura dell'URI all'installer scelto e ai noti.
+                val grantTargets = listOfNotNull(
+                    target?.packageName,
+                    "com.google.android.packageinstaller",
+                    "com.android.packageinstaller",
+                    "com.miui.packageinstaller"
+                ).distinct()
+                grantTargets.forEach {
+                    try { context.grantUriPermission(it, fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION) } catch (_: Exception) {}
+                }
+
+                val componentArg = if (target != null) "-n ${target.packageName}/${target.name} " else ""
+
+                // Dialog di installazione via Root: "Requested by" resta il package installer (non shell);
+                // "Installed by" viene poi forzato a Play Store da setInstallerViaRoot.
+                val amCommand = "am start " + componentArg +
                         "-a android.intent.action.INSTALL_PACKAGE " +
-                        "-d \"file://$tempPath\" " +
+                        "-d \"$fileUri\" " +
                         "-t \"application/vnd.android.package-archive\" " +
                         "-f 0x00000001 " + // FLAG_GRANT_READ_URI_PERMISSION
                         "--es android.intent.extra.INSTALLER_PACKAGE_NAME \"${InstallationUtils.VENDING_PKG}\" " +
@@ -137,10 +164,8 @@ object RootUtils {
                         "--ei android.intent.extra.INSTALL_REASON 1 " + // 1 = STORE
                         "--ez android.intent.extra.NOT_UNKNOWN_SOURCE true"
 
-                // Un'unica sessione su (staging + permessi + dialog) con stop-on-error: un solo prompt root.
-                val script = "cp \"$filepath\" $tempPath && chmod 644 $tempPath && $amCommand"
-                val logs = runSuWithCmd(script)
-                Log.d("KingInstaller", "Root install -> out='${logs.getInputStreamLog()}' err='${logs.getErrorStreamLog()}'")
+                val logs = runSuWithCmd(amCommand)
+                Log.d("KingInstaller", "Root install (target=${target?.packageName ?: "?"}) -> out='${logs.getInputStreamLog()}' err='${logs.getErrorStreamLog()}'")
 
                 activity.runOnUiThread {
                     onStatusUpdate("")
