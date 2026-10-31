@@ -122,24 +122,14 @@ object RootUtils {
 
         thread {
             try {
-                val apkFile = File(filepath)
-                val context = activity.applicationContext
-                val fileUri = FileProvider.getUriForFile(
-                    context, "${context.packageName}.provider", apkFile
-                )
+                // Staging dell'APK in /data/local/tmp/ (leggibile dal package installer di sistema)
+                val tempPath = "/data/local/tmp/king_installer_temp.apk"
 
-                // 1. Concediamo i permessi (Root può farlo per chiunque)
-                val targetPackages = listOf("com.android.shell", "com.google.android.packageinstaller", "com.android.packageinstaller")
-                targetPackages.forEach { pkg ->
-                    try {
-                        context.grantUriPermission(pkg, fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    } catch (ignored: Exception) {}
-                }
-
-                // 2. Comando am start via Root (su)
+                // Dialog di installazione via Root: così "Requested by" resta il package installer
+                // (non shell). "Installed by" viene poi forzato a Play Store da setInstallerViaRoot.
                 val amCommand = "am start " +
                         "-a android.intent.action.INSTALL_PACKAGE " +
-                        "-d \"$fileUri\" " +
+                        "-d \"file://$tempPath\" " +
                         "-t \"application/vnd.android.package-archive\" " +
                         "-f 0x00000001 " + // FLAG_GRANT_READ_URI_PERMISSION
                         "--es android.intent.extra.INSTALLER_PACKAGE_NAME \"${InstallationUtils.VENDING_PKG}\" " +
@@ -147,7 +137,10 @@ object RootUtils {
                         "--ei android.intent.extra.INSTALL_REASON 1 " + // 1 = STORE
                         "--ez android.intent.extra.NOT_UNKNOWN_SOURCE true"
 
-                runSuWithCmd(amCommand)
+                // Un'unica sessione su (staging + permessi + dialog) con stop-on-error: un solo prompt root.
+                val script = "cp \"$filepath\" $tempPath && chmod 644 $tempPath && $amCommand"
+                val logs = runSuWithCmd(script)
+                Log.d("KingInstaller", "Root install -> out='${logs.getInputStreamLog()}' err='${logs.getErrorStreamLog()}'")
 
                 activity.runOnUiThread {
                     onStatusUpdate("")
@@ -163,9 +156,15 @@ object RootUtils {
 
     fun setInstallerViaRoot(packageName: String) {
         thread {
-            val cmd = "cmd package set-installer $packageName ${InstallationUtils.VENDING_PKG}"
-            runSuWithCmd(cmd)
-            Log.d("KingInstaller", "Forced installer to Play Store for $packageName via Root")
+            val target = InstallationUtils.VENDING_PKG
+            // Più varianti del comando (cambiano tra versioni Android/ROM): ci fermiamo alla prima
+            // che riesce (|| sul codice d'uscita). Come root (uid 0) il controllo di firma
+            // "same cert" del package manager viene aggirato — cosa che lo shell non può fare.
+            val cmd = "pm set-installer $packageName $target 2>&1 || " +
+                    "cmd package set-installer $packageName $target 2>&1 || " +
+                    "cmd package set-installer-package --user 0 $packageName $target 2>&1"
+            val logs = runSuWithCmd(cmd)
+            Log.d("KingInstaller", "setInstallerViaRoot($packageName) -> out='${logs.getInputStreamLog()}' err='${logs.getErrorStreamLog()}'")
         }
     }
 }

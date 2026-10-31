@@ -45,7 +45,7 @@ object DiagnosticsUtils {
         // è esattamente ciò che ci serve. Proviamo prima con i tag dell'app, poi senza filtro.
         val filtered = arrayOf(
             "logcat", "-d", "-v", "time", "-t", "2000",
-            "KingInstaller:V", "ShizukuUtils:V", "MyUserService:V",
+            "KingInstaller:V", "ShizukuUtils:V", "MyUserService:V", "RootUtils:V",
             "MainActivity:V", "InstallationResultReceiver:V", "AndroidRuntime:E", "*:S"
         )
         val unfiltered = arrayOf("logcat", "-d", "-v", "time", "-t", "1000")
