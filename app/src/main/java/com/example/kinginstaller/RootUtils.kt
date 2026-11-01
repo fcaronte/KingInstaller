@@ -123,28 +123,27 @@ object RootUtils {
     }
 
     /**
-     * Imposta Play Store come installer del pacchetto appena installato. Come root (uid 0) il
-     * controllo di firma "same cert" del package manager viene aggirato — cosa che lo shell non può
-     * fare. [onDone] riceve l'output grezzo di su a scopo diagnostico: l'esito REALE va riverificato
-     * dal chiamante rileggendo installingPackageName, perché un set-installer riuscito non stampa
-     * nulla (output vuoto = né successo né fallimento certi).
+     * Imposta Play Store come installer del pacchetto appena installato.
+     *
+     * ⚠️ `cmd package set-installer` eseguito come **root (uid 0)** è rifiutato da Android recente
+     * (14/15/17) con `SecurityException: Unknown calling UID: 0`: il PackageManager pretende un uid
+     * "noto" (associato a un pacchetto) e uid 0 non lo è. Lo eseguiamo quindi come **system
+     * (uid 1000)** — uid noto e con INSTALL_PACKAGES, che aggira anche il check "same cert" — e come
+     * **shell (uid 2000)**, infine root. Eseguiamo tutte le varianti e in coda leggiamo l'installer
+     * REALE con `dumpsys`, così [onDone] riporta con certezza quale uid ha funzionato (o perché
+     * ognuno fallisce). L'esito finale lo conferma comunque il polling via `isAACompatible`.
      */
     fun setInstallerViaRoot(packageName: String, onDone: ((detail: String) -> Unit)? = null) {
         thread {
             val target = InstallationUtils.VENDING_PKG
-            // Android 17 RIFIUTA `set-installer` eseguito come root (uid 0) con
-            // "SecurityException: Unknown calling UID: 0" (il PackageManager non trova un pacchetto
-            // associato a uid 0). Lo eseguiamo quindi come SYSTEM (uid 1000): è un uid "noto" e ha
-            // INSTALL_PACKAGES, che aggira anche il check "same cert". Fallback: SHELL (uid 2000) e
-            // infine root diretto, per le ROM dove uid 0 è ancora accettato. Ci fermiamo alla prima
-            // variante che riesce (|| sul codice d'uscita).
             val set = "cmd package set-installer $packageName $target"
-            val cmd = "su 1000 -c '$set' 2>&1 || " +
-                    "su 2000 -c '$set' 2>&1 || " +
-                    "$set 2>&1 || " +
-                    "pm set-installer $packageName $target 2>&1"
+            val cmd = "echo '[u1000]'; su 1000 -c '$set' 2>&1; " +
+                    "echo '[u2000]'; su 2000 -c '$set' 2>&1; " +
+                    "echo '[root]'; $set 2>&1; " +
+                    "echo '[installer=]'; dumpsys package $packageName 2>/dev/null | grep -m1 -i installerPackageName | tr -d ' '"
             val logs = runSuWithCmd(cmd)
-            val detail = (logs.getInputStreamLog() + " " + logs.getErrorStreamLog()).trim()
+            val detail = (logs.getInputStreamLog() + " " + logs.getErrorStreamLog())
+                .replace("\n", " ").trim()
             Log.d("KingInstaller", "setInstallerViaRoot($packageName) -> '$detail'")
             onDone?.invoke(detail)
         }
