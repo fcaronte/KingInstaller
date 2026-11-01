@@ -111,17 +111,36 @@ object RootUtils {
         return byteArrayOutputStream.toString("UTF-8")
     }
 
-    fun setInstallerViaRoot(packageName: String) {
+    /**
+     * Pre-attiva il permesso root: esegue un comando innocuo così il prompt del superuser compare
+     * SUBITO (mentre l'utente è ancora nel flusso d'installazione) e, al momento del fix
+     * post-installazione, su è già concesso e il set-installer parte senza latenza.
+     */
+    fun prewarm() {
+        thread {
+            try { runSuWithCmd("id") } catch (e: Exception) { /* no-op: su assente */ }
+        }
+    }
+
+    /**
+     * Imposta Play Store come installer del pacchetto appena installato. Come root (uid 0) il
+     * controllo di firma "same cert" del package manager viene aggirato — cosa che lo shell non può
+     * fare. [onDone] riceve l'output grezzo di su a scopo diagnostico: l'esito REALE va riverificato
+     * dal chiamante rileggendo installingPackageName, perché un set-installer riuscito non stampa
+     * nulla (output vuoto = né successo né fallimento certi).
+     */
+    fun setInstallerViaRoot(packageName: String, onDone: ((detail: String) -> Unit)? = null) {
         thread {
             val target = InstallationUtils.VENDING_PKG
             // Più varianti del comando (cambiano tra versioni Android/ROM): ci fermiamo alla prima
-            // che riesce (|| sul codice d'uscita). Come root (uid 0) il controllo di firma
-            // "same cert" del package manager viene aggirato — cosa che lo shell non può fare.
+            // che riesce (|| sul codice d'uscita).
             val cmd = "pm set-installer $packageName $target 2>&1 || " +
                     "cmd package set-installer $packageName $target 2>&1 || " +
                     "cmd package set-installer-package --user 0 $packageName $target 2>&1"
             val logs = runSuWithCmd(cmd)
-            Log.d("KingInstaller", "setInstallerViaRoot($packageName) -> out='${logs.getInputStreamLog()}' err='${logs.getErrorStreamLog()}'")
+            val detail = (logs.getInputStreamLog() + " " + logs.getErrorStreamLog()).trim()
+            Log.d("KingInstaller", "setInstallerViaRoot($packageName) -> '$detail'")
+            onDone?.invoke(detail)
         }
     }
 }

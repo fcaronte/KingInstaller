@@ -43,6 +43,10 @@ class MainActivity : AppCompatActivity() {
     private var selectedFilePath: String? = null
     private var lastInstalledPackage: String? = null
 
+    // Output grezzo dell'ultimo tentativo di fix via Root (per diagnosi nel messaggio finale).
+    @Volatile
+    private var lastRootFixDetail: String? = null
+
     private val shizukuRequestCode = 1001
 
     private val processedPackages = mutableMapOf<String, Long>()
@@ -60,6 +64,7 @@ class MainActivity : AppCompatActivity() {
 
                 Log.d("KingInstaller", "Package added: $packageName")
                 lastInstalledPackage = packageName
+                lastRootFixDetail = null
 
                 val tvError = findViewById<TextView>(R.id.textViewError)
                 val installButton = findViewById<Button>(R.id.installButton)
@@ -107,7 +112,10 @@ class MainActivity : AppCompatActivity() {
                                         tvError.text = getString(R.string.fixing_installer_root)
                                         tvError.setTextColor(Color.parseColor("#FFA000"))
                                     }
-                                    RootUtils.setInstallerViaRoot(packageName)
+                                    // Catturiamo l'output di su: se il fix non riesce, lo mostriamo
+                                    // nel messaggio finale così è chiaro il PERCHÉ (es. "su non
+                                    // disponibile"). L'esito reale lo rileva il polling via isAACompatible.
+                                    RootUtils.setInstallerViaRoot(packageName) { detail -> lastRootFixDetail = detail }
                                     handler.postDelayed(this, intervalMillis)
                                 }
                                 shizukuTrickEnabled || (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission()) -> {
@@ -128,11 +136,19 @@ class MainActivity : AppCompatActivity() {
                         } else if (elapsed >= timeoutMillis) {
                             val summary = InstallationUtils.getInstallSourceSummary(context, packageName)
                             Log.w("KingInstaller", "AA non compatibile per $packageName -> $summary")
+                            val rootDetail = lastRootFixDetail
                             runOnUiThread {
                                 installButton.isEnabled = true
                                 updateComponentStates(installing = false)
                                 tvError.setTextColor(getColor(R.color.aa_red_text))
-                                tvError.text = getString(R.string.install_success_no_aa) + "\n" + summary
+                                var msg = getString(R.string.install_success_no_aa) + "\n" + summary
+                                // Diagnostica Root: se il fix via su non ha avuto effetto, mostriamo il
+                                // suo output (o l'assenza di su) così l'utente capisce il PERCHÉ.
+                                if (rootTrickEnabled || RootUtils.isDeviceRooted) {
+                                    msg += if (!rootDetail.isNullOrEmpty()) "\n[root] $rootDetail"
+                                           else "\n[root] su non disponibile o nessun output"
+                                }
+                                tvError.text = msg
                                 // Se il metodo Shizuku non è bastato su questo device, suggeriamo prima
                                 // il Classico (senza Shizuku) e, se rootato, offriamo anche l'opzione Root.
                                 if (shizukuTrickEnabled) {
@@ -743,6 +759,10 @@ class MainActivity : AppCompatActivity() {
                 if (rootTrickEnabled) "Avvio installazione (Classico + fix installer post-installazione via Root)."
                 else "Avvio installazione tramite Metodo Classico (scelta utente)."
             )
+
+            // Root: pre-attiviamo su ORA, così il prompt del superuser compare mentre l'utente è già
+            // nel flusso e il fix post-installazione parte senza attendere la concessione.
+            if (rootTrickEnabled) RootUtils.prewarm()
 
             if (!packageManager.canRequestPackageInstalls()) {
                 startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
