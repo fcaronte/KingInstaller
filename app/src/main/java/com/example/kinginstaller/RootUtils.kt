@@ -153,24 +153,20 @@ object RootUtils {
     }
 
     /**
-     * Lancia il package installer DI SISTEMA come **shell (uid 2000)** per installare l'APK con
-     * "Installed by" = Play Store **e** "Requested by" = package installer in un colpo solo
-     * (entrambi i campi che Android Auto ≥14 pretende).
+     * Root-equivalente di `ShizukuUtils.startInstallActivityAsShell`: lancia lo **stesso** intent
+     * d'installazione del metodo Shizuku ma con identità **shell (uid 2000)** via `su`, invece che
+     * col binder dell'ActivityTaskManager wrappato da Shizuku. Stessi extra
+     * (`INSTALLER_PACKAGE_NAME=vending`, `NOT_UNKNOWN_SOURCE`, `REFERRER_NAME`, `INSTALL_REASON`) e
+     * stessi grant d'URI (fatti da MainActivity, come in `installApk`).
      *
-     * ⚠️ Perché shell e non il `set-installer`/`pm install -i`:
-     * - il `set-installer` POST-installazione è rifiutato per OGNI uid dal controllo di firma
-     *   (`Caller does not have same cert as new installer package com.android.vending`);
+     * Perché così e non `set-installer`/`pm install -i`:
+     * - il `set-installer` POST-installazione è rifiutato per OGNI uid (controllo di firma);
      * - `pm install -i` imposterebbe "Installed by" = vending ma lascerebbe "Requested by" a
-     *   shell/nullo → AA lo rifiuta.
-     * L'extra `INSTALLER_PACKAGE_NAME=vending` viene **onorato** solo se il CHIAMANTE dell'installer
-     * è privilegiato (INSTALL_PACKAGES): da app normale è rifiutato ("invalid, remove it"), da shell
-     * no. Ed è il packageinstaller a eseguire l'installazione, quindi si registra **lui** come
-     * iniziatore ("Requested by" = `com.google.android.packageinstaller`). È la tecnica di
-     * UnknownAuto/Shizuku, qui via `su 2000`.
-     *
-     * L'APK è servito come `content://` dal FileProvider dell'app; MainActivity concede in anticipo
-     * la lettura ai package installer, così l'installer legge l'URI a prescindere da chi lancia
-     * `am start`. L'esito reale (verde/rosso) lo verifica poi il `packageAddedReceiver`.
+     *   shell/nullo → AA ≥14 lo rifiuta.
+     * Da shell (privilegiata) l'extra `INSTALLER_PACKAGE_NAME` è **onorato** → "Installed by" =
+     * vending; ed è il packageinstaller a installare → "Requested by" =
+     * `com.google.android.packageinstaller`. L'esito reale (verde/rosso) lo verifica poi il
+     * `packageAddedReceiver`.
      */
     fun launchInstallerAsShell(
         uriString: String,
@@ -179,14 +175,13 @@ object RootUtils {
         thread {
             val vending = InstallationUtils.VENDING_PKG
             val am = "am start" +
-                    " -n com.google.android.packageinstaller/com.android.packageinstaller.InstallStart" +
                     " -a android.intent.action.INSTALL_PACKAGE" +
                     " -d $uriString" +
                     " -t application/vnd.android.package-archive" +
                     " --es android.intent.extra.INSTALLER_PACKAGE_NAME $vending" +
                     " --ez android.intent.extra.NOT_UNKNOWN_SOURCE true" +
-                    " --ei android.intent.extra.INSTALL_REASON 1" +
-                    " --es android.intent.extra.REFERRER_NAME android-app://$vending"
+                    " --es android.intent.extra.REFERRER_NAME android-app://$vending" +
+                    " --ei android.content.pm.extra.INSTALL_REASON 1"
             val logs = runSuWithCmd("su 2000 -c \"$am\" 2>&1")
             val detail = (logs.getInputStreamLog() + " " + logs.getErrorStreamLog())
                 .replace("\n", " ").trim()

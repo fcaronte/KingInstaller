@@ -149,10 +149,12 @@ object InstallationUtils {
         FileProvider.getUriForFile(context.applicationContext, "${context.packageName}.provider", apkFile)
 
     /**
-     * Package installer a cui concedere la lettura dell'URI dell'APK prima di lanciare l'installer
-     * come shell (il grant è indipendente dal caller di `am start`, così l'installer legge l'APK).
+     * Package a cui concedere la lettura dell'URI dell'APK prima di lanciare l'installer come shell.
+     * Stessa lista del metodo Shizuku (`ShizukuUtils.installApk`): il grant è indipendente dal caller
+     * di `am start`, così l'installer legge l'APK; include `com.android.shell` perché è la shell a
+     * lanciare l'intent.
      */
-    val INSTALLER_PACKAGES = listOf(GOOGLE_INSTALLER_PKG, "com.android.packageinstaller", VENDING_PKG)
+    val INSTALLER_PACKAGES = listOf("com.android.shell", GOOGLE_INSTALLER_PKG, "com.android.packageinstaller")
 
     /**
      * Riepilogo leggibile dei campi di origine installazione, per diagnostica.
