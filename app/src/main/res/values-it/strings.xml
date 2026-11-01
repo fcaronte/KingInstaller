@@ -91,4 +91,5 @@
     <string name="share_log_chooser">Condividi log KingInstaller</string>
     <string name="share_log_error">Errore condivisione log: %1$s</string>
     <string name="share_log_preparing">Generazione log diagnostico…</string>
+    <string name="log_copied">Log copiato negli appunti</string>
 </resources>

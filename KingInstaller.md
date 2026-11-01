@@ -67,6 +67,7 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
   - **Policy per versione Android** (vedi §1.6): switch Oppo nascosto su Android 15+; suggerimento package installer solo fino ad Android 14.
   - **Feedback del fix installer**: durante la correzione post-installazione la UI mostra lo stato (arancione) e, in caso di fallimento, i valori reali di install-source ("Installed by / Requested by").
   - **Condivisione log diagnostico**: icona di condivisione accanto al titolo "Welcome to Installer!" (`shareLogButton`) genera e condivide un report (device, ROM MIUI/HyperOS via `getprop`, stato metodo/Shizuku/root, install-source dell'ultima app, logcat del processo) — `DiagnosticsUtils.kt`.
+  - **Copia log negli appunti**: un **tocco sulla finestra del log** (`textViewError`) ne copia il testo negli appunti (`ClipData`/`ClipboardManager`), con conferma Toast `log_copied` (nascosta su Android 13+, dove il sistema mostra già il proprio avviso). Comodo per incollare la diagnostica `[root]`/`[installer=]` senza passare dalla condivisione.
 
 ---
 

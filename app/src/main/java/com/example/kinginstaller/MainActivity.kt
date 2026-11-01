@@ -2,6 +2,8 @@ package com.example.kinginstaller
 
 import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -416,6 +418,18 @@ class MainActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.shareLogButton).setOnClickListener {
             Toast.makeText(this, R.string.share_log_preparing, Toast.LENGTH_SHORT).show()
             DiagnosticsUtils.shareDiagnostics(this, lastInstalledPackage)
+        }
+
+        // Tocco sulla finestra del log: copia il testo negli appunti (comodo per incollare la
+        // diagnostica [root]/[installer=]). Su Android 13+ il sistema mostra già il proprio avviso.
+        findViewById<TextView>(R.id.textViewError).setOnClickListener { v ->
+            val text = (v as TextView).text?.toString()?.trim().orEmpty()
+            if (text.isEmpty()) return@setOnClickListener
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+            clipboard?.setPrimaryClip(ClipData.newPlainText("KingInstaller log", text))
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                Toast.makeText(this, R.string.log_copied, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

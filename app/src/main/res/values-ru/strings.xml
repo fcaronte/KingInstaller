@@ -86,6 +86,7 @@
     <string name="share_log_chooser">Поделиться журналом KingInstaller</string>
     <string name="share_log_error">Ошибка отправки журнала: %1$s</string>
     <string name="share_log_preparing">Создание диагностического журнала…</string>
+    <string name="log_copied">Журнал скопирован в буфер обмена</string>
     <string name="not_aa_title">Несовместимо с Android Auto</string>
     <string name="not_aa_message">Метод Shizuku не смог задать установщик на этом устройстве. Сначала попробуйте Классический метод (без Shizuku); если не поможет, нужен метод Root.</string>
     <string name="try_classic">Попробовать классический</string>

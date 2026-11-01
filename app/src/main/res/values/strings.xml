@@ -90,4 +90,5 @@
     <string name="share_log_chooser">Share KingInstaller log</string>
     <string name="share_log_error">Log share error: %1$s</string>
     <string name="share_log_preparing">Generating diagnostic log…</string>
+    <string name="log_copied">Log copied to clipboard</string>
 </resources>
