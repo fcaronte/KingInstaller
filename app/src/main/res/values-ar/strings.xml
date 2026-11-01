@@ -71,6 +71,7 @@
     <string name="install_success_aa">تم تثبيت التطبيق بنجاح! (متوافق مع AA)</string>
     <string name="install_success_no_aa">تم تثبيت التطبيق، ولكن قد لا يكون متوافقاً مع AA. تحقق من التفاصيل.</string>
     <string name="installing_root">جارٍ التثبيت بامتيازات Root…</string>
+    <string name="root_launch_failed">تعذّر تشغيل مثبّت النظام بصلاحيات Root. التفاصيل موجودة في السجل المُشارَك.</string>
     <string name="processing_apk">جاري معالجة ملف APK…</string>
     <string name="processing_shared_apk">جاري معالجة ملف APK المشارك…</string>
     <string name="error_copying_file">خطأ في نسخ الملف</string>

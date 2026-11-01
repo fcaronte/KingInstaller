@@ -71,6 +71,7 @@
     <string name="install_success_aa">应用安装成功！（兼容 Android Auto）</string>
     <string name="install_success_no_aa">应用已安装，但可能不兼容 Android Auto。请查看详情。</string>
     <string name="installing_root">正在以 Root 权限安装…</string>
+    <string name="root_launch_failed">无法以 Root 身份启动系统安装程序。详情见共享日志。</string>
     <string name="processing_apk">正在处理 APK 文件…</string>
     <string name="processing_shared_apk">正在处理分享的 APK 文件…</string>
     <string name="error_copying_file">复制文件出错</string>

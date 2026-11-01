@@ -144,20 +144,17 @@ class MainActivity : AppCompatActivity() {
                             }
                         } else if (elapsed >= timeoutMillis) {
                             val summary = InstallationUtils.getInstallSourceSummary(context, packageName)
-                            Log.w("KingInstaller", "AA non compatibile per $packageName -> $summary")
                             val rootDetail = lastRootFixDetail
+                            // I dettagli verbosi (output di su/am) restano in LOGCAT → finiscono nel
+                            // log condiviso, NON a schermo: a schermo solo messaggio chiaro + summary
+                            // ("Installed by"/"Requested by").
+                            Log.w("KingInstaller", "AA non compatibile per $packageName -> $summary" +
+                                    (if (!rootDetail.isNullOrEmpty()) " | [root] $rootDetail" else ""))
                             runOnUiThread {
                                 installButton.isEnabled = true
                                 updateComponentStates(installing = false)
                                 tvError.setTextColor(getColor(R.color.aa_red_text))
-                                var msg = getString(R.string.install_success_no_aa) + "\n" + summary
-                                // Diagnostica: per il Metodo Root il summary (Installed/Requested by)
-                                // è già conclusivo; aggiungiamo l'output di su solo se presente (caso
-                                // Classico su device rootato col set-installer best-effort).
-                                if (!rootDetail.isNullOrEmpty()) {
-                                    msg += "\n[root] $rootDetail"
-                                }
-                                tvError.text = msg
+                                tvError.text = getString(R.string.install_success_no_aa) + "\n" + summary
                                 // Se il metodo Shizuku non è bastato su questo device, suggeriamo prima
                                 // il Classico (senza Shizuku) e, se rootato, offriamo anche l'opzione Root.
                                 if (shizukuTrickEnabled) {
@@ -825,14 +822,16 @@ class MainActivity : AppCompatActivity() {
         tv.text = getString(R.string.installing_root)
 
         RootUtils.launchInstallerAsShell(uri.toString()) { ok, detail ->
+            if (!ok) Log.w("KingInstaller", "launchInstallerAsShell fallito: $detail")
             runOnUiThread {
                 if (!ok) {
-                    // Il lancio dell'installer come shell è fallito (es. su assente o componente non
-                    // trovato): mostriamo il perché. Se è andato, non tocchiamo la UI: l'installer di
-                    // sistema è in primo piano e l'esito lo verifica il packageAddedReceiver.
+                    // Lancio dell'installer come shell fallito (es. su non concesso): messaggio
+                    // chiaro a schermo, il dettaglio grezzo resta solo nel logcat/log condiviso.
+                    // Se è andato, non tocchiamo la UI: l'installer di sistema è in primo piano e
+                    // l'esito lo verifica il packageAddedReceiver.
                     updateComponentStates(installing = false)
                     tv.setTextColor(getColor(R.color.aa_red_text))
-                    tv.text = getString(R.string.error_occurred, detail)
+                    tv.text = getString(R.string.root_launch_failed)
                 }
             }
         }

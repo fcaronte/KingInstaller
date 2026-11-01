@@ -71,6 +71,7 @@
     <string name="install_success_aa">App erfolgreich installiert! (AA-kompatibel)</string>
     <string name="install_success_no_aa">App installiert, aber möglicherweise NICHT AA-kompatibel. Details prüfen.</string>
     <string name="installing_root">Installation mit Root-Rechten…</string>
+    <string name="root_launch_failed">Der System-Installer konnte nicht als Root gestartet werden. Details im geteilten Protokoll.</string>
     <string name="processing_apk">Verarbeite APK-Datei…</string>
     <string name="processing_shared_apk">Verarbeite geteilte APK-Datei…</string>
     <string name="error_copying_file">Fehler beim Kopieren der Datei</string>

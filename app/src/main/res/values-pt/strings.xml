@@ -71,6 +71,7 @@
     <string name="install_success_aa">Aplicação instalada com sucesso! (`Compatível com AA`)</string>
     <string name="install_success_no_aa">Aplicação instalada, mas pode NÃO ser compatível com AA. Verifique os detalhes.</string>
     <string name="installing_root">Instalando com privilégios Root…</string>
+    <string name="root_launch_failed">Não foi possível iniciar o instalador do sistema como Root. Os detalhes estão no registro compartilhado.</string>
     <string name="processing_apk">A processar ficheiro APK…</string>
     <string name="processing_shared_apk">A processar ficheiro APK partilhado…</string>
     <string name="error_copying_file">Erro ao copiar o ficheiro</string>
