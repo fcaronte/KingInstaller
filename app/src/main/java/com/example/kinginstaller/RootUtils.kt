@@ -137,9 +137,12 @@ object RootUtils {
         thread {
             val target = InstallationUtils.VENDING_PKG
             val set = "cmd package set-installer $packageName $target"
-            val cmd = "echo '[u1000]'; su 1000 -c '$set' 2>&1; " +
-                    "echo '[u2000]'; su 2000 -c '$set' 2>&1; " +
-                    "echo '[root]'; $set 2>&1; " +
+            // Filtra le righe di stacktrace ("    at com.android…"): lasciano solo rumore nella
+            // finestra del log. Teniamo la riga d'eccezione utile (es. "Unknown calling UID: 0").
+            val noStack = "grep -vE '^[[:space:]]*at '"
+            val cmd = "echo '[u1000]'; su 1000 -c '$set' 2>&1 | $noStack; " +
+                    "echo '[u2000]'; su 2000 -c '$set' 2>&1 | $noStack; " +
+                    "echo '[root]'; $set 2>&1 | $noStack; " +
                     "echo '[installer=]'; dumpsys package $packageName 2>/dev/null | grep -m1 -i installerPackageName | tr -d ' '"
             val logs = runSuWithCmd(cmd)
             val detail = (logs.getInputStreamLog() + " " + logs.getErrorStreamLog())
