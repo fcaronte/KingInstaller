@@ -132,11 +132,17 @@ object RootUtils {
     fun setInstallerViaRoot(packageName: String, onDone: ((detail: String) -> Unit)? = null) {
         thread {
             val target = InstallationUtils.VENDING_PKG
-            // Più varianti del comando (cambiano tra versioni Android/ROM): ci fermiamo alla prima
-            // che riesce (|| sul codice d'uscita).
-            val cmd = "pm set-installer $packageName $target 2>&1 || " +
-                    "cmd package set-installer $packageName $target 2>&1 || " +
-                    "cmd package set-installer-package --user 0 $packageName $target 2>&1"
+            // Android 17 RIFIUTA `set-installer` eseguito come root (uid 0) con
+            // "SecurityException: Unknown calling UID: 0" (il PackageManager non trova un pacchetto
+            // associato a uid 0). Lo eseguiamo quindi come SYSTEM (uid 1000): è un uid "noto" e ha
+            // INSTALL_PACKAGES, che aggira anche il check "same cert". Fallback: SHELL (uid 2000) e
+            // infine root diretto, per le ROM dove uid 0 è ancora accettato. Ci fermiamo alla prima
+            // variante che riesce (|| sul codice d'uscita).
+            val set = "cmd package set-installer $packageName $target"
+            val cmd = "su 1000 -c '$set' 2>&1 || " +
+                    "su 2000 -c '$set' 2>&1 || " +
+                    "$set 2>&1 || " +
+                    "pm set-installer $packageName $target 2>&1"
             val logs = runSuWithCmd(cmd)
             val detail = (logs.getInputStreamLog() + " " + logs.getErrorStreamLog()).trim()
             Log.d("KingInstaller", "setInstallerViaRoot($packageName) -> '$detail'")
