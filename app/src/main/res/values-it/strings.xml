@@ -70,6 +70,7 @@
     <string name="donate_buymeacoffee">Offrimi un caffè</string>
     <string name="install_success_aa">App installata con successo! (Compatibile AA)</string>
     <string name="install_success_no_aa">App installata, ma potrebbe NON essere compatibile AA. Verifica i dettagli.</string>
+    <string name="installing_root">Installazione con privilegi Root…</string>
     <string name="processing_apk">Elaborazione file APK in corso…</string>
     <string name="processing_shared_apk">Elaborazione file APK condiviso…</string>
     <string name="error_copying_file">Errore copia file</string>

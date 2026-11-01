@@ -71,6 +71,7 @@
     <string name="donate_buymeacoffee">Egy kávé</string>
     <string name="install_success_aa">Az alkalmazás sikeresen telepítve! (AA kompatibilis)</string>
     <string name="install_success_no_aa">Az alkalmazás telepítve van, de lehet, hogy NEM AA kompatibilis. Nézze meg a részleteket.</string>
+    <string name="installing_root">Telepítés Root jogosultságokkal…</string>
     <string name="processing_apk">APK-fájl feldolgozása…</string>
     <string name="processing_shared_apk">Megosztott APK-fájl feldolgozása…</string>
     <string name="error_copying_file">Hiba a fájl másolásakor</string>

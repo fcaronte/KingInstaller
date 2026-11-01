@@ -151,4 +151,55 @@ object RootUtils {
             onDone?.invoke(detail)
         }
     }
+
+    /**
+     * Installa l'APK con privilegi impostando Play Store come installer GIÀ AL MOMENTO
+     * dell'installazione (`pm install -i com.android.vending`). È la tecnica di `adb install -i`.
+     *
+     * ⚠️ A differenza del `set-installer` POST-installazione (bloccato per OGNI uid dal controllo di
+     * firma `SecurityException: Caller does not have same cert as new installer package …`), il
+     * percorso via sessione d'installazione **accetta un installer arbitrario** se il chiamante è
+     * shell/root/INSTALL_PACKAGES, senza controllo di firma. Per questo il Root ora **installa e
+     * marca in un colpo solo**, invece di installare col dialog e correggere dopo (impossibile).
+     *
+     * L'APK viene messo in staging in `/data/local/tmp` (leggibile dalla shell) per evitare i
+     * problemi di permesso sul file privato dell'app. Proviamo shell (uid 2000), poi system (1000),
+     * poi root, fermandoci al primo `Success`; in coda leggiamo con `dumpsys` l'installer e
+     * l'iniziatore REALI. [onResult] riporta se è andata e il dettaglio etichettato.
+     */
+    fun installViaRoot(
+        apkPath: String,
+        packageName: String?,
+        onResult: (success: Boolean, detail: String) -> Unit
+    ) {
+        thread {
+            val vending = InstallationUtils.VENDING_PKG
+            val stage = "/data/local/tmp/kinginstaller_stage.apk"
+            val inst = "pm install -i $vending -r $stage"
+            val noStack = "grep -vE '^[[:space:]]*at '"
+            val srcLine = if (!packageName.isNullOrEmpty())
+                "echo '[src]'; dumpsys package $packageName 2>/dev/null | grep -m2 -iE 'installerPackageName|initiatingPackageName' | tr -d ' '"
+            else "echo '[src] pkg n/d'"
+            val cmd = buildString {
+                append("cp '$apkPath' $stage 2>&1; chmod 644 $stage 2>&1; ")
+                append("OK=no; ")
+                append("for U in 2000 1000 R; do ")
+                append("if [ \"\$U\" = R ]; then O=\$($inst 2>&1 | $noStack); ")
+                append("else O=\$(su \$U -c \"$inst\" 2>&1 | $noStack); fi; ")
+                append("echo \"[u\$U] \$O\"; ")
+                append("case \"\$O\" in *Success*) OK=yes; break;; esac; ")
+                append("done; ")
+                append("rm -f $stage 2>/dev/null; ")
+                append("echo \"[ok=\$OK]\"; ")
+                append(srcLine)
+            }
+            val logs = runSuWithCmd(cmd)
+            val detail = (logs.getInputStreamLog() + " " + logs.getErrorStreamLog())
+                .replace("\n", " ").trim()
+            val success = detail.contains("Success") ||
+                    detail.contains("installerPackageName=$vending", ignoreCase = true)
+            Log.d("KingInstaller", "installViaRoot($packageName) ok=$success -> '$detail'")
+            onResult(success, detail)
+        }
+    }
 }

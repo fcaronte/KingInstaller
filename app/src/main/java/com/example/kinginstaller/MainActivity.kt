@@ -49,6 +49,11 @@ class MainActivity : AppCompatActivity() {
     @Volatile
     private var lastRootFixDetail: String? = null
 
+    // True mentre è in corso l'installazione Root via `pm install -i`: in tal caso il
+    // packageAddedReceiver NON deve fare polling/post-fix (l'esito lo gestisce installViaRootFlow).
+    @Volatile
+    private var rootPmActive: Boolean = false
+
     private val shizukuRequestCode = 1001
 
     private val processedPackages = mutableMapOf<String, Long>()
@@ -57,6 +62,13 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == Intent.ACTION_PACKAGE_ADDED) {
                 val packageName = intent.data?.schemeSpecificPart ?: return
+                // Installazione Root via `pm install -i`: l'esito e la UI li gestisce il callback
+                // di installViaRootFlow. Qui niente polling/post-fix (il set-installer POST-install
+                // è bloccato dal controllo di firma, inutile ritentarlo).
+                if (rootPmActive) {
+                    lastInstalledPackage = packageName
+                    return
+                }
                 val lastProcessed = processedPackages[packageName] ?: 0L
                 val currentTime = System.currentTimeMillis()
                 if (currentTime - lastProcessed < 5000) {
@@ -761,22 +773,20 @@ class MainActivity : AppCompatActivity() {
                 // Successo Shizuku
             })
             
-        } else {
-            // Metodo CLASSICO e ROOT: in entrambi è l'APP a lanciare il dialog di sistema e a
-            // consegnare l'APK col proprio grant URI (come caller), quindi l'installer lo legge e
-            // "Requested by" risulta il package installer. Per il ROOT la correzione a Play Store
-            // ("Installed by") avviene DOPO, nel packageAddedReceiver via setInstallerViaRoot (uid 0
-            // aggira il check "same cert"). NON lanciamo l'installer come root: da uid 0 l'am start
-            // non riesce a consegnare l'APK/URI all'installer.
-            Log.d(
-                "MainActivity",
-                if (rootTrickEnabled) "Avvio installazione (Classico + fix installer post-installazione via Root)."
-                else "Avvio installazione tramite Metodo Classico (scelta utente)."
-            )
+        } else if (rootTrickEnabled) {
+            // Metodo ROOT: installazione diretta e privilegiata con Play Store come installer GIÀ
+            // in fase d'installazione (`pm install -i com.android.vending`). Il vecchio approccio
+            // "dialog + set-installer dopo" è impossibile: il set-installer post-installazione è
+            // rifiutato per OGNI uid dal controllo di firma ("same cert as com.android.vending").
+            // Qui invece il percorso via sessione accetta un installer arbitrario (come adb install).
+            Log.d("MainActivity", "Avvio installazione tramite Metodo Root (pm install -i vending).")
+            installViaRootFlow(filepath)
 
-            // Root: pre-attiviamo su ORA, così il prompt del superuser compare mentre l'utente è già
-            // nel flusso e il fix post-installazione parte senza attendere la concessione.
-            if (rootTrickEnabled) RootUtils.prewarm()
+        } else {
+            // Metodo CLASSICO (e Oppo): è l'APP a lanciare il dialog di sistema e a consegnare l'APK
+            // col proprio grant URI (come caller), quindi l'installer lo legge e "Requested by"
+            // risulta il package installer.
+            Log.d("MainActivity", "Avvio installazione tramite Metodo Classico (scelta utente).")
 
             if (!packageManager.canRequestPackageInstalls()) {
                 startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
@@ -792,6 +802,52 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 findViewById<TextView>(R.id.textViewError).text = getString(R.string.error_occurred, e.toString())
                 updateComponentStates(installing = false)
+            }
+        }
+    }
+
+    /**
+     * Flusso d'installazione del Metodo Root: installa con privilegi impostando Play Store come
+     * installer al volo (`pm install -i`). Sopprime il packageAddedReceiver (rootPmActive) perché
+     * qui gestiamo esito e UI direttamente, poi verifica che "Installed by" sia davvero Play Store.
+     */
+    private fun installViaRootFlow(filepath: String) {
+        val tv = findViewById<TextView>(R.id.textViewError)
+        val installButton = findViewById<Button>(R.id.installButton)
+        val pkg = InstallationUtils.getPackageNameFromApk(this, File(filepath))
+
+        rootPmActive = true
+        installButton.isEnabled = false
+        tv.setTextColor(Color.parseColor("#FFA000"))
+        tv.text = getString(R.string.installing_root)
+
+        RootUtils.installViaRoot(filepath, pkg) { success, detail ->
+            runOnUiThread {
+                installButton.isEnabled = true
+                updateComponentStates(installing = false)
+                if (pkg != null) lastInstalledPackage = pkg
+
+                val vendingOk = pkg != null && InstallationUtils.isInstallerVending(this, pkg)
+                val summary = pkg?.let { InstallationUtils.getInstallSourceSummary(this, it) } ?: ""
+
+                when {
+                    success && vendingOk -> {
+                        tv.setTextColor(getColor(R.color.aa_green_text))
+                        tv.text = getString(R.string.install_success_aa) + "\n" + summary
+                    }
+                    success -> {
+                        // Installata ma "Installed by" non risulta Play Store: mostra la diagnosi.
+                        tv.setTextColor(getColor(R.color.aa_red_text))
+                        tv.text = getString(R.string.install_success_no_aa) + "\n" + summary + "\n[root] " + detail
+                    }
+                    else -> {
+                        tv.setTextColor(getColor(R.color.aa_red_text))
+                        tv.text = getString(R.string.error_occurred, detail)
+                    }
+                }
+
+                // Rilascia il guard dopo che l'eventuale broadcast ACTION_PACKAGE_ADDED è passato.
+                Handler(Looper.getMainLooper()).postDelayed({ rootPmActive = false }, 3000L)
             }
         }
     }

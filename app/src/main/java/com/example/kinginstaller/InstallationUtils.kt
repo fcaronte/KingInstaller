@@ -145,6 +145,26 @@ object InstallationUtils {
     }
 
     /**
+     * Verifica SOLO che "Installed by" (`installingPackageName`) sia Play Store: è il requisito
+     * reale di Android Auto. Usato dal metodo Root, che imposta l'installer già in fase
+     * d'installazione via `pm install -i`: lì "Requested by" può risultare nullo (installazione da
+     * shell senza app iniziatrice), ma ciò NON impedisce ad AA di riconoscere l'app come da Play.
+     */
+    fun isInstallerVending(context: Context, packageName: String): Boolean {
+        return try {
+            val pm = context.packageManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                pm.getInstallSourceInfo(packageName).installingPackageName == VENDING_PKG
+            } else {
+                @Suppress("DEPRECATION")
+                pm.getInstallerPackageName(packageName) == VENDING_PKG
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
      * Riepilogo leggibile dei campi di origine installazione, per diagnostica.
      * Utile su Xiaomi/One UI per capire perché un'app non risulta compatibile con AA
      * (es. "Requested by" = com.android.shell, oppure "Installed by" != com.android.vending).
