@@ -49,11 +49,6 @@ class MainActivity : AppCompatActivity() {
     @Volatile
     private var lastRootFixDetail: String? = null
 
-    // True mentre è in corso l'installazione Root via `pm install -i`: in tal caso il
-    // packageAddedReceiver NON deve fare polling/post-fix (l'esito lo gestisce installViaRootFlow).
-    @Volatile
-    private var rootPmActive: Boolean = false
-
     private val shizukuRequestCode = 1001
 
     private val processedPackages = mutableMapOf<String, Long>()
@@ -62,13 +57,6 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == Intent.ACTION_PACKAGE_ADDED) {
                 val packageName = intent.data?.schemeSpecificPart ?: return
-                // Installazione Root via `pm install -i`: l'esito e la UI li gestisce il callback
-                // di installViaRootFlow. Qui niente polling/post-fix (il set-installer POST-install
-                // è bloccato dal controllo di firma, inutile ritentarlo).
-                if (rootPmActive) {
-                    lastInstalledPackage = packageName
-                    return
-                }
                 val lastProcessed = processedPackages[packageName] ?: 0L
                 val currentTime = System.currentTimeMillis()
                 if (currentTime - lastProcessed < 5000) {
@@ -121,14 +109,21 @@ class MainActivity : AppCompatActivity() {
                             // segnalandolo in UI così è chiaro che il fix è stato avviato.
                             fixAttempted = true
                             when {
-                                rootTrickEnabled || RootUtils.isDeviceRooted -> {
+                                rootTrickEnabled -> {
+                                    // Metodo Root: "Installed by"/"Requested by" sono già impostati
+                                    // AL VOLO lanciando l'installer come shell (installViaRootFlow).
+                                    // Il set-installer POST-installazione è bloccato dalla firma per
+                                    // ogni uid → nessun post-fix, qui si fa solo verifica.
+                                    handler.postDelayed(this, intervalMillis)
+                                }
+                                RootUtils.isDeviceRooted -> {
+                                    // Classico su device rootato: best-effort col set-installer via
+                                    // su (sullo stesso path di firma può comunque fallire); ne
+                                    // catturiamo l'output per il messaggio diagnostico finale.
                                     runOnUiThread {
                                         tvError.text = getString(R.string.fixing_installer_root)
                                         tvError.setTextColor(Color.parseColor("#FFA000"))
                                     }
-                                    // Catturiamo l'output di su: se il fix non riesce, lo mostriamo
-                                    // nel messaggio finale così è chiaro il PERCHÉ (es. "su non
-                                    // disponibile"). L'esito reale lo rileva il polling via isAACompatible.
                                     RootUtils.setInstallerViaRoot(packageName) { detail -> lastRootFixDetail = detail }
                                     handler.postDelayed(this, intervalMillis)
                                 }
@@ -156,11 +151,11 @@ class MainActivity : AppCompatActivity() {
                                 updateComponentStates(installing = false)
                                 tvError.setTextColor(getColor(R.color.aa_red_text))
                                 var msg = getString(R.string.install_success_no_aa) + "\n" + summary
-                                // Diagnostica Root: se il fix via su non ha avuto effetto, mostriamo il
-                                // suo output (o l'assenza di su) così l'utente capisce il PERCHÉ.
-                                if (rootTrickEnabled || RootUtils.isDeviceRooted) {
-                                    msg += if (!rootDetail.isNullOrEmpty()) "\n[root] $rootDetail"
-                                           else "\n[root] su non disponibile o nessun output"
+                                // Diagnostica: per il Metodo Root il summary (Installed/Requested by)
+                                // è già conclusivo; aggiungiamo l'output di su solo se presente (caso
+                                // Classico su device rootato col set-installer best-effort).
+                                if (!rootDetail.isNullOrEmpty()) {
+                                    msg += "\n[root] $rootDetail"
                                 }
                                 tvError.text = msg
                                 // Se il metodo Shizuku non è bastato su questo device, suggeriamo prima
@@ -774,12 +769,13 @@ class MainActivity : AppCompatActivity() {
             })
             
         } else if (rootTrickEnabled) {
-            // Metodo ROOT: installazione diretta e privilegiata con Play Store come installer GIÀ
-            // in fase d'installazione (`pm install -i com.android.vending`). Il vecchio approccio
-            // "dialog + set-installer dopo" è impossibile: il set-installer post-installazione è
-            // rifiutato per OGNI uid dal controllo di firma ("same cert as com.android.vending").
-            // Qui invece il percorso via sessione accetta un installer arbitrario (come adb install).
-            Log.d("MainActivity", "Avvio installazione tramite Metodo Root (pm install -i vending).")
+            // Metodo ROOT: lancia il package installer di SISTEMA come SHELL (uid 2000) con l'extra
+            // INSTALLER_PACKAGE_NAME=vending. Da shell (privilegiata) l'installer onora l'extra →
+            // "Installed by" = Play Store, ed è il packageinstaller a installare → "Requested by" =
+            // com.google.android.packageinstaller: ENTRAMBI i campi che Android Auto ≥14 pretende.
+            // (Il set-installer post-installazione è bloccato dalla firma; `pm install -i` lascia
+            // "Requested by" a shell/nullo → AA rifiuta. Vedi KingInstaller.md §1.5.)
+            Log.d("MainActivity", "Avvio installazione tramite Metodo Root (installer di sistema come shell).")
             installViaRootFlow(filepath)
 
         } else {
@@ -807,47 +803,37 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Flusso d'installazione del Metodo Root: installa con privilegi impostando Play Store come
-     * installer al volo (`pm install -i`). Sopprime il packageAddedReceiver (rootPmActive) perché
-     * qui gestiamo esito e UI direttamente, poi verifica che "Installed by" sia davvero Play Store.
+     * Flusso d'installazione del Metodo Root: lancia il package installer di sistema COME SHELL con
+     * l'extra INSTALLER_PACKAGE_NAME=vending, così "Installed by" = Play Store e "Requested by" =
+     * packageinstaller vengono impostati AL VOLO. L'esito (verde/rosso) lo determina poi il
+     * packageAddedReceiver verificando isAACompatible a installazione conclusa.
      */
     private fun installViaRootFlow(filepath: String) {
         val tv = findViewById<TextView>(R.id.textViewError)
-        val installButton = findViewById<Button>(R.id.installButton)
-        val pkg = InstallationUtils.getPackageNameFromApk(this, File(filepath))
+        val uri = InstallationUtils.getApkContentUri(this, File(filepath))
 
-        rootPmActive = true
-        installButton.isEnabled = false
+        // Concediamo in anticipo la lettura dell'URI ai package installer: l'`am start` è lanciato
+        // dalla shell, ma l'installer leggerà l'APK grazie a questo grant (indipendente dal caller).
+        for (p in InstallationUtils.INSTALLER_PACKAGES) {
+            try {
+                grantUriPermission(p, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (ignored: Exception) {
+            }
+        }
+
         tv.setTextColor(Color.parseColor("#FFA000"))
         tv.text = getString(R.string.installing_root)
 
-        RootUtils.installViaRoot(filepath, pkg) { success, detail ->
+        RootUtils.launchInstallerAsShell(uri.toString()) { ok, detail ->
             runOnUiThread {
-                installButton.isEnabled = true
-                updateComponentStates(installing = false)
-                if (pkg != null) lastInstalledPackage = pkg
-
-                val vendingOk = pkg != null && InstallationUtils.isInstallerVending(this, pkg)
-                val summary = pkg?.let { InstallationUtils.getInstallSourceSummary(this, it) } ?: ""
-
-                when {
-                    success && vendingOk -> {
-                        tv.setTextColor(getColor(R.color.aa_green_text))
-                        tv.text = getString(R.string.install_success_aa) + "\n" + summary
-                    }
-                    success -> {
-                        // Installata ma "Installed by" non risulta Play Store: mostra la diagnosi.
-                        tv.setTextColor(getColor(R.color.aa_red_text))
-                        tv.text = getString(R.string.install_success_no_aa) + "\n" + summary + "\n[root] " + detail
-                    }
-                    else -> {
-                        tv.setTextColor(getColor(R.color.aa_red_text))
-                        tv.text = getString(R.string.error_occurred, detail)
-                    }
+                if (!ok) {
+                    // Il lancio dell'installer come shell è fallito (es. su assente o componente non
+                    // trovato): mostriamo il perché. Se è andato, non tocchiamo la UI: l'installer di
+                    // sistema è in primo piano e l'esito lo verifica il packageAddedReceiver.
+                    updateComponentStates(installing = false)
+                    tv.setTextColor(getColor(R.color.aa_red_text))
+                    tv.text = getString(R.string.error_occurred, detail)
                 }
-
-                // Rilascia il guard dopo che l'eventuale broadcast ACTION_PACKAGE_ADDED è passato.
-                Handler(Looper.getMainLooper()).postDelayed({ rootPmActive = false }, 3000L)
             }
         }
     }

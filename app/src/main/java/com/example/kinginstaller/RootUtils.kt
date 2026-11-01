@@ -153,53 +153,47 @@ object RootUtils {
     }
 
     /**
-     * Installa l'APK con privilegi impostando Play Store come installer GIÀ AL MOMENTO
-     * dell'installazione (`pm install -i com.android.vending`). È la tecnica di `adb install -i`.
+     * Lancia il package installer DI SISTEMA come **shell (uid 2000)** per installare l'APK con
+     * "Installed by" = Play Store **e** "Requested by" = package installer in un colpo solo
+     * (entrambi i campi che Android Auto ≥14 pretende).
      *
-     * ⚠️ A differenza del `set-installer` POST-installazione (bloccato per OGNI uid dal controllo di
-     * firma `SecurityException: Caller does not have same cert as new installer package …`), il
-     * percorso via sessione d'installazione **accetta un installer arbitrario** se il chiamante è
-     * shell/root/INSTALL_PACKAGES, senza controllo di firma. Per questo il Root ora **installa e
-     * marca in un colpo solo**, invece di installare col dialog e correggere dopo (impossibile).
+     * ⚠️ Perché shell e non il `set-installer`/`pm install -i`:
+     * - il `set-installer` POST-installazione è rifiutato per OGNI uid dal controllo di firma
+     *   (`Caller does not have same cert as new installer package com.android.vending`);
+     * - `pm install -i` imposterebbe "Installed by" = vending ma lascerebbe "Requested by" a
+     *   shell/nullo → AA lo rifiuta.
+     * L'extra `INSTALLER_PACKAGE_NAME=vending` viene **onorato** solo se il CHIAMANTE dell'installer
+     * è privilegiato (INSTALL_PACKAGES): da app normale è rifiutato ("invalid, remove it"), da shell
+     * no. Ed è il packageinstaller a eseguire l'installazione, quindi si registra **lui** come
+     * iniziatore ("Requested by" = `com.google.android.packageinstaller`). È la tecnica di
+     * UnknownAuto/Shizuku, qui via `su 2000`.
      *
-     * L'APK viene messo in staging in `/data/local/tmp` (leggibile dalla shell) per evitare i
-     * problemi di permesso sul file privato dell'app. Proviamo shell (uid 2000), poi system (1000),
-     * poi root, fermandoci al primo `Success`; in coda leggiamo con `dumpsys` l'installer e
-     * l'iniziatore REALI. [onResult] riporta se è andata e il dettaglio etichettato.
+     * L'APK è servito come `content://` dal FileProvider dell'app; MainActivity concede in anticipo
+     * la lettura ai package installer, così l'installer legge l'URI a prescindere da chi lancia
+     * `am start`. L'esito reale (verde/rosso) lo verifica poi il `packageAddedReceiver`.
      */
-    fun installViaRoot(
-        apkPath: String,
-        packageName: String?,
-        onResult: (success: Boolean, detail: String) -> Unit
+    fun launchInstallerAsShell(
+        uriString: String,
+        onLaunched: ((ok: Boolean, detail: String) -> Unit)? = null
     ) {
         thread {
             val vending = InstallationUtils.VENDING_PKG
-            val stage = "/data/local/tmp/kinginstaller_stage.apk"
-            val inst = "pm install -i $vending -r $stage"
-            val noStack = "grep -vE '^[[:space:]]*at '"
-            val srcLine = if (!packageName.isNullOrEmpty())
-                "echo '[src]'; dumpsys package $packageName 2>/dev/null | grep -m2 -iE 'installerPackageName|initiatingPackageName' | tr -d ' '"
-            else "echo '[src] pkg n/d'"
-            val cmd = buildString {
-                append("cp '$apkPath' $stage 2>&1; chmod 644 $stage 2>&1; ")
-                append("OK=no; ")
-                append("for U in 2000 1000 R; do ")
-                append("if [ \"\$U\" = R ]; then O=\$($inst 2>&1 | $noStack); ")
-                append("else O=\$(su \$U -c \"$inst\" 2>&1 | $noStack); fi; ")
-                append("echo \"[u\$U] \$O\"; ")
-                append("case \"\$O\" in *Success*) OK=yes; break;; esac; ")
-                append("done; ")
-                append("rm -f $stage 2>/dev/null; ")
-                append("echo \"[ok=\$OK]\"; ")
-                append(srcLine)
-            }
-            val logs = runSuWithCmd(cmd)
+            val am = "am start" +
+                    " -n com.google.android.packageinstaller/com.android.packageinstaller.InstallStart" +
+                    " -a android.intent.action.INSTALL_PACKAGE" +
+                    " -d $uriString" +
+                    " -t application/vnd.android.package-archive" +
+                    " --es android.intent.extra.INSTALLER_PACKAGE_NAME $vending" +
+                    " --ez android.intent.extra.NOT_UNKNOWN_SOURCE true" +
+                    " --ei android.intent.extra.INSTALL_REASON 1" +
+                    " --es android.intent.extra.REFERRER_NAME android-app://$vending"
+            val logs = runSuWithCmd("su 2000 -c \"$am\" 2>&1")
             val detail = (logs.getInputStreamLog() + " " + logs.getErrorStreamLog())
                 .replace("\n", " ").trim()
-            val success = detail.contains("Success") ||
-                    detail.contains("installerPackageName=$vending", ignoreCase = true)
-            Log.d("KingInstaller", "installViaRoot($packageName) ok=$success -> '$detail'")
-            onResult(success, detail)
+            val ok = detail.contains("Starting", ignoreCase = true) &&
+                    !detail.contains("Error", ignoreCase = true)
+            Log.d("KingInstaller", "launchInstallerAsShell ok=$ok -> '$detail'")
+            onLaunched?.invoke(ok, detail)
         }
     }
 }

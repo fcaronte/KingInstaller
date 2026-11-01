@@ -144,25 +144,15 @@ object InstallationUtils {
         }
     }
 
+    /** URI `content://` dell'APK via FileProvider, da passare al package installer di sistema. */
+    fun getApkContentUri(context: Context, apkFile: File): Uri =
+        FileProvider.getUriForFile(context.applicationContext, "${context.packageName}.provider", apkFile)
+
     /**
-     * Verifica SOLO che "Installed by" (`installingPackageName`) sia Play Store: è il requisito
-     * reale di Android Auto. Usato dal metodo Root, che imposta l'installer già in fase
-     * d'installazione via `pm install -i`: lì "Requested by" può risultare nullo (installazione da
-     * shell senza app iniziatrice), ma ciò NON impedisce ad AA di riconoscere l'app come da Play.
+     * Package installer a cui concedere la lettura dell'URI dell'APK prima di lanciare l'installer
+     * come shell (il grant è indipendente dal caller di `am start`, così l'installer legge l'APK).
      */
-    fun isInstallerVending(context: Context, packageName: String): Boolean {
-        return try {
-            val pm = context.packageManager
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                pm.getInstallSourceInfo(packageName).installingPackageName == VENDING_PKG
-            } else {
-                @Suppress("DEPRECATION")
-                pm.getInstallerPackageName(packageName) == VENDING_PKG
-            }
-        } catch (e: Exception) {
-            false
-        }
-    }
+    val INSTALLER_PACKAGES = listOf(GOOGLE_INSTALLER_PKG, "com.android.packageinstaller", VENDING_PKG)
 
     /**
      * Riepilogo leggibile dei campi di origine installazione, per diagnostica.
