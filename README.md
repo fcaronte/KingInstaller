@@ -20,11 +20,12 @@ KingInstaller is a utility designed to install APK files in a way that tricks th
 
 * **Hybrid Installation Architecture:** Combines direct intents, Shizuku remote `UserService` (supporting **Shizuku-Next**, **Standard Shizuku**, **ShizukuPlus**, and **Plus Drop-In**), and Root execution.
 * **Smart Workflow:** Streamlined installation flow recommending the classic method first, falling back to Shizuku, and utilizing Root as the ultimate solution when needed.
-* **Auto-Fixer:** Automatically repairs the installer identity immediately after installation if Shizuku or Root is available.
+* **Auto-Fixer:** Ensures the correct installer identity — the **Root** method sets it *at install time* by launching the system package installer as a privileged shell, while **Shizuku** repairs it right after install via the system binder.
 * **Material Design 3 UI:** Modernized interface embracing clean layouts and Material 3 guidelines.
 * **🌍 Multilingual Experience:** KingInstaller supports multiple languages and automatically adapts the interface to the user's preferred system language for a more intuitive experience.
 * **App Diagnostic Checker:** Built-in tool to inspect how the system perceives an installed application.
 * **Diagnostic Log Sharing:** Share a full diagnostic report (device, ROM, install source, logcat) via the share icon next to the title — handy for troubleshooting and support.
+* **One-Tap Log Copy:** Tap the status/log box to copy its contents to the clipboard (in addition to the share icon) — makes it easy to paste the install diagnostics.
 * **Android Auto Settings Shortcut:** Quick shortcut button to jump straight into AA settings.
 
 ---
@@ -49,7 +50,7 @@ To get the best results across different devices and Android versions, follow th
 ### 3️⃣ Step 3: The Root Method (Ultimate Fallback)
 
 * **When to use:** If both the classic method and Shizuku fail due to heavy vendor security restrictions (mandatory for Xiaomi / POCO / Redmi on MIUI/HyperOS; Vivo reported but unconfirmed).
-* **How to use:** Enable the **Root Trick** switch. This grants KingInstaller direct root-level execution via `su` to manipulate the package manager service directly.
+* **How to use:** Enable the **Root Trick** switch and install. KingInstaller uses `su` to launch the system package installer **as a privileged shell**, so Play Store is recorded as the installer *and* the Package Installer stays the initiator — the same end result as the Shizuku method, but without Shizuku (ideal where the vendor blocks Shizuku, e.g. Xiaomi).
 
 ---
 
@@ -57,7 +58,7 @@ To get the best results across different devices and Android versions, follow th
 
 Based on extensive testing:
 
-* **The Golden Rule:** For an app to work in Android Auto, the **"Requested by"** field should ideally be the Package Installer, while the **"Installed by"** field **MUST be the Play Store**.
+* **The Golden Rule:** For an app to work in Android Auto, the **"Installed by"** field **MUST be the Play Store** (`com.android.vending`). On **Android Auto 14+** the **"Requested by"** field is enforced too and must be the **Package Installer** (never shell/empty). KingInstaller's Root and Shizuku methods set both correctly.
 * **Experimental Tweaks:** Due to the wide variety of custom ROMs and security patches across manufacturers, certain installation flags or behavior may require a trial-and-error approach.
 
 ---
@@ -82,15 +83,16 @@ KingInstaller è un'utilità progettata per installare file APK ingannando il si
 
 ---
 
-## ✨ Funzionalità e Ulteriori Aggiornamenti (v1.9)
+## ✨ Funzionalità e Ulteriori Aggiornamenti (v2.5)
 
 * **Architettura di Installazione Ibrida:** Combina intent diretti, `UserService` remoto di Shizuku (con supporto a **Shizuku-Next**, **Shizuku Standard**, **ShizukuPlus** e **Plus Drop-In**) ed esecuzione tramite Root.
 * **Flusso Intelligente:** Processo di installazione ottimizzato che consiglia prima il metodo classico, passando a Shizuku in caso di problemi e riservando il Root come soluzione definitiva.
-* **Auto-Fixer:** Ripara automaticamente l'identità dell'installer subito dopo l'installazione se Shizuku o il Root sono disponibili.
+* **Auto-Fixer:** Garantisce l'identità corretta dell'installer — il metodo **Root** la imposta *durante* l'installazione lanciando il package installer di sistema come shell privilegiata, mentre **Shizuku** la corregge subito dopo l'installazione tramite il binder di sistema.
 * **Interfaccia Material Design 3:** Design moderno basato su linee pulite e linee guida Material 3.
 * **🌍 Esperienza Multilingua:** KingInstaller supporta ora più lingue e adatta automaticamente l'interfaccia alla lingua preferita del sistema per un'esperienza più intuitiva.
 * **Diagnostica App Integrata:** Strumento integrato per verificare come il sistema percepisce l'applicazione installata.
 * **Condivisione Log Diagnostico:** Condividi un report completo (dispositivo, ROM, origine installazione, logcat) tramite l'icona di condivisione accanto al titolo — utile per diagnosi e supporto.
+* **Copia Log con un Tocco:** Tocca il riquadro di stato/log per copiarne il contenuto negli appunti (oltre all'icona di condivisione) — comodo per incollare la diagnostica dell'installazione.
 * **Scorciatoia Impostazioni Android Auto:** Pulsante rapido per accedere direttamente alle impostazioni di AA.
 
 ---
@@ -115,7 +117,7 @@ Per ottenere i risultati migliori su diversi dispositivi e versioni Android, seg
 ### 3️⃣ Passo 3: Il Metodo Root (Soluzione di riserva estrema)
 
 * **Quando usarlo:** Se sia il metodo classico che Shizuku falliscono per restrizioni del produttore (obbligatorio su Xiaomi / POCO / Redmi con MIUI/HyperOS; Vivo segnalato ma non confermato).
-* **Come usarlo:** Attiva l'interruttore **Root**. Questo concederà a KingInstaller l'esecuzione diretta con privilegi di root tramite `su` per manipolare direttamente il servizio di package manager.
+* **Come usarlo:** Attiva l'interruttore **Root** e installa. KingInstaller usa `su` per lanciare il package installer di sistema **come shell privilegiata**, così il Play Store viene registrato come installer *e* il Package Installer resta l'iniziatore — lo stesso risultato del metodo Shizuku, ma senza Shizuku (ideale dove il produttore blocca Shizuku, es. Xiaomi).
 
 ---
 
@@ -123,7 +125,7 @@ Per ottenere i risultati migliori su diversi dispositivi e versioni Android, seg
 
 Basato su test approfonditi:
 
-* **La Regola d'Oro:** Affinché un'app funzioni in Android Auto, il campo **"Requested by"** (Richiesto da) dovrebbe idealmente essere il Package Installer, mentre il campo **"Installed by"** (Installato da) **DEVE essere il Play Store**.
+* **La Regola d'Oro:** Affinché un'app funzioni in Android Auto, il campo **"Installed by"** (Installato da) **DEVE essere il Play Store** (`com.android.vending`). Su **Android Auto 14+** viene controllato **anche** il campo **"Requested by"** (Richiesto da), che deve essere il **Package Installer** (mai shell/vuoto). I metodi Root e Shizuku di KingInstaller impostano correttamente entrambi.
 * **Modifiche Sperimentali:** A causa della grande varietà di custom ROM e patch di sicurezza tra i vari produttori, alcuni flag d'installazione potrebbero richiedere un approccio per tentativi ed errori.
 
 ---
