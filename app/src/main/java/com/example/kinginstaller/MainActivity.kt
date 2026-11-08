@@ -843,20 +843,46 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val dialog = MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.select_split_apks_title)
-            .setMultiChoiceItems(items, checkedItems) { dialogInterface, which, isChecked ->
-                val file = apkFiles[which]
-                if (PackageArchiveUtils.isBaseApk(context, file)) {
-                    (dialogInterface as? androidx.appcompat.app.AlertDialog)?.listView?.setItemChecked(which, true)
-                    checkedItems[which] = true
-                    Toast.makeText(this, R.string.base_apk_mandatory, Toast.LENGTH_SHORT).show()
-                } else {
-                    checkedItems[which] = isChecked
+        val dialogView = layoutInflater.inflate(R.layout.dialog_split_selection, null)
+        val selectAllCheckbox = dialogView.findViewById<com.google.android.material.checkbox.MaterialCheckBox>(R.id.selectAllCheckbox)
+        val listView = dialogView.findViewById<android.widget.ListView>(R.id.splitListView)
+
+        val adapter = android.widget.ArrayAdapter(
+            this,
+            android.R.layout.simple_list_item_multiple_choice,
+            items
+        )
+        listView.adapter = adapter
+
+        for (i in checkedItems.indices) {
+            listView.setItemChecked(i, checkedItems[i])
+        }
+
+        listView.setOnItemClickListener { _: android.widget.AdapterView<*>, _: View, position: Int, _: Long ->
+            val file = apkFiles[position]
+            if (PackageArchiveUtils.isBaseApk(context, file)) {
+                listView.setItemChecked(position, true)
+                checkedItems[position] = true
+                Toast.makeText(this, R.string.base_apk_mandatory, Toast.LENGTH_SHORT).show()
+            } else {
+                checkedItems[position] = listView.isItemChecked(position)
+            }
+        }
+
+        selectAllCheckbox.setOnCheckedChangeListener { _: android.widget.CompoundButton, isChecked: Boolean ->
+            for (i in apkFiles.indices) {
+                val file = apkFiles[i]
+                if (!PackageArchiveUtils.isBaseApk(context, file)) {
+                    checkedItems[i] = isChecked
+                    listView.setItemChecked(i, isChecked)
                 }
             }
-            .setNeutralButton(R.string.select_all, null)
-            .setPositiveButton(R.string.install_as_king) { _, _ ->
+        }
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.select_split_apks_title)
+            .setView(dialogView)
+            .setPositiveButton(R.string.install_as_king) { _: android.content.DialogInterface, _: Int ->
                 val selectedFiles = apkFiles.filterIndexed { index, _ -> checkedItems[index] }
                 if (selectedFiles.isEmpty()) {
                     Toast.makeText(this, R.string.no_splits_selected, Toast.LENGTH_SHORT).show()
@@ -865,30 +891,13 @@ class MainActivity : AppCompatActivity() {
                     performSplitApkInstall(packageName, selectedFiles)
                 }
             }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
+            .setNegativeButton(android.R.string.cancel) { _: android.content.DialogInterface, _: Int ->
                 updateComponentStates(installing = false)
             }
             .setOnCancelListener {
                 updateComponentStates(installing = false)
             }
             .create()
-
-        var selectAll = false
-        dialog.setOnShowListener {
-            dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
-                selectAll = !selectAll
-                val listView = dialog.listView
-                for (i in 0 until apkFiles.size) {
-                    val file = apkFiles[i]
-                    if (!PackageArchiveUtils.isBaseApk(context, file)) {
-                        checkedItems[i] = selectAll
-                        listView.setItemChecked(i, selectAll)
-                    }
-                }
-                val neutralBtn = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL)
-                neutralBtn.text = if (selectAll) getString(R.string.deselect_all) else getString(R.string.select_all)
-            }
-        }
 
         dialog.show()
     }
