@@ -111,7 +111,7 @@ object ShizukuUtils {
                     return@thread
                 }
 
-                prewarmUserService(context)
+                ensureUserServiceConnected(context)
 
                 val fileUri = FileProvider.getUriForFile(
                     context, "${context.packageName}.provider", apkFile
@@ -131,16 +131,37 @@ object ShizukuUtils {
                 activity.runOnUiThread { onStatusUpdate(activity.getString(R.string.opening_package_installer)) }
 
                 val vending = InstallationUtils.VENDING_PKG
-                val installIntent = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
-                    setDataAndType(fileUri, "application/vnd.android.package-archive")
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, vending)
-                    putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
-                    putExtra("android.content.pm.extra.INSTALL_REASON", 1)
+                val am = "am start" +
+                        " -a android.intent.action.VIEW" +
+                        " -d $fileUri" +
+                        " -t application/vnd.android.package-archive" +
+                        " --es android.intent.extra.INSTALLER_PACKAGE_NAME $vending" +
+                        " --ez android.intent.extra.NOT_UNKNOWN_SOURCE true" +
+                        " --ei android.content.pm.extra.INSTALL_REASON 1"
+
+                val warm = cachedService
+                var success = false
+                if (warm?.asBinder()?.pingBinder() == true) {
+                    try {
+                        warm.execCommand(am)
+                        success = true
+                        Log.d("ShizukuUtils", "am start eseguito tramite UserService")
+                    } catch (e: Exception) {
+                        Log.e("ShizukuUtils", "execCommand tramite UserService fallito", e)
+                    }
                 }
 
-                InstallationState.isFocusLost = false
-                val success = startInstallActivityAsShell(context, installIntent)
+                if (!success) {
+                    val installIntent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(fileUri, "application/vnd.android.package-archive")
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, vending)
+                        putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
+                        putExtra("android.content.pm.extra.INSTALL_REASON", 1)
+                    }
+                    InstallationState.isFocusLost = false
+                    success = startInstallActivityAsShell(context, installIntent)
+                }
 
                 if (success) {
                     val startTime = System.currentTimeMillis()
@@ -237,6 +258,33 @@ object ShizukuUtils {
             .processNameSuffix("service")
             .daemon(false)
             .version(1)
+
+    fun ensureUserServiceConnected(context: Context) {
+        if (!isShizukuAvailable() || !hasShizukuPermission()) return
+        if (cachedService?.asBinder()?.pingBinder() == true) return
+
+        val latch = java.util.concurrent.CountDownLatch(1)
+        try {
+            val connection = object : ServiceConnection {
+                override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+                    if (binder != null && binder.pingBinder()) {
+                        cachedService = IMyUserService.Stub.asInterface(binder)
+                        Log.d("ShizukuUtils", "UserService connesso con successo")
+                    }
+                    latch.countDown()
+                }
+
+                override fun onServiceDisconnected(name: ComponentName?) {
+                    cachedService = null
+                    latch.countDown()
+                }
+            }
+            Shizuku.bindUserService(buildUserServiceArgs(context), connection)
+            latch.await(1200, java.util.concurrent.TimeUnit.MILLISECONDS)
+        } catch (e: Exception) {
+            Log.e("ShizukuUtils", "ensureUserServiceConnected fallito", e)
+        }
+    }
 
     /**
      * Avvia in anticipo il UserService di Shizuku e ne memorizza il binder, così la correzione
