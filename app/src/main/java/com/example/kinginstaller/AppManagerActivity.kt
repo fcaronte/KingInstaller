@@ -198,23 +198,48 @@ class AppManagerActivity : AppCompatActivity() {
             val pm = packageManager
             val appInfo = pm.getApplicationInfo(app.packageName, 0)
             val sourceDir = appInfo.sourceDir
-            if (sourceDir != null) {
-                val dir = File(filesDir, "apk")
-                if (!dir.exists()) dir.mkdir()
-                val targetApk = File(dir, "${app.packageName}.apk")
+            val splitDirs = appInfo.splitSourceDirs
+
+            if (sourceDir == null) {
+                Toast.makeText(this, getString(R.string.error_occurred, "APK path not found"), Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val dir = File(filesDir, "apk")
+            if (!dir.exists()) dir.mkdir()
+
+            val targetFile: File
+            if (splitDirs.isNullOrEmpty()) {
+                targetFile = File(dir, "${app.packageName}.apk")
                 File(sourceDir).inputStream().use { input ->
-                    targetApk.outputStream().use { output ->
+                    targetFile.outputStream().use { output ->
                         input.copyTo(output)
                     }
                 }
-                val intent = Intent(this, MainActivity::class.java).apply {
-                    putExtra("selected_apk_path", targetApk.absolutePath)
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                }
-                startActivity(intent)
             } else {
-                Toast.makeText(this, getString(R.string.error_occurred, "APK path not found"), Toast.LENGTH_SHORT).show()
+                targetFile = File(dir, "${app.packageName}.apks")
+                java.util.zip.ZipOutputStream(java.io.FileOutputStream(targetFile)).use { zos ->
+                    val baseFile = File(sourceDir)
+                    zos.putNextEntry(java.util.zip.ZipEntry(baseFile.name.ifEmpty { "base.apk" }))
+                    baseFile.inputStream().use { it.copyTo(zos) }
+                    zos.closeEntry()
+
+                    for (splitPath in splitDirs) {
+                        val splitFile = File(splitPath)
+                        if (splitFile.exists()) {
+                            zos.putNextEntry(java.util.zip.ZipEntry(splitFile.name))
+                            splitFile.inputStream().use { it.copyTo(zos) }
+                            zos.closeEntry()
+                        }
+                    }
+                }
             }
+
+            val intent = Intent(this, MainActivity::class.java).apply {
+                putExtra("selected_apk_path", targetFile.absolutePath)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            }
+            startActivity(intent)
         } catch (e: Exception) {
             Toast.makeText(this, getString(R.string.error_occurred, e.message ?: e.toString()), Toast.LENGTH_SHORT).show()
         }
