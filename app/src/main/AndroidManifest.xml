@@ -14,6 +14,8 @@
 
     <queries>
         <package android:name="moe.shizuku.manager" />
+        <package android:name="moe.shizuku.manager.dev" />
+        <package android:name="moe.shizuku.privileged.api" />
         <package android:name="rikka.shizuku" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
