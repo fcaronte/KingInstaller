@@ -112,6 +112,8 @@ class MainActivity : AppCompatActivity() {
                                 tvError.text = getString(R.string.install_success_no_aa) + "\n" + summary
                                 if (shizukuTrickEnabled) {
                                     promptNotCompatibleAfterShizuku(packageName)
+                                } else if (!rootTrickEnabled && ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission()) {
+                                    promptNotCompatibleAfterClassic(packageName)
                                 }
                             }
                         } else {
@@ -689,6 +691,30 @@ class MainActivity : AppCompatActivity() {
         rootTrickEnabled = false
         oppoTrickEnabled = false
         Shizuku.removeBinderReceivedListener(binderListener)
+        saveMethodSelection()
+        syncSwitches()
+        startInstallation()
+    }
+
+    private fun promptNotCompatibleAfterClassic(packageName: String) {
+        val builder = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.not_aa_title)
+            .setMessage(R.string.not_aa_message)
+        if (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission()) {
+            builder.setPositiveButton(R.string.shizuku_trick) { _, _ -> retryWithShizuku() }
+        }
+        if (RootUtils.isDeviceRooted) {
+            builder.setNeutralButton(R.string.fix_with_root_confirm) { _, _ -> fixViaRootAndRecheck(packageName) }
+        }
+        builder.setNegativeButton(android.R.string.cancel, null)
+        builder.show()
+    }
+
+    private fun retryWithShizuku() {
+        shizukuTrickEnabled = true
+        rootTrickEnabled = false
+        oppoTrickEnabled = false
+        Shizuku.addBinderReceivedListenerSticky(binderListener)
         saveMethodSelection()
         syncSwitches()
         startInstallation()
