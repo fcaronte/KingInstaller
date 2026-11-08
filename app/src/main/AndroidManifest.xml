@@ -10,8 +10,10 @@
         tools:ignore="AllFilesAccessPolicy,ScopedStorage" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="PackageVisibilityPolicy,QueryAllPackagesPermission" />
+    <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
 
     <queries>
+        <package android:name="moe.shizuku.manager" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
         </intent>
