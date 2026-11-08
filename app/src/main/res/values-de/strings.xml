@@ -101,6 +101,8 @@
     <string name="error_extracting_archive">Fehler beim Entpacken des Archivs: %1$s</string>
     <string name="error_no_apks_in_archive">Keine gültigen APK-Dateien im Archiv gefunden</string>
     <string name="installing_split_apks">Split-APKs werden installiert (%1$d Dateien)…</string>
+    <string name="dont_show_again">Nicht mehr anzeigen</string>
+    <string name="proceed_install">Installieren</string>
     <string name="split_not_aa_notice">Die Split-APK-Installation ist eine Zusatzfunktion – sie macht die App in Android Auto NICHT sichtbar.</string>
     <string name="select_split_apks_title">Wähle die zu installierenden Split-APKs:</string>
     <string name="split_mandatory">Erforderlich</string>

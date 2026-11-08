@@ -101,6 +101,8 @@
     <string name="error_extracting_archive">خطأ في استخراج الأرشيف: %1$s</string>
     <string name="error_no_apks_in_archive">لم يتم العثور على ملفات APK صالحة في الأرشيف</string>
     <string name="installing_split_apks">جاري تثبيت ملفات APK المقسمة (%1$d ملفات)…</string>
+    <string name="dont_show_again">عدم الإظهار مرة أخرى</string>
+    <string name="proceed_install">تثبيت</string>
     <string name="split_not_aa_notice">تثبيت حِزم APK المقسّمة ميزة إضافية: لا يجعل التطبيق ظاهرًا في Android Auto.</string>
     <string name="select_split_apks_title">حدد ملفات APK المقسمة لتثبيتها:</string>
     <string name="split_mandatory">إلزامي</string>

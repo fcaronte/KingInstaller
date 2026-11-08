@@ -101,6 +101,8 @@
     <string name="error_extracting_archive">आर्काइव निकालने में त्रुटि: %1$s</string>
     <string name="error_no_apks_in_archive">आर्काइव में कोई वैध APK फ़ाइल नहीं मिली</string>
     <string name="installing_split_apks">स्प्लिट APK इंस्टॉल किए जा रहे हैं (%1$d फ़ाइलें)…</string>
+    <string name="dont_show_again">फिर से न दिखाएँ</string>
+    <string name="proceed_install">इंस्टॉल करें</string>
     <string name="split_not_aa_notice">स्प्लिट APK इंस्टॉल एक अतिरिक्त सुविधा है — यह ऐप को Android Auto में दिखाई देने योग्य नहीं बनाती।</string>
     <string name="select_split_apks_title">इंस्टॉल करने के लिए स्प्लिट APK चुनें:</string>
     <string name="split_mandatory">अनिवार्य</string>

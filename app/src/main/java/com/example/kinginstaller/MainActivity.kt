@@ -21,6 +21,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -930,11 +931,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun performSplitApkInstall(packageName: String?, apkFiles: List<File>) {
+        // Avviso (una tantum): lo split install NON rende l'app visibile in Android Auto. Mostriamo
+        // una schermata con "non mostrare più", poi si procede. Se già nascosto, installa diretto.
+        val prefs = getSharedPreferences("split_notice", MODE_PRIVATE)
+        if (prefs.getBoolean("hide_split_aa_notice", false)) {
+            doSplitApkInstall(packageName, apkFiles)
+            return
+        }
+        val checkBox = CheckBox(this).apply {
+            setText(R.string.dont_show_again)
+            val p = (24 * resources.displayMetrics.density).toInt()
+            setPadding(p, p / 2, p, 0)
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.not_aa_title)
+            .setMessage(R.string.split_not_aa_notice)
+            .setView(checkBox)
+            .setPositiveButton(R.string.proceed_install) { _, _ ->
+                if (checkBox.isChecked) prefs.edit { putBoolean("hide_split_aa_notice", true) }
+                doSplitApkInstall(packageName, apkFiles)
+            }
+            .setNegativeButton(android.R.string.cancel) { _, _ -> updateComponentStates(installing = false) }
+            .setOnCancelListener { updateComponentStates(installing = false) }
+            .show()
+    }
+
+    private fun doSplitApkInstall(packageName: String?, apkFiles: List<File>) {
         val tvError = findViewById<TextView>(R.id.textViewError)
         tvError.text = getString(R.string.installing_split_apks, apkFiles.size)
-        // Avviso: l'installazione split è una comodità in più, ma NON può rendere l'app visibile in
-        // Android Auto (un bundle multi-APK non può ottenere "Requested by = packageinstaller").
-        Toast.makeText(this, R.string.split_not_aa_notice, Toast.LENGTH_LONG).show()
 
         if (shizukuTrickEnabled) {
             Log.d("MainActivity", "Avvio installazione split tramite Metodo Shizuku.")

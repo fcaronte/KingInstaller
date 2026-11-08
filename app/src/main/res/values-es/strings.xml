@@ -101,6 +101,8 @@
     <string name="error_extracting_archive">Error al extraer el archivo: %1$s</string>
     <string name="error_no_apks_in_archive">No se encontraron archivos APK válidos en el archivo</string>
     <string name="installing_split_apks">Instalando APKs divididos (%1$d archivos)…</string>
+    <string name="dont_show_again">No volver a mostrar</string>
+    <string name="proceed_install">Instalar</string>
     <string name="split_not_aa_notice">La instalación de APK divididos es una función adicional: NO hace visible la app en Android Auto.</string>
     <string name="select_split_apks_title">Selecciona los APKs divididos a instalar:</string>
     <string name="split_mandatory">Obligatorio</string>
