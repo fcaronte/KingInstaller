@@ -27,9 +27,12 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
 - **`com.android.shell` + `com.android.vending`**: **FALLISCE**. Se il pacchetto risulta installato da Play Store ma avviato da Shell ADB, Android Auto rifiuta l'app e la nasconde dalla dashboard dell'auto.
 - **`Package Installer` + `com.android.vending`**: **SUCCESSO**. L'app viene correttamente riconosciuta e mostrata in Android Auto.
 
-### 1.4. ROM Cinesi (Xiaomi / MIUI / HyperOS) — Gli Extra dell'Intent Vengono Ignorati
-- **Causa**: su MIUI/HyperOS gli intent di installazione sono dirottati verso `com.miui.packageinstaller`, che **ignora gli extra** (`EXTRA_INSTALLER_PACKAGE_NAME`, `REFERRER_NAME`, `ORIGINATING_PACKAGE`, ecc.). L'app viene quindi installata con "Installed by" errato. **Questo riguarda Xiaomi/MIUI/HyperOS, NON Samsung.**
-- **Fallback UserService**: se la via binder fallisce, si ripiega su `MyUserService` (AIDL → `set-installer` via shell), con warm-up (`prewarmUserService` chiamato in `installApk`) e binder in cache (`cachedService`).
+### 1.4. ROM Cinesi (Xiaomi / MIUI / HyperOS / POCO / Redmi)
+- **Configurazione Shizuku per Xiaomi/HyperOS/MIUI**: Confermato e testato (es. POCO F6 con Android 16). Per far funzionare il metodo Shizuku su dispositivi Xiaomi/HyperOS/MIUI **è necessario abilitare due opzioni nelle Opzioni Sviluppatore**:
+  1. **Installa tramite USB** ("Install via USB")
+  2. **Debug USB (Impostazioni di sicurezza)** ("USB debugging - Security settings")
+  *(Requisito richiesto dall'app Shizuku stessa per consentire le operazioni di installazione e gestione pacchetti).*
+- **Fallback UserService**: se la via binder diretta fallisce, si ripiega su `MyUserService` (AIDL → `set-installer` via shell), con warm-up (`prewarmUserService` chiamato in `installApk`) e binder in cache (`cachedService`).
 - **Nota su "Requested by"**: `set-installer` cambia solo "Installed by" (`installingPackageName`). "Requested by" (`initiatingPackageName`) resta quello del dialog (es. `com.miui.packageinstaller`, che contiene "packageinstaller" e quindi supera `isAACompatible`).
 
 ### 1.5. Invarianti UI Installer (NON regredire)
