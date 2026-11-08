@@ -948,12 +948,11 @@ class MainActivity : AppCompatActivity() {
             doSplitApkInstall(packageName, apkFiles)
             return
         }
-        val checkView = layoutInflater.inflate(R.layout.dialog_dont_show_again, null)
-        val checkBox = checkView.findViewById<CheckBox>(R.id.checkDontShowAgain)
+        val view = layoutInflater.inflate(R.layout.dialog_split_notice, null)
+        val checkBox = view.findViewById<CheckBox>(R.id.checkDontShowAgain)
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.not_aa_title)
-            .setMessage(R.string.split_not_aa_notice)
-            .setView(checkView)
+            .setView(view)
             .setPositiveButton(R.string.proceed_install) { _, _ ->
                 if (checkBox.isChecked) prefs.edit { putBoolean("hide_split_aa_notice", true) }
                 doSplitApkInstall(packageName, apkFiles)
