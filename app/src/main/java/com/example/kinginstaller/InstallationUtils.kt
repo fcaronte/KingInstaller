@@ -209,10 +209,11 @@ object InstallationUtils {
                     }
                 }
 
-                val intent = Intent(context, InstallationResultReceiver::class.java).apply {
+                val intent = Intent(context, MainActivity::class.java).apply {
                     action = "com.example.kinginstaller.INSTALL_COMPLETE"
+                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
-                val pendingIntent = android.app.PendingIntent.getBroadcast(
+                val pendingIntent = android.app.PendingIntent.getActivity(
                     context,
                     sessionId,
                     intent,
