@@ -46,6 +46,11 @@ class MainActivity : AppCompatActivity() {
     private var selectedFilePath: String? = null
     private var lastInstalledPackage: String? = null
 
+    // True se l'ultima installazione avviata è uno split (multi-APK): a esito non compatibile NON
+    // proponiamo altri metodi (uno split non può mai essere AA-compatibile).
+    @Volatile
+    private var lastInstallWasSplit: Boolean = false
+
     private val shizukuRequestCode = 1001
 
     private val processedPackages = mutableMapOf<String, Long>()
@@ -105,12 +110,16 @@ class MainActivity : AppCompatActivity() {
                                 updateComponentStates(installing = false)
                                 tvError.setTextColor(getColor(R.color.aa_red_text))
                                 tvError.text = getString(R.string.install_success_no_aa) + "\n" + summary
-                                if (shizukuTrickEnabled) {
-                                    promptNotCompatibleAfterShizuku(packageName)
-                                } else if (rootTrickEnabled) {
-                                    promptNotCompatibleAfterRoot()
-                                } else if (RootUtils.isDeviceRooted || (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission())) {
-                                    promptNotCompatibleAfterClassic(packageName)
+                                // Per gli split NON proponiamo altri metodi: non possono comunque
+                                // diventare AA-compatibili (niente "Requested by = packageinstaller").
+                                if (!lastInstallWasSplit) {
+                                    if (shizukuTrickEnabled) {
+                                        promptNotCompatibleAfterShizuku(packageName)
+                                    } else if (rootTrickEnabled) {
+                                        promptNotCompatibleAfterRoot()
+                                    } else if (RootUtils.isDeviceRooted || (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission())) {
+                                        promptNotCompatibleAfterClassic(packageName)
+                                    }
                                 }
                             }
                         } else {
@@ -766,6 +775,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.file_error, Toast.LENGTH_SHORT).show()
             return
         }
+        lastInstallWasSplit = false
 
         updateComponentStates(installing = true)
         val tvError = findViewById<TextView>(R.id.textViewError)
@@ -938,15 +948,12 @@ class MainActivity : AppCompatActivity() {
             doSplitApkInstall(packageName, apkFiles)
             return
         }
-        val checkBox = CheckBox(this).apply {
-            setText(R.string.dont_show_again)
-            val p = (24 * resources.displayMetrics.density).toInt()
-            setPadding(p, p / 2, p, 0)
-        }
+        val checkView = layoutInflater.inflate(R.layout.dialog_dont_show_again, null)
+        val checkBox = checkView.findViewById<CheckBox>(R.id.checkDontShowAgain)
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.not_aa_title)
             .setMessage(R.string.split_not_aa_notice)
-            .setView(checkBox)
+            .setView(checkView)
             .setPositiveButton(R.string.proceed_install) { _, _ ->
                 if (checkBox.isChecked) prefs.edit { putBoolean("hide_split_aa_notice", true) }
                 doSplitApkInstall(packageName, apkFiles)
@@ -957,6 +964,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun doSplitApkInstall(packageName: String?, apkFiles: List<File>) {
+        lastInstallWasSplit = true
         val tvError = findViewById<TextView>(R.id.textViewError)
         tvError.text = getString(R.string.installing_split_apks, apkFiles.size)
 
