@@ -317,10 +317,7 @@ class MainActivity : AppCompatActivity() {
                     oppoTrickEnabled = false
                     shizukuTrickEnabled = false
                     Shizuku.removeBinderReceivedListener(binderListener)
-                    if (isGooglePackageExist && !forceRootEnabled) {
-                        findViewById<TextView>(R.id.textViewError).setText(R.string.root_method_warning)
-                        forceRootEnabled = true
-                    }
+                    findViewById<TextView>(R.id.textViewError).text = ""
                     syncSwitches()
                     saveMethodSelection()
                     updateComponentStates()
