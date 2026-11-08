@@ -55,16 +55,17 @@ class MainActivity : AppCompatActivity() {
 
     private val packageAddedReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_PACKAGE_ADDED) {
+            val action = intent.action
+            if (action == Intent.ACTION_PACKAGE_ADDED || action == Intent.ACTION_PACKAGE_REPLACED) {
                 val packageName = intent.data?.schemeSpecificPart ?: return
                 val lastProcessed = processedPackages[packageName] ?: 0L
                 val currentTime = System.currentTimeMillis()
-                if (currentTime - lastProcessed < 5000) {
+                if (currentTime - lastProcessed < 1500) {
                     return
                 }
                 processedPackages[packageName] = currentTime
 
-                Log.d("KingInstaller", "Package added: $packageName")
+                Log.d("KingInstaller", "Package added or replaced: $packageName ($action)")
                 lastInstalledPackage = packageName
                 lastRootFixDetail = null
 
@@ -204,7 +205,9 @@ class MainActivity : AppCompatActivity() {
         Shizuku.addRequestPermissionResultListener(shizukuListener)
         Shizuku.addBinderDeadListener(binderDeadListener)
 
-        val filter = IntentFilter(Intent.ACTION_PACKAGE_ADDED).apply {
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_PACKAGE_ADDED)
+            addAction(Intent.ACTION_PACKAGE_REPLACED)
             addDataScheme("package")
         }
         registerReceiver(packageAddedReceiver, filter)
