@@ -91,6 +91,8 @@ class MainActivity : AppCompatActivity() {
                 val fixGraceMillis = 500L
 
                 val pollingRunnable = object : Runnable {
+                    var fixAttempted = false
+
                     override fun run() {
                         val isCompatible = InstallationUtils.isAACompatible(context, packageName)
                         val elapsed = System.currentTimeMillis() - startTime
@@ -102,9 +104,36 @@ class MainActivity : AppCompatActivity() {
                                 installButton.isEnabled = true
                                 updateComponentStates(installing = false)
                             }
+                        } else if (!fixAttempted && elapsed >= fixGraceMillis) {
+                            fixAttempted = true
+                            when {
+                                rootTrickEnabled -> {
+                                    runOnUiThread {
+                                        tvError.text = getString(R.string.fixing_installer_root)
+                                        tvError.setTextColor(Color.parseColor("#FFA000"))
+                                    }
+                                    RootUtils.setInstallerViaRoot(packageName) { detail -> lastRootFixDetail = detail }
+                                    handler.postDelayed(this, intervalMillis)
+                                }
+                                shizukuTrickEnabled -> {
+                                    runOnUiThread {
+                                        tvError.text = getString(R.string.fixing_installer_shizuku)
+                                        tvError.setTextColor(Color.parseColor("#FFA000"))
+                                    }
+                                    ShizukuUtils.setInstallerViaShizuku(applicationContext, packageName) { ok ->
+                                        if (!ok) Log.w("KingInstaller", "setInstallerViaShizuku fallito per $packageName")
+                                    }
+                                    handler.postDelayed(this, intervalMillis)
+                                }
+                                else -> {
+                                    handler.postDelayed(this, intervalMillis)
+                                }
+                            }
                         } else if (elapsed >= timeoutMillis) {
                             val summary = InstallationUtils.getInstallSourceSummary(context, packageName)
-                            Log.w("KingInstaller", "AA non compatibile per $packageName -> $summary")
+                            val rootDetail = lastRootFixDetail
+                            Log.w("KingInstaller", "AA non compatibile per $packageName -> $summary" +
+                                    (if (!rootDetail.isNullOrEmpty()) " | [root] $rootDetail" else ""))
                             runOnUiThread {
                                 installButton.isEnabled = true
                                 updateComponentStates(installing = false)

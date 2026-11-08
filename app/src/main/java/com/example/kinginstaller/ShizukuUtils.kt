@@ -306,18 +306,7 @@ object ShizukuUtils {
             return
         }
         thread {
-            val viaBinder = try {
-                setInstallerViaBinder(packageName).also {
-                    Log.d("ShizukuUtils", "setInstaller via binder per $packageName: $it")
-                }
-            } catch (e: Throwable) {
-                // method.invoke avvolge la vera eccezione in InvocationTargetException (message null):
-                // scartiamo il wrapper per loggare la causa reale (es. SecurityException con motivo).
-                val cause = (e as? java.lang.reflect.InvocationTargetException)?.targetException ?: e.cause ?: e
-                Log.w("ShizukuUtils", "setInstaller via binder fallito -> ${cause.javaClass.name}: ${cause.message}", cause)
-                false
-            }
-            if (viaBinder) onDone?.invoke(true) else setInstallerViaUserService(context, packageName, onDone)
+            setInstallerViaUserService(context, packageName, onDone)
         }
     }
 
