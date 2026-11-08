@@ -5,12 +5,40 @@
 ### 🇺🇸 English
 
 **New**
-- **Support for XAPK, APKS, and APKM files** 📦 — KingInstaller can now open, extract, and install split APK bundles (.xapk, .apks, .apkm) and expansion files (.obb) across all installation methods (Classic, Shizuku, Root) without affecting single APK installations.
+- **Support for XAPK, APKS, and APKM files** 📦 — open, extract, and install split APK bundles (.xapk, .apks, .apkm) and OBB expansion files across all methods (Classic, Shizuku, Root), with smart pre-selection of the right ABI / screen density / language and a one-tap "Select all". Split apps can also be reinstalled from the in-app installer checker. *Note: split apps can't be made Android Auto–visible (a multi-APK bundle can't get the Play Store "Requested by" source); a dialog explains this, with a "don't show again" option.*
+- **Direct in-app update** 🔄 — KingInstaller downloads its own update APK and launches the install in one tap.
+- **XLauncher shortcut** 🚗 — a new "Universal AA unlock (XLauncher)" entry in the ⋮ menu; and if the Root method can't make an app Android Auto–visible, KingInstaller suggests XLauncher Unlocked (an Xposed/LSPosed module that unlocks every AA app regardless of installer).
+
+**Improvements**
+- **Android 13+ robustness** — several fixes so the system installer opens reliably on Android 13+ (dynamic binder signature resolution, synchronous Shizuku UserService connection with a safe fallback, Background-Activity-Launch workaround, correct installer resolution). Shizuku-Next compatibility.
+- After a non-compatible install on a **rooted device**, the **Root method** is now offered too (not only Shizuku/Classic), and the Classic-failed prompt appears on rooted devices even without Shizuku.
+- Update/reinstall of an already-installed app now shows the result feedback (ACTION_PACKAGE_REPLACED).
+- The diagnostic log is also auto-saved to the public Downloads folder.
+- Docs updated with the Xiaomi/POCO/HyperOS Developer-Options steps required for Shizuku.
+
+**Removed / Fixed**
+- Removed the **post-install installer fix**: on modern Android the `set-installer` is blocked by a signature check for every uid, so it never worked — the correct installer is set at install time instead.
+- Removed the unneeded MANAGE_EXTERNAL_STORAGE prompt (content:// URIs + the system file picker are used instead) and trimmed superfluous install-intent extras (fewer conflicts on custom ROMs like MIUI).
+- Fixed an EPIPE (broken pipe) error during root split installs and a Shizuku UserService crash (ClassCastException).
 
 ### 🇮🇹 Italiano
 
 **Novità**
-- **Supporto per file XAPK, APKS e APKM** 📦 — KingInstaller ora può aprire, estrarre e installare pacchetti split (.xapk, .apks, .apkm) e file di espansione (.obb) su tutti i metodi di installazione (Classico, Shizuku, Root), mantenendo inalterata l'installazione dei singoli file APK.
+- **Supporto per file XAPK, APKS e APKM** 📦 — apri, estrai e installa pacchetti split (.xapk, .apks, .apkm) e file di espansione OBB su tutti i metodi (Classico, Shizuku, Root), con pre-selezione intelligente di ABI / densità schermo / lingua e un pulsante "Seleziona tutto". Le app split si possono anche reinstallare dalla schermata di verifica installatore. *Nota: le app split non possono essere rese visibili in Android Auto (un bundle multi-APK non può ottenere l'origine "Requested by" del Play Store); un dialogo lo spiega, con opzione "non mostrare più".*
+- **Aggiornamento diretto in-app** 🔄 — KingInstaller scarica l'APK di aggiornamento e avvia l'installazione con un tocco.
+- **Scorciatoia XLauncher** 🚗 — nuova voce "Sblocco universale AA (XLauncher)" nel menu ⋮; e se il metodo Root non riesce a rendere un'app visibile in Android Auto, KingInstaller propone XLauncher Unlocked (modulo Xposed/LSPosed che sblocca tutte le app AA a prescindere dall'installer).
+
+**Miglioramenti**
+- **Robustezza Android 13+** — vari fix perché l'installer di sistema si apra in modo affidabile su Android 13+ (risoluzione dinamica delle firme del binder, connessione sincrona del UserService Shizuku con fallback sicuro, aggiramento del Background Activity Launch, corretta risoluzione dell'installer). Compatibilità con Shizuku-Next.
+- Dopo un'installazione non compatibile su **device rootato**, ora viene proposto anche il **Metodo Root** (non solo Shizuku/Classico), e il prompt del Classico-fallito compare sui device rootati anche senza Shizuku.
+- L'aggiornamento/reinstallazione di un'app già presente ora mostra il feedback d'esito (ACTION_PACKAGE_REPLACED).
+- Il log diagnostico viene salvato automaticamente anche nella cartella pubblica Download.
+- Documentazione aggiornata con i passi delle Opzioni Sviluppatore Xiaomi/POCO/HyperOS necessari per Shizuku.
+
+**Rimosso / Risolto**
+- Rimosso il **fix installer post-installazione**: su Android moderno il `set-installer` è bloccato da un controllo di firma per ogni uid, quindi non funzionava — l'installer corretto viene impostato al momento dell'installazione.
+- Rimosso il prompt inutile per MANAGE_EXTERNAL_STORAGE (si usano URI content:// + il file picker di sistema) e ripuliti gli extra superflui degli intent d'installazione (meno conflitti su ROM custom come MIUI).
+- Risolto un errore EPIPE (broken pipe) nelle installazioni split via root e un crash del UserService Shizuku (ClassCastException).
 
 ## v2.5
 
