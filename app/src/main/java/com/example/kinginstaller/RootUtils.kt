@@ -230,22 +230,10 @@ object RootUtils {
                 val writeDetails = StringBuilder()
 
                 for (apk in apkFiles) {
-                    val proc = Runtime.getRuntime().exec(arrayOf("su", "-c", "cmd package install-write $sessionId ${apk.name} -"))
-                    val os = proc.outputStream
-                    apk.inputStream().use { input ->
-                        input.copyTo(os)
-                    }
-                    os.flush()
-                    os.close()
+                    val proc = Runtime.getRuntime().exec(arrayOf("su", "-c", "cmd package install-write $sessionId ${apk.name} ${apk.absolutePath}"))
                     val exitCode = proc.waitFor()
                     if (exitCode != 0) {
-                        val procFb = Runtime.getRuntime().exec(arrayOf("su", "-c", "pm install-write $sessionId ${apk.name} -"))
-                        val osFb = procFb.outputStream
-                        apk.inputStream().use { input ->
-                            input.copyTo(osFb)
-                        }
-                        osFb.flush()
-                        osFb.close()
+                        val procFb = Runtime.getRuntime().exec(arrayOf("su", "-c", "pm install-write $sessionId ${apk.name} ${apk.absolutePath}"))
                         val exitCodeFb = procFb.waitFor()
                         if (exitCodeFb != 0) {
                             writeSuccess = false
