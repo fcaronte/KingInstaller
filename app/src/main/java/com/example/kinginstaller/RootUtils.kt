@@ -112,47 +112,6 @@ object RootUtils {
     }
 
     /**
-     * Pre-attiva il permesso root: esegue un comando innocuo così il prompt del superuser compare
-     * SUBITO (mentre l'utente è ancora nel flusso d'installazione) e, al momento del fix
-     * post-installazione, su è già concesso e il set-installer parte senza latenza.
-     */
-    fun prewarm() {
-        thread {
-            try { runSuWithCmd("id") } catch (e: Exception) { /* no-op: su assente */ }
-        }
-    }
-
-    /**
-     * Imposta Play Store come installer del pacchetto appena installato.
-     *
-     * ⚠️ `cmd package set-installer` eseguito come **root (uid 0)** è rifiutato da Android recente
-     * (14/15/17) con `SecurityException: Unknown calling UID: 0`: il PackageManager pretende un uid
-     * "noto" (associato a un pacchetto) e uid 0 non lo è. Lo eseguiamo quindi come **system
-     * (uid 1000)** — uid noto e con INSTALL_PACKAGES, che aggira anche il check "same cert" — e come
-     * **shell (uid 2000)**, infine root. Eseguiamo tutte le varianti e in coda leggiamo l'installer
-     * REALE con `dumpsys`, così [onDone] riporta con certezza quale uid ha funzionato (o perché
-     * ognuno fallisce). L'esito finale lo conferma comunque il polling via `isAACompatible`.
-     */
-    fun setInstallerViaRoot(packageName: String, onDone: ((detail: String) -> Unit)? = null) {
-        thread {
-            val target = InstallationUtils.VENDING_PKG
-            val set = "cmd package set-installer $packageName $target"
-            // Filtra le righe di stacktrace ("    at com.android…"): lasciano solo rumore nella
-            // finestra del log. Teniamo la riga d'eccezione utile (es. "Unknown calling UID: 0").
-            val noStack = "grep -vE '^[[:space:]]*at '"
-            val cmd = "echo '[u1000]'; su 1000 -c '$set' 2>&1 | $noStack; " +
-                    "echo '[u2000]'; su 2000 -c '$set' 2>&1 | $noStack; " +
-                    "echo '[root]'; $set 2>&1 | $noStack; " +
-                    "echo '[installer=]'; dumpsys package $packageName 2>/dev/null | grep -m1 -i installerPackageName | tr -d ' '"
-            val logs = runSuWithCmd(cmd)
-            val detail = (logs.getInputStreamLog() + " " + logs.getErrorStreamLog())
-                .replace("\n", " ").trim()
-            Log.d("KingInstaller", "setInstallerViaRoot($packageName) -> '$detail'")
-            onDone?.invoke(detail)
-        }
-    }
-
-    /**
      * Root-equivalente di `ShizukuUtils.startInstallActivityAsShell`: lancia lo **stesso** intent
      * d'installazione del metodo Shizuku ma con identità **shell (uid 2000)** via `su`, invece che
      * col binder dell'ActivityTaskManager wrappato da Shizuku. Stessi extra

@@ -45,10 +45,6 @@ class MainActivity : AppCompatActivity() {
     private var selectedFilePath: String? = null
     private var lastInstalledPackage: String? = null
 
-    // Output grezzo dell'ultimo tentativo di fix via Root (per diagnosi nel messaggio finale).
-    @Volatile
-    private var lastRootFixDetail: String? = null
-
     private val shizukuRequestCode = 1001
 
     private val processedPackages = mutableMapOf<String, Long>()
@@ -67,7 +63,6 @@ class MainActivity : AppCompatActivity() {
 
                 Log.d("KingInstaller", "Package added or replaced: $packageName ($action)")
                 lastInstalledPackage = packageName
-                lastRootFixDetail = null
 
                 val tvError = findViewById<TextView>(R.id.textViewError)
                 val installButton = findViewById<Button>(R.id.installButton)
@@ -79,21 +74,17 @@ class MainActivity : AppCompatActivity() {
                     installButton.isEnabled = false
                 }
                 
-                // 3. Polling reattivo CON FEEDBACK VISIBILE: ogni 150 ms verifichiamo la
-                //    compatibilità AA. Se dopo un breve margine i metadati NON risultano
-                //    corretti (tipico di Xiaomi/MIUI/HyperOS che ignora gli extra dell'intent,
-                //    ma possibile anche su One UI), forziamo UNA volta l'installer a Play Store
-                //    con privilegi Root o Shizuku mostrando lo stato, poi controlliamo l'esito.
+                // 3. Polling reattivo: ogni 150 ms verifichiamo la compatibilità AA fino al timeout.
+                //    L'installer corretto (Play Store) è impostato AL MOMENTO dell'installazione
+                //    (installer di sistema lanciato come shell). Il fix POST-installazione è stato
+                //    RIMOSSO: il set-installer dopo l'install è bloccato dalla firma per ogni uid.
                 //    In caso di fallimento mostriamo i valori reali di install-source per diagnosi.
                 val handler = Handler(Looper.getMainLooper())
                 val startTime = System.currentTimeMillis()
                 val timeoutMillis = 6000L
                 val intervalMillis = 150L
-                val fixGraceMillis = 500L
 
                 val pollingRunnable = object : Runnable {
-                    var fixAttempted = false
-
                     override fun run() {
                         val isCompatible = InstallationUtils.isAACompatible(context, packageName)
                         val elapsed = System.currentTimeMillis() - startTime
@@ -105,36 +96,9 @@ class MainActivity : AppCompatActivity() {
                                 installButton.isEnabled = true
                                 updateComponentStates(installing = false)
                             }
-                        } else if (!fixAttempted && elapsed >= fixGraceMillis) {
-                            fixAttempted = true
-                            when {
-                                rootTrickEnabled -> {
-                                    runOnUiThread {
-                                        tvError.text = getString(R.string.fixing_installer_root)
-                                        tvError.setTextColor(Color.parseColor("#FFA000"))
-                                    }
-                                    RootUtils.setInstallerViaRoot(packageName) { detail -> lastRootFixDetail = detail }
-                                    handler.postDelayed(this, intervalMillis)
-                                }
-                                shizukuTrickEnabled -> {
-                                    runOnUiThread {
-                                        tvError.text = getString(R.string.fixing_installer_shizuku)
-                                        tvError.setTextColor(Color.parseColor("#FFA000"))
-                                    }
-                                    ShizukuUtils.setInstallerViaShizuku(applicationContext, packageName) { ok ->
-                                        if (!ok) Log.w("KingInstaller", "setInstallerViaShizuku fallito per $packageName")
-                                    }
-                                    handler.postDelayed(this, intervalMillis)
-                                }
-                                else -> {
-                                    handler.postDelayed(this, intervalMillis)
-                                }
-                            }
                         } else if (elapsed >= timeoutMillis) {
                             val summary = InstallationUtils.getInstallSourceSummary(context, packageName)
-                            val rootDetail = lastRootFixDetail
-                            Log.w("KingInstaller", "AA non compatibile per $packageName -> $summary" +
-                                    (if (!rootDetail.isNullOrEmpty()) " | [root] $rootDetail" else ""))
+                            Log.w("KingInstaller", "AA non compatibile per $packageName -> $summary")
                             runOnUiThread {
                                 installButton.isEnabled = true
                                 updateComponentStates(installing = false)
@@ -711,9 +675,6 @@ class MainActivity : AppCompatActivity() {
             .setMessage(R.string.not_aa_message)
             .setPositiveButton(R.string.try_classic) { _, _ -> retryWithClassic() }
             .setNegativeButton(android.R.string.cancel, null)
-        if (RootUtils.isDeviceRooted) {
-            builder.setNeutralButton(R.string.fix_with_root_confirm) { _, _ -> fixViaRootAndRecheck(packageName) }
-        }
         builder.show()
     }
 
@@ -735,9 +696,6 @@ class MainActivity : AppCompatActivity() {
         if (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission()) {
             builder.setPositiveButton(R.string.shizuku_trick) { _, _ -> retryWithShizuku() }
         }
-        if (RootUtils.isDeviceRooted) {
-            builder.setNeutralButton(R.string.fix_with_root_confirm) { _, _ -> fixViaRootAndRecheck(packageName) }
-        }
         builder.setNegativeButton(android.R.string.cancel, null)
         builder.show()
     }
@@ -752,32 +710,6 @@ class MainActivity : AppCompatActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
             startInstallation()
         }, 300L)
-    }
-
-    private fun fixViaRootAndRecheck(packageName: String) {
-        val tv = findViewById<TextView>(R.id.textViewError)
-        tv.text = getString(R.string.fixing_installer_root)
-        tv.setTextColor(Color.parseColor("#FFA000"))
-        RootUtils.setInstallerViaRoot(packageName)
-
-        val handler = Handler(Looper.getMainLooper())
-        val start = System.currentTimeMillis()
-        handler.postDelayed(object : Runnable {
-            override fun run() {
-                when {
-                    InstallationUtils.isAACompatible(this@MainActivity, packageName) -> {
-                        tv.text = getString(R.string.install_success_aa)
-                        tv.setTextColor(getColor(R.color.aa_green_text))
-                    }
-                    System.currentTimeMillis() - start >= 3000 -> {
-                        tv.text = getString(R.string.install_success_no_aa) + "\n" +
-                            InstallationUtils.getInstallSourceSummary(this@MainActivity, packageName)
-                        tv.setTextColor(getColor(R.color.aa_red_text))
-                    }
-                    else -> handler.postDelayed(this, 150)
-                }
-            }
-        }, 400)
     }
 
     private fun startInstallation() {
