@@ -103,4 +103,6 @@
     <string name="base_apk_mandatory">ملف APK الأساسي إلزامي</string>
     <string name="no_splits_selected">لم يتم تحديد أي ملفات APK للتثبيت</string>
     <string name="downloading_update">جاري تنزيل التحديث…</string>
+    <string name="select_all">تحديد الكل</string>
+    <string name="deselect_all">إلغاء تحديد الكل</string>
 </resources>

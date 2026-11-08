@@ -104,4 +104,6 @@
     <string name="base_apk_mandatory">Az alap APK kötelező</string>
     <string name="no_splits_selected">Nincs kijelölve APK a telepítéshez</string>
     <string name="downloading_update">Frissítés letöltése…</string>
+    <string name="select_all">Összes kijelölése</string>
+    <string name="deselect_all">Kijelölések törlése</string>
 </resources>

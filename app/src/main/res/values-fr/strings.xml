@@ -103,4 +103,6 @@
     <string name="base_apk_mandatory">L\'APK de base est obligatoire</string>
     <string name="no_splits_selected">Aucun APK sélectionné pour l\'installation</string>
     <string name="downloading_update">Téléchargement de la mise à jour…</string>
+    <string name="select_all">Tout sélectionner</string>
+    <string name="deselect_all">Tout désélectionner</string>
 </resources>

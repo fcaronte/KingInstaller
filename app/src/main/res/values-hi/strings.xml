@@ -103,4 +103,6 @@
     <string name="base_apk_mandatory">बेस APK अनिवार्य है</string>
     <string name="no_splits_selected">इंस्टॉलेशन के लिए कोई APK नहीं चुना गया</string>
     <string name="downloading_update">अपडेट डाउनलोड हो रहा है…</string>
+    <string name="select_all">सभी चुनें</string>
+    <string name="deselect_all">सभी अचयनित करें</string>
 </resources>

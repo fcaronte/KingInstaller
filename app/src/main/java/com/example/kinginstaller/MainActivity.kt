@@ -855,6 +855,7 @@ class MainActivity : AppCompatActivity() {
                     checkedItems[which] = isChecked
                 }
             }
+            .setNeutralButton(R.string.select_all, null)
             .setPositiveButton(R.string.install_as_king) { _, _ ->
                 val selectedFiles = apkFiles.filterIndexed { index, _ -> checkedItems[index] }
                 if (selectedFiles.isEmpty()) {
@@ -871,6 +872,23 @@ class MainActivity : AppCompatActivity() {
                 updateComponentStates(installing = false)
             }
             .create()
+
+        var selectAll = false
+        dialog.setOnShowListener {
+            dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+                selectAll = !selectAll
+                val listView = dialog.listView
+                for (i in 0 until apkFiles.size) {
+                    val file = apkFiles[i]
+                    if (!PackageArchiveUtils.isBaseApk(context, file)) {
+                        checkedItems[i] = selectAll
+                        listView.setItemChecked(i, selectAll)
+                    }
+                }
+                val neutralBtn = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL)
+                neutralBtn.text = if (selectAll) getString(R.string.deselect_all) else getString(R.string.select_all)
+            }
+        }
 
         dialog.show()
     }
