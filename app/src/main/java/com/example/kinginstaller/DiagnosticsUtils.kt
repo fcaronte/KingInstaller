@@ -135,6 +135,14 @@ object DiagnosticsUtils {
             val file = File(activity.cacheDir, "kinginstaller-diagnostics.txt")
             file.writeText(report)
 
+            try {
+                val downloads = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                if (!downloads.exists()) downloads.mkdirs()
+                val destFile = File(downloads, "kinginstaller-diagnostics.txt")
+                destFile.writeText(report)
+                Toast.makeText(activity, "Log saved to Downloads/kinginstaller-diagnostics.txt", Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {}
+
             val uri = FileProvider.getUriForFile(activity, "${activity.packageName}.provider", file)
             val share = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
