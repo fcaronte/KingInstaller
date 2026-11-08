@@ -71,7 +71,7 @@ object ShizukuUtils {
                 val pType = method.parameterTypes[i]
                 args[i] = when {
                     pType.isAssignableFrom(Intent::class.java) -> intent
-                    pType == String::class.java -> if (i == 1) "com.android.shell" else null
+                    pType == String::class.java -> if (i == 1) context.packageName else null
                     pType == Int::class.javaPrimitiveType || pType == Integer::class.java -> 0
                     else -> null
                 }
