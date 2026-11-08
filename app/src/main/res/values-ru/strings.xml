@@ -104,4 +104,5 @@
     <string name="downloading_update">Загрузка обновления…</string>
     <string name="select_all">Выбрать все</string>
     <string name="deselect_all">Отменить все</string>
+    <string name="not_aa_classic_message">Приложение было установлено классическим методом, но может быть несовместимо с Android Auto. Хотите попробовать установить через Shizuku или Root?</string>
 </resources>

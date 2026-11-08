@@ -105,4 +105,5 @@
     <string name="downloading_update">正在下载更新…</string>
     <string name="select_all">全选</string>
     <string name="deselect_all">取消全选</string>
+    <string name="not_aa_classic_message">该应用使用经典方式安装，但可能与 Android Auto 不兼容。您是否要尝试使用 Shizuku 或 Root 安装？</string>
 </resources>

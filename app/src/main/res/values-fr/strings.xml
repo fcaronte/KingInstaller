@@ -105,4 +105,5 @@
     <string name="downloading_update">Téléchargement de la mise à jour…</string>
     <string name="select_all">Tout sélectionner</string>
     <string name="deselect_all">Tout désélectionner</string>
+    <string name="not_aa_classic_message">L\'application a été installée avec la méthode Classique, mais n\'est peut-être pas compatible avec Android Auto. Souhaitez-vous essayer d\'installer avec Shizuku ou Root ?</string>
 </resources>

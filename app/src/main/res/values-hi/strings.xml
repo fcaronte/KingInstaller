@@ -105,4 +105,5 @@
     <string name="downloading_update">अपडेट डाउनलोड हो रहा है…</string>
     <string name="select_all">सभी चुनें</string>
     <string name="deselect_all">सभी अचयनित करें</string>
+    <string name="not_aa_classic_message">ऐप को Classic तरीके से इंस्टॉल किया गया है, लेकिन यह Android Auto के साथ संगत नहीं हो सकता है। क्या आप Shizuku या Root के साथ इंस्टॉल करने का प्रयास करना चाहते हैं?</string>
 </resources>

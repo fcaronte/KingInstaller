@@ -104,4 +104,5 @@
     <string name="downloading_update">Downloading update…</string>
     <string name="select_all">Select All</string>
     <string name="deselect_all">Deselect All</string>
+    <string name="not_aa_classic_message">The app was installed with the Classic method, but might not be Android Auto-compatible. Would you like to try installing with Shizuku or Root?</string>
 </resources>

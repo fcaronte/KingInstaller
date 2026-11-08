@@ -14,6 +14,7 @@
 
     <queries>
         <package android:name="moe.shizuku.manager" />
+        <package android:name="rikka.shizuku" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
         </intent>

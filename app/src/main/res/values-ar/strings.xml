@@ -105,4 +105,5 @@
     <string name="downloading_update">جاري تنزيل التحديث…</string>
     <string name="select_all">تحديد الكل</string>
     <string name="deselect_all">إلغاء تحديد الكل</string>
+    <string name="not_aa_classic_message">تم تثبيت التطبيق بالطريقة التقليدية، ولكنه قد غير متوافق مع Android Auto. هل تريد تجربة التثبيت باستخدام Shizuku أو Root؟</string>
 </resources>

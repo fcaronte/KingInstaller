@@ -699,7 +699,7 @@ class MainActivity : AppCompatActivity() {
     private fun promptNotCompatibleAfterClassic(packageName: String) {
         val builder = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.not_aa_title)
-            .setMessage(R.string.not_aa_message)
+            .setMessage(R.string.not_aa_classic_message)
         if (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission()) {
             builder.setPositiveButton(R.string.shizuku_trick) { _, _ -> retryWithShizuku() }
         }
