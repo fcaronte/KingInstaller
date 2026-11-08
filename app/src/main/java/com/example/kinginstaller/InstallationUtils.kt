@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Build
 import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
-import androidx.core.net.toUri
 import java.io.File
 import java.io.FileOutputStream
 
@@ -90,22 +89,8 @@ object InstallationUtils {
             
             putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
             putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, VENDING_PKG)
-            
             putExtra("installerPackageName", VENDING_PKG)
-            putExtra("android.content.pm.extra.VERIFICATION_INSTALLER_PACKAGE", VENDING_PKG)
-            putExtra("android.content.pm.extra.VERIFICATION_INSTALLER_UID", 0)
-            
             putExtra("android.intent.extra.INSTALL_REASON", 1)
-            
-            putExtra("android.intent.extra.REFERRER_NAME", "android-app://$VENDING_PKG")
-            putExtra(Intent.EXTRA_REFERRER, "android-app://$VENDING_PKG".toUri())
-            
-            putExtra("android.intent.extra.ORIGINATING_PACKAGE", VENDING_PKG)
-            putExtra(Intent.EXTRA_ORIGINATING_URI, "https://play.google.com/store/apps/details?id=${context.packageName}".toUri())
-            
-            if (Build.VERSION.SDK_INT >= 34) {
-                putExtra("android.content.pm.extra.REQUEST_UPDATE_OWNERSHIP", true)
-            }
         }
     }
 
@@ -275,22 +260,8 @@ object InstallationUtils {
 
             putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
             putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, VENDING_PKG)
-
             putExtra("installerPackageName", VENDING_PKG)
-            putExtra("android.content.pm.extra.VERIFICATION_INSTALLER_PACKAGE", VENDING_PKG)
-            putExtra("android.content.pm.extra.VERIFICATION_INSTALLER_UID", 0)
-
             putExtra("android.intent.extra.INSTALL_REASON", 1)
-
-            putExtra("android.intent.extra.REFERRER_NAME", "android-app://$VENDING_PKG")
-            putExtra(Intent.EXTRA_REFERRER, "android-app://$VENDING_PKG".toUri())
-
-            putExtra("android.intent.extra.ORIGINATING_PACKAGE", VENDING_PKG)
-            putExtra(Intent.EXTRA_ORIGINATING_URI, "https://play.google.com/store/apps/details?id=${context.packageName}".toUri())
-
-            if (Build.VERSION.SDK_INT >= 34) {
-                putExtra("android.content.pm.extra.REQUEST_UPDATE_OWNERSHIP", true)
-            }
         }
     }
 }
