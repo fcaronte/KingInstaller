@@ -16,6 +16,9 @@
         android:id="@+id/action_download_shizuku_next"
         android:title="@string/download_shizuku_next"/>
     <item
+        android:id="@+id/action_xlauncher"
+        android:title="@string/menu_xlauncher"/>
+    <item
         android:id="@+id/action_readme"
         android:title="@string/action_readme"/>
     <item

@@ -70,6 +70,9 @@
     <string name="donate_buymeacoffee">اشتري لي قهوة</string>
     <string name="install_success_aa">تم تثبيت التطبيق بنجاح! (متوافق مع AA)</string>
     <string name="install_success_no_aa">تم تثبيت التطبيق، ولكن قد لا يكون متوافقاً مع AA. تحقق من التفاصيل.</string>
+    <string name="menu_xlauncher">فتح AA شامل (XLauncher)</string>
+    <string name="get_xlauncher">الحصول على XLauncher</string>
+    <string name="not_aa_root_message">لم تتمكن طريقة Root من إظهار هذا التطبيق في Android Auto على هذا النظام. كحل شامل، ثبّت XLauncher Unlocked (وحدة Xposed/LSPosed): فهي تفتح جميع تطبيقات Android Auto بغض النظر عن طريقة تثبيتها.</string>
     <string name="installing_root">جارٍ التثبيت بامتيازات Root…</string>
     <string name="root_launch_failed">تعذّر تشغيل مثبّت النظام بصلاحيات Root. التفاصيل موجودة في السجل المُشارَك.</string>
     <string name="processing_apk">جاري معالجة ملف APK…</string>

@@ -71,6 +71,9 @@
     <string name="donate_buymeacoffee">Egy kávé</string>
     <string name="install_success_aa">Az alkalmazás sikeresen telepítve! (AA kompatibilis)</string>
     <string name="install_success_no_aa">Az alkalmazás telepítve van, de lehet, hogy NEM AA kompatibilis. Nézze meg a részleteket.</string>
+    <string name="menu_xlauncher">Univerzális AA-feloldás (XLauncher)</string>
+    <string name="get_xlauncher">XLauncher beszerzése</string>
+    <string name="not_aa_root_message">A Root módszer ezen a ROM-on nem tudta láthatóvá tenni ezt az alkalmazást az Android Autóban. Univerzális megoldásként telepítsd az XLauncher Unlocked modult (Xposed/LSPosed): minden Android Auto alkalmazást felold, a telepítés módjától függetlenül.</string>
     <string name="installing_root">Telepítés Root jogosultságokkal…</string>
     <string name="root_launch_failed">A rendszer telepítőjét nem sikerült Root-ként elindítani. A részletek a megosztott naplóban vannak.</string>
     <string name="processing_apk">APK-fájl feldolgozása…</string>

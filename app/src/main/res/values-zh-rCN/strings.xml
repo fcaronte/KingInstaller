@@ -70,6 +70,9 @@
     <string name="donate_buymeacoffee">请我喝咖啡</string>
     <string name="install_success_aa">应用安装成功！（兼容 Android Auto）</string>
     <string name="install_success_no_aa">应用已安装，但可能不兼容 Android Auto。请查看详情。</string>
+    <string name="menu_xlauncher">通用 AA 解锁 (XLauncher)</string>
+    <string name="get_xlauncher">获取 XLauncher</string>
+    <string name="not_aa_root_message">在此 ROM 上，Root 方法无法让此应用在 Android Auto 中显示。作为通用方案，请安装 XLauncher Unlocked（一个 Xposed/LSPosed 模块）：无论应用如何安装，它都能解锁所有 Android Auto 应用。</string>
     <string name="installing_root">正在以 Root 权限安装…</string>
     <string name="root_launch_failed">无法以 Root 身份启动系统安装程序。详情见共享日志。</string>
     <string name="processing_apk">正在处理 APK 文件…</string>

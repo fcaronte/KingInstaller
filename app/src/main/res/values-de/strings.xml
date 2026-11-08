@@ -70,6 +70,9 @@
     <string name="donate_buymeacoffee">Buy Me a Coffee</string>
     <string name="install_success_aa">App erfolgreich installiert! (AA-kompatibel)</string>
     <string name="install_success_no_aa">App installiert, aber möglicherweise NICHT AA-kompatibel. Details prüfen.</string>
+    <string name="menu_xlauncher">Universelle AA-Freischaltung (XLauncher)</string>
+    <string name="get_xlauncher">XLauncher holen</string>
+    <string name="not_aa_root_message">Die Root-Methode konnte diese App auf dieser ROM nicht in Android Auto sichtbar machen. Als universelle Lösung installiere XLauncher Unlocked (ein Xposed/LSPosed-Modul) – es schaltet jede Android-Auto-App frei, unabhängig von der Installationsart.</string>
     <string name="installing_root">Installation mit Root-Rechten…</string>
     <string name="root_launch_failed">Der System-Installer konnte nicht als Root gestartet werden. Details im geteilten Protokoll.</string>
     <string name="processing_apk">Verarbeite APK-Datei…</string>

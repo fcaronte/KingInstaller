@@ -106,7 +106,9 @@ class MainActivity : AppCompatActivity() {
                                 tvError.text = getString(R.string.install_success_no_aa) + "\n" + summary
                                 if (shizukuTrickEnabled) {
                                     promptNotCompatibleAfterShizuku(packageName)
-                                } else if (!rootTrickEnabled && (RootUtils.isDeviceRooted || (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission()))) {
+                                } else if (rootTrickEnabled) {
+                                    promptNotCompatibleAfterRoot()
+                                } else if (RootUtils.isDeviceRooted || (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission())) {
                                     promptNotCompatibleAfterClassic(packageName)
                                 }
                             }
@@ -616,6 +618,7 @@ class MainActivity : AppCompatActivity() {
             R.id.action_search3 -> "https://github.com/Rikj000/KingInstaller"
             R.id.action_site -> "https://inceptive.ru"
             R.id.action_download_shizuku_next -> "https://github.com/rushiranpise/Shizuku-Next/releases"
+            R.id.action_xlauncher -> { openXLauncher(); return true }
             R.id.action_readme -> "https://github.com/fcaronte/KingInstaller/blob/master/README.md"
             R.id.action_change_language -> {
                 openAppLanguageSettings()
@@ -727,6 +730,27 @@ class MainActivity : AppCompatActivity() {
         saveMethodSelection()
         syncSwitches()
         startInstallation()
+    }
+
+    /**
+     * Metodo Root non riuscito su questa ROM (es. custom ROM dove lo spoof dell'origine non basta):
+     * proponiamo XLauncher Unlocked, un modulo Xposed/LSPosed che sblocca AA a prescindere
+     * dall'installer. È la via "universale" per chi ha root, senza reimplementare patch fragili.
+     */
+    private fun promptNotCompatibleAfterRoot() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.not_aa_title)
+            .setMessage(R.string.not_aa_root_message)
+            .setPositiveButton(R.string.get_xlauncher) { _, _ -> openXLauncher() }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    /** Apre la pagina di XLauncher Unlocked (sblocco AA universale via Xposed/LSPosed). */
+    private fun openXLauncher() {
+        startActivity(Intent(Intent.ACTION_VIEW).apply {
+            data = "https://github.com/Rikj000/Android-Auto-XLauncher-Unlocked".toUri()
+        })
     }
 
     private fun startInstallation() {

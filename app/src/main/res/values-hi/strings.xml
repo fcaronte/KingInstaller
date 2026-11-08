@@ -70,6 +70,9 @@
     <string name="donate_buymeacoffee">मुझे एक कॉफी खरीदें</string>
     <string name="install_success_aa">ऐप सफलतापूर्वक स्थापित हो गया! (AA संगत)</string>
     <string name="install_success_no_aa">ऐप स्थापित हो गया, लेकिन AA संगत नहीं हो सकता है।</string>
+    <string name="menu_xlauncher">यूनिवर्सल AA अनलॉक (XLauncher)</string>
+    <string name="get_xlauncher">XLauncher प्राप्त करें</string>
+    <string name="not_aa_root_message">Root विधि इस ROM पर इस ऐप को Android Auto में दृश्यमान नहीं बना सकी। सार्वभौमिक समाधान के रूप में XLauncher Unlocked (एक Xposed/LSPosed मॉड्यूल) इंस्टॉल करें: यह इंस्टॉल करने के तरीके की परवाह किए बिना सभी Android Auto ऐप्स को अनलॉक कर देता है।</string>
     <string name="installing_root">Root विशेषाधिकारों के साथ इंस्टॉल हो रहा है…</string>
     <string name="root_launch_failed">सिस्टम इंस्टॉलर को Root के रूप में शुरू नहीं किया जा सका। विवरण साझा किए गए लॉग में हैं।</string>
     <string name="processing_apk">APK फ़ाइल संसाधित हो रही है…</string>

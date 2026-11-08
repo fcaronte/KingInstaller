@@ -70,6 +70,9 @@
     <string name="donate_buymeacoffee">Offrimi un caffè</string>
     <string name="install_success_aa">App installata con successo! (Compatibile AA)</string>
     <string name="install_success_no_aa">App installata, ma potrebbe NON essere compatibile AA. Verifica i dettagli.</string>
+    <string name="menu_xlauncher">Sblocco universale AA (XLauncher)</string>
+    <string name="get_xlauncher">Ottieni XLauncher</string>
+    <string name="not_aa_root_message">Il metodo Root non è riuscito a rendere questa app visibile in Android Auto su questa ROM. Come soluzione universale installa XLauncher Unlocked (un modulo Xposed/LSPosed): sblocca tutte le app di Android Auto a prescindere da come sono state installate.</string>
     <string name="installing_root">Installazione con privilegi Root…</string>
     <string name="root_launch_failed">Impossibile avviare l\'installer di sistema come Root. I dettagli sono nel log condiviso.</string>
     <string name="processing_apk">Elaborazione file APK in corso…</string>
