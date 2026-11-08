@@ -29,7 +29,11 @@ object ShizukuUtils {
     @Volatile private var cachedService: IMyUserService? = null
     @Volatile private var warmConnection: ServiceConnection? = null
 
-    fun isShizukuAvailable(): Boolean = try { Shizuku.pingBinder() } catch (_: Exception) { false }
+    fun isShizukuAvailable(): Boolean = try {
+        Shizuku.pingBinder() || Shizuku.getVersion() > 0
+    } catch (_: Exception) {
+        false
+    }
 
     fun hasShizukuPermission(): Boolean = try {
         Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED

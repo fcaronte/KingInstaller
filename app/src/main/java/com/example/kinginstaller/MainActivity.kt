@@ -746,7 +746,9 @@ class MainActivity : AppCompatActivity() {
         Shizuku.addBinderReceivedListenerSticky(binderListener)
         saveMethodSelection()
         syncSwitches()
-        startInstallation()
+        Handler(Looper.getMainLooper()).postDelayed({
+            startInstallation()
+        }, 300L)
     }
 
     private fun fixViaRootAndRecheck(packageName: String) {
