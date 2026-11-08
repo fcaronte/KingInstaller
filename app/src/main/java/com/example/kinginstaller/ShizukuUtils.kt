@@ -290,7 +290,7 @@ object ShizukuUtils {
                 }
             }
             Shizuku.bindUserService(buildUserServiceArgs(context), connection)
-            latch.await(1200, java.util.concurrent.TimeUnit.MILLISECONDS)
+            latch.await(3500, java.util.concurrent.TimeUnit.MILLISECONDS)
         } catch (e: Exception) {
             Log.e("ShizukuUtils", "ensureUserServiceConnected fallito", e)
         }
