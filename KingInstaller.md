@@ -44,6 +44,27 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
 - **Android 15+ (API 35)**: lo switch **Oppo/Realme/OnePlus** è nascosto (non più utile) e disattivato se residuo da sessioni precedenti.
 - **Fino ad Android 14 (API 34)**: il suggerimento iniziale basato sul package installer rilevato (`isGooglePackageExist`) viene mostrato; su API ≥ 35 è soppresso perché l'euristica non è più attendibile.
 
+### 1.7. Panorama Reale dei Metodi e le 2 Forzature di King (Classico vs Shizuku tra A13, A15, A16, A17)
+- **Le 2 Forzature Indispensabili di King E l'Obbligo di Passare dall'Installer Stock**:
+  - Le sole 2 forzature da sole non bastano: per far comparire e funzionare qualsiasi app di terze parti su Android Auto (anche quelle non conformi ai criteri di Google), il campo **`Requested by` (initiatingPackageName)** DEVE essere tassativamente il **Package Installer di sistema** (o Play Store), e **MAI** la shell.
+  - **Per questo motivo KingInstaller DEVE passare sempre dall'installatore pacchetti stock** (aprendo il relativo dialog a schermo) e **NON** può usare installazioni silenziose o dirette via shell/adb (come `pm install`), che registrerebbero inevitabilmente `Requested by: com.android.shell` causando il blocco categorico da parte di Android Auto.
+  - Le **2 opzioni forzate** passate all'installatore stock sono:
+    1. `Intent.EXTRA_INSTALLER_PACKAGE_NAME` = `com.android.vending` (attribuisce "Installed by" al Google Play Store).
+    2. `Intent.EXTRA_NOT_UNKNOWN_SOURCE` = `true` (attesta al sistema che l'app NON proviene da origini sconosciute/untrusted).
+
+- **Dove il Metodo Classico FUNZIONA BENISSIMO (Samsung A16/A17 e Pixel A16)**:
+  - Su **Samsung con Android 16 e 17 (One UI)** e sui **Pixel con Android 16**, il **Metodo Classico** funziona alla grande: il Package Installer di sistema gestisce e onora direttamente le due forzature di King passate dall'Activity, consentendo di ottenere sia `Requested by: Package Installer` sia `Installed by: Play Store`.
+
+- **Dove Shizuku ECCELLE (A15, A16, A17) e perché FALLISCE sui Samsung**:
+  - Su **quasi tutti i dispositivi con Android 15, 16 e 17** (Pixel, Xiaomi HyperOS/MIUI, Honor, OnePlus, Realme, Motorola, ecc.), il **Metodo Shizuku** funziona perfettamente perché la Shell ADB (UID 2000) possiede i privilegi per avviare l'installazione imponendo le forzature senza blocchi.
+  - **Nei Samsung invece Shizuku FALLISCE**: l'architettura di sicurezza di Samsung One UI (Knox e `SecPackageInstaller`) blocca o sterilizza le forzature richieste da King se l'intent o il comando proviene dalla Shell (`com.android.shell`). Per questo motivo sui Samsung con A16/A17 bisogna usare il **Metodo Classico**.
+
+- **Il caso anomalo di Android 13 (perché Shizuku non si avviava)**:
+  - Su **Android 13 stock con Google Package Installer**:
+    - Con **Shizuku**: `InstallStart` verifica che il chiamante dichiari `REQUEST_INSTALL_PACKAGES`. La Shell (UID 2000) non lo dichiara a manifest, e su A13 `InstallStart` termina immediatamente con `finish()` e l'errore `Requesting uid 2000 needs to declare permission android.permission.REQUEST_INSTALL_PACKAGES`, causando la mancata apertura di qualsiasi interfaccia a schermo ("clicco installa e non si avvia nulla").
+    - Con il **Classico**: su alcune build AOSP/Google A13 aggiornate con la patch CVE-2023-21017 (`A-236687884`), `InstallStart` rimuove l'extra `The given installer package name com.android.vending is invalid. Remove it.` declassando l'installer a `com.google.android.packageinstaller`.
+    - Su questi specifici firmware A13 in cui sia Shizuku che il Classico sono limitati, la via risolutiva definitiva è il **Metodo Root**.
+
 ---
 
 ## 2. Current Status & Milestone
