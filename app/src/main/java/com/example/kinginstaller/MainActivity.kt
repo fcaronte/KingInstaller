@@ -524,6 +524,49 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleIntent(intent: Intent?) {
         if (intent == null) return
+
+        if (intent.action == "com.example.kinginstaller.INSTALL_COMPLETE") {
+            val status = intent.getIntExtra(android.content.pm.PackageInstaller.EXTRA_STATUS, android.content.pm.PackageInstaller.STATUS_FAILURE)
+            Log.d("MainActivity", "Received INSTALL_COMPLETE session result: status=$status")
+            when (status) {
+                android.content.pm.PackageInstaller.STATUS_PENDING_USER_ACTION -> {
+                    val confirmIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
+                    }
+                    if (confirmIntent != null) {
+                        try {
+                            confirmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(confirmIntent)
+                            Log.d("MainActivity", "Launched installation user confirmation dialog from MainActivity")
+                        } catch (e: Exception) {
+                            Log.e("MainActivity", "Failed to start confirmation activity", e)
+                        }
+                    }
+                }
+                android.content.pm.PackageInstaller.STATUS_SUCCESS -> {
+                    Log.d("MainActivity", "Split package installation succeeded via session")
+                    val tvError = findViewById<TextView>(R.id.textViewError)
+                    tvError.text = getString(R.string.install_success_aa)
+                    tvError.setTextColor(getColor(R.color.aa_green_text))
+                    findViewById<Button>(R.id.installButton).isEnabled = true
+                    updateComponentStates(installing = false)
+                }
+                else -> {
+                    val message = intent.getStringExtra(android.content.pm.PackageInstaller.EXTRA_STATUS_MESSAGE)
+                    Log.e("MainActivity", "Split package installation failed: status=$status, message=$message")
+                    val tvError = findViewById<TextView>(R.id.textViewError)
+                    tvError.setTextColor(getColor(R.color.aa_red_text))
+                    tvError.text = getString(R.string.error_occurred, message ?: "Status $status")
+                    findViewById<Button>(R.id.installButton).isEnabled = true
+                    updateComponentStates(installing = false)
+                }
+            }
+            return
+        }
+
         val extraPath = intent.getStringExtra("selected_apk_path")
         if (extraPath != null) {
             updateSelectedFile(extraPath)
@@ -543,9 +586,12 @@ class MainActivity : AppCompatActivity() {
                 try {
                     var type = intent.type
                     if (type == null) type = contentResolver.getType(data)
-                    if (type == null && data.toString().lowercase().endsWith(".apk")) type = "application/vnd.android.package-archive"
+                    val dataString = data.toString().lowercase()
+                    if (type == null && (dataString.endsWith(".apk") || dataString.endsWith(".xapk") || dataString.endsWith(".apks") || dataString.endsWith(".apkm"))) {
+                        type = "application/vnd.android.package-archive"
+                    }
 
-                    if (type == "application/vnd.android.package-archive" || type == "application/octet-stream" || type == null) {
+                    if (type == "application/vnd.android.package-archive" || type == "application/octet-stream" || type == "application/zip" || type == "application/x-xapk" || type == "application/x-apks" || type == "application/x-apkm" || type == null) {
                         val path = if (data.scheme == "file") data.path else InstallationUtils.copyFileToInternalStorage(this, data, "apk")
                         runOnUiThread {
                             if (path != null) {
@@ -578,7 +624,8 @@ class MainActivity : AppCompatActivity() {
                     val path = if (uri.scheme == "file") uri.path else InstallationUtils.copyFileToInternalStorage(this, uri, "apk")
                     runOnUiThread {
                         if (path != null) {
-                            if (path.lowercase().endsWith(".apk") || InstallationUtils.getPackageNameFromApk(this, File(path)) != null) {
+                            val lower = path.lowercase()
+                            if (lower.endsWith(".apk") || lower.endsWith(".xapk") || lower.endsWith(".apks") || lower.endsWith(".apkm") || PackageArchiveUtils.isSplitArchive(File(path)) || InstallationUtils.getPackageNameFromApk(this, File(path)) != null) {
                                 updateSelectedFile(path)
                                 tvError.text = ""
                             } else {
@@ -743,14 +790,40 @@ class MainActivity : AppCompatActivity() {
         }
 
         updateComponentStates(installing = true)
-        findViewById<TextView>(R.id.textViewError).text = ""
+        val tvError = findViewById<TextView>(R.id.textViewError)
+        tvError.text = ""
 
         Handler(Looper.getMainLooper()).postDelayed({
             updateComponentStates(installing = false)
         }, 1000L)
 
+        if (PackageArchiveUtils.isSplitArchive(myFile)) {
+            tvError.text = getString(R.string.extracting_archive)
+            Thread {
+                val result = PackageArchiveUtils.extractArchive(this, myFile)
+                runOnUiThread {
+                    if (result.error != null || result.apkFiles.isEmpty()) {
+                        tvError.text = getString(R.string.error_extracting_archive, result.error ?: getString(R.string.error_no_apks_in_archive))
+                        updateComponentStates(installing = false)
+                        return@runOnUiThread
+                    }
+
+                    if (result.isSingleApk) {
+                        performSingleApkInstall(result.apkFiles[0].absolutePath)
+                    } else {
+                        tvError.text = ""
+                        showSplitSelectionDialog(result.packageName, result.apkFiles)
+                    }
+                }
+            }.start()
+        } else {
+            performSingleApkInstall(myFile.absolutePath)
+        }
+    }
+
+    private fun performSingleApkInstall(filepath: String) {
+        val myFile = File(filepath)
         if (shizukuTrickEnabled) {
-            // FLUSSO SHIZUKU PURO (Nessun fallback al classico se fallisce)
             Log.d("MainActivity", "Avvio installazione tramite Metodo Shizuku (scelta utente).")
             
             if (!ShizukuUtils.isShizukuAvailable() || !ShizukuUtils.hasShizukuPermission()) {
@@ -766,19 +839,10 @@ class MainActivity : AppCompatActivity() {
             })
             
         } else if (rootTrickEnabled) {
-            // Metodo ROOT: lancia il package installer di SISTEMA come SHELL (uid 2000) con l'extra
-            // INSTALLER_PACKAGE_NAME=vending. Da shell (privilegiata) l'installer onora l'extra →
-            // "Installed by" = Play Store, ed è il packageinstaller a installare → "Requested by" =
-            // com.google.android.packageinstaller: ENTRAMBI i campi che Android Auto ≥14 pretende.
-            // (Il set-installer post-installazione è bloccato dalla firma; `pm install -i` lascia
-            // "Requested by" a shell/nullo → AA rifiuta. Vedi KingInstaller.md §1.5.)
             Log.d("MainActivity", "Avvio installazione tramite Metodo Root (installer di sistema come shell).")
             installViaRootFlow(filepath)
 
         } else {
-            // Metodo CLASSICO (e Oppo): è l'APP a lanciare il dialog di sistema e a consegnare l'APK
-            // col proprio grant URI (come caller), quindi l'installer lo legge e "Requested by"
-            // risulta il package installer.
             Log.d("MainActivity", "Avvio installazione tramite Metodo Classico (scelta utente).")
 
             if (!packageManager.canRequestPackageInstalls()) {
@@ -795,6 +859,127 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 findViewById<TextView>(R.id.textViewError).text = getString(R.string.error_occurred, e.toString())
                 updateComponentStates(installing = false)
+            }
+        }
+    }
+
+    private fun showSplitSelectionDialog(
+        packageName: String?,
+        apkFiles: List<File>
+    ) {
+        val context = this
+        val items = apkFiles.map { file ->
+            val name = file.name
+            val isBase = PackageArchiveUtils.isBaseApk(context, file)
+            if (isBase) {
+                "$name (${getString(R.string.split_mandatory)})"
+            } else {
+                name
+            }
+        }.toTypedArray()
+
+        val checkedItems = BooleanArray(apkFiles.size) { i ->
+            val file = apkFiles[i]
+            val splitType = PackageArchiveUtils.classifySplit(context, file)
+            when (splitType) {
+                PackageArchiveUtils.SplitType.BASE -> true
+                PackageArchiveUtils.SplitType.ABI_COMPATIBLE -> true
+                PackageArchiveUtils.SplitType.ABI_INCOMPATIBLE -> false
+                PackageArchiveUtils.SplitType.DENSITY_COMPATIBLE -> true
+                PackageArchiveUtils.SplitType.DENSITY_INCOMPATIBLE -> false
+                PackageArchiveUtils.SplitType.LANG_COMPATIBLE -> true
+                PackageArchiveUtils.SplitType.LANG_INCOMPATIBLE -> false
+                PackageArchiveUtils.SplitType.GENERIC -> true
+            }
+        }
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.select_split_apks_title)
+            .setMultiChoiceItems(items, checkedItems) { dialogInterface, which, isChecked ->
+                val file = apkFiles[which]
+                if (PackageArchiveUtils.isBaseApk(context, file)) {
+                    (dialogInterface as? androidx.appcompat.app.AlertDialog)?.listView?.setItemChecked(which, true)
+                    checkedItems[which] = true
+                    Toast.makeText(this, R.string.base_apk_mandatory, Toast.LENGTH_SHORT).show()
+                } else {
+                    checkedItems[which] = isChecked
+                }
+            }
+            .setPositiveButton(R.string.install_as_king) { _, _ ->
+                val selectedFiles = apkFiles.filterIndexed { index, _ -> checkedItems[index] }
+                if (selectedFiles.isEmpty()) {
+                    Toast.makeText(this, R.string.no_splits_selected, Toast.LENGTH_SHORT).show()
+                    updateComponentStates(installing = false)
+                } else {
+                    performSplitApkInstall(packageName, selectedFiles)
+                }
+            }
+            .setNegativeButton(android.R.string.cancel) { _, _ ->
+                updateComponentStates(installing = false)
+            }
+            .setOnCancelListener {
+                updateComponentStates(installing = false)
+            }
+            .create()
+
+        dialog.show()
+    }
+
+    private fun performSplitApkInstall(packageName: String?, apkFiles: List<File>) {
+        val tvError = findViewById<TextView>(R.id.textViewError)
+        tvError.text = getString(R.string.installing_split_apks, apkFiles.size)
+
+        if (shizukuTrickEnabled) {
+            Log.d("MainActivity", "Avvio installazione split tramite Metodo Shizuku.")
+            if (!ShizukuUtils.isShizukuAvailable() || !ShizukuUtils.hasShizukuPermission()) {
+                tvError.text = getString(R.string.shizuku_error_inactive)
+                updateComponentStates(installing = false)
+                return
+            }
+            ShizukuUtils.installSplitApks(this, packageName, apkFiles, { status ->
+                tvError.text = status
+            }, {})
+        } else if (rootTrickEnabled) {
+            Log.d("MainActivity", "Avvio installazione split tramite Metodo Root.")
+            installSplitApksRootFlow(packageName, apkFiles)
+        } else {
+            Log.d("MainActivity", "Avvio installazione split tramite Metodo Classico.")
+            if (!packageManager.canRequestPackageInstalls()) {
+                startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                    data = "package:$packageName".toUri()
+                })
+                updateComponentStates(installing = false)
+                return
+            }
+            try {
+                InstallationUtils.installSplitApksClassico(this, packageName, apkFiles, errorCallback = { err ->
+                    runOnUiThread {
+                        tvError.setTextColor(getColor(R.color.aa_red_text))
+                        tvError.text = getString(R.string.error_occurred, err)
+                        updateComponentStates(installing = false)
+                    }
+                })
+            } catch (e: Exception) {
+                tvError.setTextColor(getColor(R.color.aa_red_text))
+                tvError.text = getString(R.string.error_occurred, e.toString())
+                updateComponentStates(installing = false)
+            }
+        }
+    }
+
+    private fun installSplitApksRootFlow(packageName: String?, apkFiles: List<File>) {
+        val tv = findViewById<TextView>(R.id.textViewError)
+        tv.setTextColor(Color.parseColor("#FFA000"))
+        tv.text = getString(R.string.installing_root)
+
+        RootUtils.installSplitApksAsShell(packageName, apkFiles) { ok, detail ->
+            if (!ok) Log.w("KingInstaller", "installSplitApksAsShell fallito: $detail")
+            runOnUiThread {
+                if (!ok) {
+                    updateComponentStates(installing = false)
+                    tv.setTextColor(getColor(R.color.aa_red_text))
+                    tv.text = getString(R.string.root_launch_failed)
+                }
             }
         }
     }

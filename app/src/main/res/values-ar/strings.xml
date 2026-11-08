@@ -94,4 +94,13 @@
     <string name="not_aa_message">لم يتمكّن أسلوب Shizuku من تعيين المثبّت على هذا الجهاز. جرّب أولاً الأسلوب الكلاسيكي (بدون Shizuku)؛ وإن لم يكفِ فالأسلوب Root مطلوب.</string>
     <string name="try_classic">جرّب الكلاسيكي</string>
     <string name="fix_with_root_confirm">الإصلاح عبر Root</string>
+    <string name="extracting_archive">جاري استخراج أرشيف الحزمة (XAPK/APKS/APKM)…</string>
+    <string name="error_extracting_archive">خطأ في استخراج الأرشيف: %1$s</string>
+    <string name="error_no_apks_in_archive">لم يتم العثور على ملفات APK صالحة في الأرشيف</string>
+    <string name="installing_split_apks">جاري تثبيت ملفات APK المقسمة (%1$d ملفات)…</string>
+    <string name="select_split_apks_title">حدد ملفات APK المقسمة لتثبيتها:</string>
+    <string name="split_mandatory">إلزامي</string>
+    <string name="base_apk_mandatory">ملف APK الأساسي إلزامي</string>
+    <string name="no_splits_selected">لم يتم تحديد أي ملفات APK للتثبيت</string>
+    <string name="downloading_update">جاري تنزيل التحديث…</string>
 </resources>

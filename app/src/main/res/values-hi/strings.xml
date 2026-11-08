@@ -94,4 +94,13 @@
     <string name="not_aa_message">Shizuku तरीका इस डिवाइस पर इंस्टॉलर सेट नहीं कर सका। पहले Classic तरीका (Shizuku के बिना) आज़माएँ; अगर काफी न हो, तो Root तरीका ज़रूरी है।</string>
     <string name="try_classic">Classic आज़माएँ</string>
     <string name="fix_with_root_confirm">Root से ठीक करें</string>
+    <string name="extracting_archive">पैकेज आर्काइव निकाला जा रहा है (XAPK/APKS/APKM)…</string>
+    <string name="error_extracting_archive">आर्काइव निकालने में त्रुटि: %1$s</string>
+    <string name="error_no_apks_in_archive">आर्काइव में कोई वैध APK फ़ाइल नहीं मिली</string>
+    <string name="installing_split_apks">स्प्लिट APK इंस्टॉल किए जा रहे हैं (%1$d फ़ाइलें)…</string>
+    <string name="select_split_apks_title">इंस्टॉल करने के लिए स्प्लिट APK चुनें:</string>
+    <string name="split_mandatory">अनिवार्य</string>
+    <string name="base_apk_mandatory">बेस APK अनिवार्य है</string>
+    <string name="no_splits_selected">इंस्टॉलेशन के लिए कोई APK नहीं चुना गया</string>
+    <string name="downloading_update">अपडेट डाउनलोड हो रहा है…</string>
 </resources>

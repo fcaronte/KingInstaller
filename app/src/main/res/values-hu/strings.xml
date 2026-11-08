@@ -95,4 +95,13 @@
     <string name="not_aa_message">A Shizuku módszer nem tudta beállítani a telepítőt ezen az eszközön. Próbáld előbb a Klasszikus módszert (Shizuku nélkül); ha nem elég, a Root módszer szükséges.</string>
     <string name="try_classic">Klasszikus</string>
     <string name="fix_with_root_confirm">Javítás Roottal</string>
+    <string name="extracting_archive">Csomagarchívum kibontása (XAPK/APKS/APKM)…</string>
+    <string name="error_extracting_archive">Hiba az archívum kibontásakor: %1$s</string>
+    <string name="error_no_apks_in_archive">Nem található érvényes APK fájl az archívumban</string>
+    <string name="installing_split_apks">Osztott APK-k telepítése (%1$d fájl)…</string>
+    <string name="select_split_apks_title">Válaszd ki a telepítendő osztott APK-kat:</string>
+    <string name="split_mandatory">Kötelező</string>
+    <string name="base_apk_mandatory">Az alap APK kötelező</string>
+    <string name="no_splits_selected">Nincs kijelölve APK a telepítéshez</string>
+    <string name="downloading_update">Frissítés letöltése…</string>
 </resources>

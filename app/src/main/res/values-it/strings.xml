@@ -94,4 +94,13 @@
     <string name="share_log_error">Errore condivisione log: %1$s</string>
     <string name="share_log_preparing">Generazione log diagnostico…</string>
     <string name="log_copied">Log copiato negli appunti</string>
+    <string name="extracting_archive">Estrazione archivio pacchetto (XAPK/APKS/APKM)…</string>
+    <string name="error_extracting_archive">Errore nell\'estrazione dell\'archivio: %1$s</string>
+    <string name="error_no_apks_in_archive">Nessun file APK valido trovato nell\'archivio</string>
+    <string name="installing_split_apks">Installazione APK suddivisi (%1$d file)…</string>
+    <string name="select_split_apks_title">Seleziona gli APK Split da installare:</string>
+    <string name="split_mandatory">Obbligatorio</string>
+    <string name="base_apk_mandatory">L\'APK base è obbligatorio</string>
+    <string name="no_splits_selected">Nessun APK selezionato per l\'installazione</string>
+    <string name="downloading_update">Download aggiornamento in corso…</string>
 </resources>

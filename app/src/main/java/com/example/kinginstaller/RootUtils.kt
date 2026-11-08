@@ -191,4 +191,86 @@ object RootUtils {
             onLaunched?.invoke(ok, detail)
         }
     }
+
+    /**
+     * Installa un pacchetto composto da più APK split (XAPK / APKS / APKM) eseguendo le operazioni
+     * di install-create, install-write e install-commit come UID 2000 (Shell) via Root (`su`).
+     */
+    fun installSplitApksAsShell(
+        packageName: String?,
+        apkFiles: List<File>,
+        onLaunched: ((ok: Boolean, detail: String) -> Unit)? = null
+    ) {
+        thread {
+            try {
+                val vending = InstallationUtils.VENDING_PKG
+                val createCmd = "su -c \"cmd package install-create -i $vending --user 0 -r\" 2>&1"
+                val createLogs = runSuWithCmd(createCmd)
+                val createDetail = (createLogs.getInputStreamLog() + " " + createLogs.getErrorStreamLog()).trim()
+
+                val sessionIdRegex = Regex("""\[(\d+)]""")
+                var match = sessionIdRegex.find(createDetail)
+                var sessionId = match?.groupValues?.get(1)
+
+                if (sessionId == null) {
+                    val fallbackCmd = "su -c \"pm install-create -i $vending -r\" 2>&1"
+                    val fbLogs = runSuWithCmd(fallbackCmd)
+                    val fbDetail = (fbLogs.getInputStreamLog() + " " + fbLogs.getErrorStreamLog()).trim()
+                    match = sessionIdRegex.find(fbDetail)
+                    sessionId = match?.groupValues?.get(1)
+
+                    if (sessionId == null) {
+                        Log.e("KingInstaller", "Impossibile creare sessione install-create Root: $createDetail | $fbDetail")
+                        onLaunched?.invoke(false, createDetail)
+                        return@thread
+                    }
+                }
+
+                var writeSuccess = true
+                val writeDetails = StringBuilder()
+
+                for (apk in apkFiles) {
+                    val proc = Runtime.getRuntime().exec(arrayOf("su", "-c", "cmd package install-write $sessionId ${apk.name} -"))
+                    val os = proc.outputStream
+                    apk.inputStream().use { input ->
+                        input.copyTo(os)
+                    }
+                    os.flush()
+                    os.close()
+                    val exitCode = proc.waitFor()
+                    if (exitCode != 0) {
+                        val procFb = Runtime.getRuntime().exec(arrayOf("su", "-c", "pm install-write $sessionId ${apk.name} -"))
+                        val osFb = procFb.outputStream
+                        apk.inputStream().use { input ->
+                            input.copyTo(osFb)
+                        }
+                        osFb.flush()
+                        osFb.close()
+                        val exitCodeFb = procFb.waitFor()
+                        if (exitCodeFb != 0) {
+                            writeSuccess = false
+                            val err = procFb.errorStream.bufferedReader().readText()
+                            writeDetails.append("Write ${apk.name} failed ($exitCodeFb): $err ")
+                        }
+                    }
+                }
+
+                if (!writeSuccess) {
+                    runSuWithCmd("su -c \"cmd package install-abandon $sessionId\"")
+                    onLaunched?.invoke(false, writeDetails.toString())
+                    return@thread
+                }
+
+                val commitLogs = runSuWithCmd("su -c \"cmd package install-commit $sessionId\" 2>&1")
+                val commitDetail = (commitLogs.getInputStreamLog() + " " + commitLogs.getErrorStreamLog()).trim()
+                val ok = commitDetail.contains("Success", ignoreCase = true)
+                Log.d("KingInstaller", "installSplitApksAsShell ok=$ok -> '$commitDetail'")
+                onLaunched?.invoke(ok, commitDetail)
+
+            } catch (e: Exception) {
+                Log.e("KingInstaller", "installSplitApksAsShell exception", e)
+                onLaunched?.invoke(false, e.message ?: e.toString())
+            }
+        }
+    }
 }

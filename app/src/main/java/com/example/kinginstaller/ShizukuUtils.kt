@@ -178,6 +178,54 @@ object ShizukuUtils {
         }
     }
 
+    fun installSplitApks(
+        activity: Activity,
+        packageName: String?,
+        apkFiles: List<File>,
+        onStatusUpdate: (String) -> Unit,
+        onSuccess: () -> Unit
+    ) {
+        if (!isInstalling.compareAndSet(false, true)) {
+            Log.w("ShizukuUtils", "Installazione già in corso, richiesta ignorata.")
+            return
+        }
+
+        onStatusUpdate(activity.getString(R.string.shizuku_install_start))
+
+        thread {
+            try {
+                val appContext = activity.applicationContext
+                prewarmUserService(appContext)
+
+                activity.runOnUiThread {
+                    InstallationUtils.installSplitApksClassico(appContext, packageName, apkFiles, errorCallback = { err ->
+                        showError(activity, onStatusUpdate, activity.getString(R.string.error_occurred, err))
+                    })
+                    onStatusUpdate("")
+                    onSuccess()
+                    isInstalling.set(false)
+                }
+
+                if (!packageName.isNullOrEmpty()) {
+                    Thread.sleep(1500)
+                    setInstallerViaShizuku(appContext, packageName)
+                }
+
+            } catch (e: Exception) {
+                Log.e("ShizukuUtils", "Errore installSplitApks Shizuku", e)
+                activity.runOnUiThread {
+                    val appContext = activity.applicationContext
+                    InstallationUtils.installSplitApksClassico(appContext, packageName, apkFiles, errorCallback = { err ->
+                        showError(activity, onStatusUpdate, activity.getString(R.string.error_occurred, err))
+                    })
+                    onStatusUpdate("")
+                    onSuccess()
+                    isInstalling.set(false)
+                }
+            }
+        }
+    }
+
     private fun showError(activity: Activity, onStatusUpdate: (String) -> Unit, message: String) {
         onStatusUpdate(message)
         if (activity is MainActivity) {

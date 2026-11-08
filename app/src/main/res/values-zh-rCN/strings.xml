@@ -94,4 +94,13 @@
     <string name="not_aa_message">Shizuku 方式无法在此设备上设置安装来源。请先尝试经典方式（不使用 Shizuku）；若仍不行，则需要 Root 方式。</string>
     <string name="try_classic">试试经典方式</string>
     <string name="fix_with_root_confirm">用 Root 修复</string>
+    <string name="extracting_archive">正在解压安装包 (XAPK/APKS/APKM)…</string>
+    <string name="error_extracting_archive">解压安装包失败：%1$s</string>
+    <string name="error_no_apks_in_archive">压缩包内未找到有效的 APK 文件</string>
+    <string name="installing_split_apks">正在安装拆分 APK（%1$d 个文件）…</string>
+    <string name="select_split_apks_title">选择要安装的拆分 APK：</string>
+    <string name="split_mandatory">必选</string>
+    <string name="base_apk_mandatory">基础 APK 为必填项</string>
+    <string name="no_splits_selected">未选择要安装的 APK</string>
+    <string name="downloading_update">正在下载更新…</string>
 </resources>

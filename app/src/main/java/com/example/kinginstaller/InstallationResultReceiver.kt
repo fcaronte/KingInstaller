@@ -9,20 +9,22 @@ import android.util.Log
 
 class InstallationResultReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
+        val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -999)
+        Log.d("InstallationResultReceiver", "onReceive: status=$status, extras=${intent.extras?.keySet()?.joinToString()}")
         when (status) {
             PackageInstaller.STATUS_PENDING_USER_ACTION -> {
                 val confirmIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
                 } else {
                     @Suppress("DEPRECATION")
-                    intent.getParcelableExtra(Intent.EXTRA_INTENT)
+                    intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
                 }
+                Log.d("InstallationResultReceiver", "confirmIntent found: ${confirmIntent != null}")
                 confirmIntent?.let {
                     it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     try {
                         context.startActivity(it)
-                        Log.d("InstallationResultReceiver", "Launched installation user confirmation dialog")
+                        Log.d("InstallationResultReceiver", "Launched installation user confirmation dialog successfully")
                     } catch (e: Exception) {
                         Log.e("InstallationResultReceiver", "Failed to start confirmation activity", e)
                     }

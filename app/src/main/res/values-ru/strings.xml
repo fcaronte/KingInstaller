@@ -93,4 +93,13 @@
     <string name="not_aa_message">Метод Shizuku не смог задать установщик на этом устройстве. Сначала попробуйте Классический метод (без Shizuku); если не поможет, нужен метод Root.</string>
     <string name="try_classic">Попробовать классический</string>
     <string name="fix_with_root_confirm">Исправить через Root</string>
+    <string name="extracting_archive">Распаковка архива пакета (XAPK/APKS/APKM)…</string>
+    <string name="error_extracting_archive">Ошибка распаковки архива: %1$s</string>
+    <string name="error_no_apks_in_archive">В архиве не найдено допустимых файлов APK</string>
+    <string name="installing_split_apks">Установка разделенных APK (%1$d файлов)…</string>
+    <string name="select_split_apks_title">Выберите разделенные APK для установки:</string>
+    <string name="split_mandatory">Обязательно</string>
+    <string name="base_apk_mandatory">Базовый APK обязателен</string>
+    <string name="no_splits_selected">Не выбрано ни одного APK для установки</string>
+    <string name="downloading_update">Загрузка обновления…</string>
 </resources>

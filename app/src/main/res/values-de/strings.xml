@@ -94,4 +94,13 @@
     <string name="not_aa_message">Die Shizuku-Methode konnte den Installer auf diesem Gerät nicht setzen. Probiere zuerst die klassische Methode (ohne Shizuku); reicht das nicht, ist die Root-Methode nötig.</string>
     <string name="try_classic">Klassische Methode</string>
     <string name="fix_with_root_confirm">Mit Root korrigieren</string>
+    <string name="extracting_archive">Paketarchiv wird entpackt (XAPK/APKS/APKM)…</string>
+    <string name="error_extracting_archive">Fehler beim Entpacken des Archivs: %1$s</string>
+    <string name="error_no_apks_in_archive">Keine gültigen APK-Dateien im Archiv gefunden</string>
+    <string name="installing_split_apks">Split-APKs werden installiert (%1$d Dateien)…</string>
+    <string name="select_split_apks_title">Wähle die zu installierenden Split-APKs:</string>
+    <string name="split_mandatory">Erforderlich</string>
+    <string name="base_apk_mandatory">Basis-APK ist erforderlich</string>
+    <string name="no_splits_selected">Keine APKs für die Installation ausgewählt</string>
+    <string name="downloading_update">Update wird heruntergeladen…</string>
 </resources>

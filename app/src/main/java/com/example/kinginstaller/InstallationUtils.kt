@@ -30,8 +30,10 @@ object InstallationUtils {
         try {
             val dir = File(context.filesDir, "apk")
             if (dir.exists() && dir.isDirectory) {
-                dir.listFiles()?.forEach { it.delete() }
+                dir.listFiles()?.forEach { it.deleteRecursively() }
             }
+            val splitDirs = context.filesDir.listFiles { _, name -> name.startsWith("split_temp_") }
+            splitDirs?.forEach { it.deleteRecursively() }
         } catch (ignored: Exception) {
         }
     }
@@ -50,7 +52,8 @@ object InstallationUtils {
             if (name.isNullOrEmpty()) {
                 name = "temp.apk"
             }
-            if (!name.lowercase().endsWith(".apk")) {
+            val lower = name.lowercase()
+            if (!lower.endsWith(".apk") && !lower.endsWith(".xapk") && !lower.endsWith(".apks") && !lower.endsWith(".apkm")) {
                 name = "$name.apk"
             }
 
@@ -188,6 +191,106 @@ object InstallationUtils {
             info?.packageName
         } catch (e: Exception) {
             null
+        }
+    }
+
+    fun installSplitApksClassico(
+        ctx: Context,
+        packageName: String?,
+        apkFiles: List<File>,
+        errorCallback: ((String) -> Unit)? = null
+    ) {
+        val context = ctx
+        kotlin.concurrent.thread {
+            try {
+                val pm = context.packageManager
+                val installer = pm.packageInstaller
+                val params = android.content.pm.PackageInstaller.SessionParams(
+                    android.content.pm.PackageInstaller.SessionParams.MODE_FULL_INSTALL
+                )
+                // Non impostiamo setAppPackageName o setInstallerPackageName per app non privilegiate su Android 14+ (API 34+),
+                // in quanto solleverebbero SecurityException o IllegalArgumentException. Il sistema legge automaticamente
+                // il nome pacchetto dall'APK base.
+
+                val sessionId = installer.createSession(params)
+                val session = installer.openSession(sessionId)
+
+                for (apk in apkFiles) {
+                    session.openWrite(apk.name, 0, apk.length()).use { out ->
+                        apk.inputStream().use { input ->
+                            input.copyTo(out)
+                        }
+                        session.fsync(out)
+                    }
+                }
+
+                val intent = Intent(context, InstallationResultReceiver::class.java).apply {
+                    action = "com.example.kinginstaller.INSTALL_COMPLETE"
+                }
+                val pendingIntent = android.app.PendingIntent.getBroadcast(
+                    context,
+                    sessionId,
+                    intent,
+                    android.app.PendingIntent.FLAG_MUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                session.commit(pendingIntent.intentSender)
+                session.close()
+                android.util.Log.d("InstallationUtils", "session.commit completato con successo per session $sessionId")
+            } catch (e: Exception) {
+                android.util.Log.e("InstallationUtils", "Errore in installSplitApksClassico", e)
+                errorCallback?.invoke(e.localizedMessage ?: e.message ?: e.toString())
+            }
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    @SuppressLint("RequestInstallPackagesPolicy")
+    fun createSplitInstallIntent(context: Context, apkFiles: List<File>): Intent {
+        val baseApk = apkFiles.first()
+        val splitApks = apkFiles.drop(1)
+
+        val baseUri = FileProvider.getUriForFile(
+            context.applicationContext,
+            "${context.packageName}.provider",
+            baseApk
+        )
+
+        val splitUris = ArrayList<Uri>()
+        for (split in splitApks) {
+            splitUris.add(
+                FileProvider.getUriForFile(
+                    context.applicationContext,
+                    "${context.packageName}.provider",
+                    split
+                )
+            )
+        }
+
+        return Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
+            setDataAndType(baseUri, "application/vnd.android.package-archive")
+            if (splitUris.isNotEmpty()) {
+                putParcelableArrayListExtra(Intent.EXTRA_STREAM, splitUris)
+            }
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+
+            putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
+            putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, VENDING_PKG)
+
+            putExtra("installerPackageName", VENDING_PKG)
+            putExtra("android.content.pm.extra.VERIFICATION_INSTALLER_PACKAGE", VENDING_PKG)
+            putExtra("android.content.pm.extra.VERIFICATION_INSTALLER_UID", 0)
+
+            putExtra("android.intent.extra.INSTALL_REASON", 1)
+
+            putExtra("android.intent.extra.REFERRER_NAME", "android-app://$VENDING_PKG")
+            putExtra(Intent.EXTRA_REFERRER, "android-app://$VENDING_PKG".toUri())
+
+            putExtra("android.intent.extra.ORIGINATING_PACKAGE", VENDING_PKG)
+            putExtra(Intent.EXTRA_ORIGINATING_URI, "https://play.google.com/store/apps/details?id=${context.packageName}".toUri())
+
+            if (Build.VERSION.SDK_INT >= 34) {
+                putExtra("android.content.pm.extra.REQUEST_UPDATE_OWNERSHIP", true)
+            }
         }
     }
 }

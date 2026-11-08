@@ -94,4 +94,13 @@
     <string name="not_aa_message">O método Shizuku não conseguiu definir o instalador neste dispositivo. Tente primeiro o método Clássico (sem Shizuku); se não bastar, o método Root é necessário.</string>
     <string name="try_classic">Tentar Clássico</string>
     <string name="fix_with_root_confirm">Corrigir com Root</string>
+    <string name="extracting_archive">Extraindo arquivo de pacote (XAPK/APKS/APKM)…</string>
+    <string name="error_extracting_archive">Erro ao extrair o arquivo: %1$s</string>
+    <string name="error_no_apks_in_archive">Nenhum arquivo APK válido encontrado no arquivo</string>
+    <string name="installing_split_apks">Instalando APKs divididos (%1$d arquivos)…</string>
+    <string name="select_split_apks_title">Selecione os APKs divididos para instalar:</string>
+    <string name="split_mandatory">Obrigatório</string>
+    <string name="base_apk_mandatory">O APK base é obrigatório</string>
+    <string name="no_splits_selected">Nenhum APK selecionado para instalação</string>
+    <string name="downloading_update">Baixando atualização…</string>
 </resources>
