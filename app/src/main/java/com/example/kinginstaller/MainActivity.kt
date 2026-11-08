@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
                                 tvError.text = getString(R.string.install_success_no_aa) + "\n" + summary
                                 if (shizukuTrickEnabled) {
                                     promptNotCompatibleAfterShizuku(packageName)
-                                } else if (!rootTrickEnabled && ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission()) {
+                                } else if (!rootTrickEnabled && (RootUtils.isDeviceRooted || (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission()))) {
                                     promptNotCompatibleAfterClassic(packageName)
                                 }
                             }
@@ -675,6 +675,9 @@ class MainActivity : AppCompatActivity() {
             .setMessage(R.string.not_aa_message)
             .setPositiveButton(R.string.try_classic) { _, _ -> retryWithClassic() }
             .setNegativeButton(android.R.string.cancel, null)
+        if (RootUtils.isDeviceRooted) {
+            builder.setNeutralButton(R.string.root_trick) { _, _ -> retryWithRoot() }
+        }
         builder.show()
     }
 
@@ -696,6 +699,9 @@ class MainActivity : AppCompatActivity() {
         if (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission()) {
             builder.setPositiveButton(R.string.shizuku_trick) { _, _ -> retryWithShizuku() }
         }
+        if (RootUtils.isDeviceRooted) {
+            builder.setNeutralButton(R.string.root_trick) { _, _ -> retryWithRoot() }
+        }
         builder.setNegativeButton(android.R.string.cancel, null)
         builder.show()
     }
@@ -710,6 +716,17 @@ class MainActivity : AppCompatActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
             startInstallation()
         }, 300L)
+    }
+
+    /** Passa al Metodo Root e reinstalla lo stesso APK (lancio dell'installer di sistema come shell). */
+    private fun retryWithRoot() {
+        rootTrickEnabled = true
+        shizukuTrickEnabled = false
+        oppoTrickEnabled = false
+        Shizuku.removeBinderReceivedListener(binderListener)
+        saveMethodSelection()
+        syncSwitches()
+        startInstallation()
     }
 
     private fun startInstallation() {
