@@ -208,12 +208,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        try {
-            checkManageExternalStoragePermission()
-        } catch (e: Exception) {
-            tvStatus.text = getString(R.string.error_occurred, e.toString())
-        }
-
         findViewById<Button>(R.id.selectButton).setOnClickListener {
             try {
                 showFileChooser()
