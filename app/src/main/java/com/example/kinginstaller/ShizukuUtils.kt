@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.TextView
@@ -44,13 +45,7 @@ object ShizukuUtils {
         var isFocusLost = false
     }
 
-    /**
-     * Lancia l'intent di installazione spacciandosi per com.android.shell (UID 2000)
-     * tramite il binder di sistema wrappato da Shizuku.
-     * Funziona sia su Shizuku Standard che su Shizuku Plus.
-     */
-    @SuppressLint("DiscouragedPrivateApi", "PrivateApi")
-    @Suppress("UNUSED_PARAMETER")
+    @SuppressLint("BlockedPrivateApi", "DiscouragedPrivateApi", "PrivateApi")
     private fun startInstallActivityAsShell(context: Context, intent: Intent): Boolean {
         return try {
             val binder = SystemServiceHelper.getSystemService("activity_task")
@@ -63,25 +58,27 @@ object ShizukuUtils {
             asInterfaceMethod.isAccessible = true
             val atmInstance = asInterfaceMethod.invoke(null, wrappedBinder) ?: return false
 
-            val method = atmInstance.javaClass.methods.firstOrNull { it.name == "startActivityAsUser" }
-                ?: atmInstance.javaClass.declaredMethods.firstOrNull { it.name == "startActivityAsUser" }
-                ?: throw NoSuchMethodException("startActivityAsUser non trovato")
+            val methods = atmInstance.javaClass.methods + atmInstance.javaClass.declaredMethods
+            val method = methods.firstOrNull { m ->
+                m.name == "startActivityAsUser" &&
+                m.parameterTypes.any { it.isAssignableFrom(Intent::class.java) }
+            } ?: throw NoSuchMethodException("startActivityAsUser non trovato")
 
             method.isAccessible = true
 
             val args = arrayOfNulls<Any>(method.parameterTypes.size)
             for (i in method.parameterTypes.indices) {
-                val paramType = method.parameterTypes[i]
+                val pType = method.parameterTypes[i]
                 args[i] = when {
-                    paramType.isAssignableFrom(Intent::class.java) -> intent
-                    paramType == String::class.java && (i == 1 || i == 2) -> "com.android.shell"
-                    paramType == Int::class.javaPrimitiveType -> 0
+                    pType.isAssignableFrom(Intent::class.java) -> intent
+                    pType == String::class.java -> if (i == 1) "com.android.shell" else null
+                    pType == Int::class.javaPrimitiveType || pType == Integer::class.java -> 0
                     else -> null
                 }
             }
 
             method.invoke(atmInstance, *args)
-            Log.d("ShizukuUtils", "startActivityAsUser invocato come com.android.shell con successo")
+            Log.d("ShizukuUtils", "startActivityAsUser invocato come com.android.shell con successo su API ${Build.VERSION.SDK_INT}")
             true
         } catch (e: Exception) {
             Log.e("ShizukuUtils", "Errore startInstallActivityAsShell", e)
@@ -114,10 +111,8 @@ object ShizukuUtils {
                     return@thread
                 }
 
-                // Pre-avvia (warm-up) il UserService così sarà pronto per il fix post-installazione.
                 prewarmUserService(context)
 
-                // 1. Condivisione URI con FileProvider
                 val fileUri = FileProvider.getUriForFile(
                     context, "${context.packageName}.provider", apkFile
                 )
@@ -135,19 +130,16 @@ object ShizukuUtils {
 
                 activity.runOnUiThread { onStatusUpdate(activity.getString(R.string.opening_package_installer)) }
 
-                // 2. Costruzione Intent nativo con gli extra necessari per Play Store
+                val vending = InstallationUtils.VENDING_PKG
                 val installIntent = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
                     setDataAndType(fileUri, "application/vnd.android.package-archive")
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, InstallationUtils.VENDING_PKG)
+                    putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, vending)
                     putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
-                    putExtra("android.intent.extra.REFERRER_NAME", "android-app://${InstallationUtils.VENDING_PKG}")
                     putExtra("android.content.pm.extra.INSTALL_REASON", 1)
                 }
 
                 InstallationState.isFocusLost = false
-
-                // 3. Esecuzione con identità Shell (UID 2000)
                 val success = startInstallActivityAsShell(context, installIntent)
 
                 if (success) {
