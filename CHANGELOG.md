@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.6
+
+### 🇺🇸 English
+
+**New**
+- **Support for XAPK, APKS, and APKM files** 📦 — KingInstaller can now open, extract, and install split APK bundles (.xapk, .apks, .apkm) and expansion files (.obb) across all installation methods (Classic, Shizuku, Root) without affecting single APK installations.
+
+### 🇮🇹 Italiano
+
+**Novità**
+- **Supporto per file XAPK, APKS e APKM** 📦 — KingInstaller ora può aprire, estrarre e installare pacchetti split (.xapk, .apks, .apkm) e file di espansione (.obb) su tutti i metodi di installazione (Classico, Shizuku, Root), mantenendo inalterata l'installazione dei singoli file APK.
+
 ## v2.5
 
 ### 🇺🇸 English

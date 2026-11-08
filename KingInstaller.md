@@ -73,6 +73,7 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
   - **Feedback del fix installer**: durante la correzione post-installazione la UI mostra lo stato (arancione) e, in caso di fallimento, i valori reali di install-source ("Installed by / Requested by").
   - **Condivisione log diagnostico**: icona di condivisione accanto al titolo "Welcome to Installer!" (`shareLogButton`) genera e condivide un report (device, ROM MIUI/HyperOS via `getprop`, stato metodo/Shizuku/root, install-source dell'ultima app, logcat del processo) — `DiagnosticsUtils.kt`.
   - **Copia log negli appunti**: un **tocco sulla finestra del log** (`textViewError`) ne copia il testo negli appunti (`ClipData`/`ClipboardManager`), con conferma Toast `log_copied` (nascosta su Android 13+, dove il sistema mostra già il proprio avviso). Comodo per incollare la diagnostica `[root]`/`[installer=]` senza passare dalla condivisione.
+  - **Supporto esteso per file XAPK, APKS e APKM**: estrazione ed installazione automatica dei pacchetti suddivisi (split APK) ed estrazione dei file di espansione OBB per tutti e 3 i metodi (Classico, Shizuku, Root), mantenendo la completa retrocompatibilità per i file `.apk` singoli.
 
 ---
 
@@ -85,15 +86,24 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
 2. **Gestione Asincrona dei Trasferimenti APK**:
   - Tutte le operazioni di lettura/trasferimento tramite `content://` URI e `FileProvider` sono eseguite tramite Kotlin Coroutines per prevenire blocchi UI e memory leak / OOM su file APK di grandi dimensioni.
 
+3. **Gestione Pacchetti Multi-Parti (XAPK / APKS / APKM)**:
+  - `PackageArchiveUtils`: estrazione ZIP in directory temporanee `split_temp_*`, riordinamento automatico posizionando l'APK base all'indice 0, copia automatica dei file OBB in `/sdcard/Android/obb/<packageName>/`. Se l'archivio contiene 1 solo APK, il flusso degrada in modo trasparente sul metodo a singolo APK.
+  - Installazione Split APK:
+    - **Classico**: `InstallationUtils.installSplitApksClassico` tramite `PackageInstaller.Session` ed invio `PendingIntent` a `InstallationResultReceiver`.
+    - **Shizuku**: `ShizukuUtils.installSplitApks` tramite `PackageInstaller.Session` + `prewarmUserService` e correzione post-installazione.
+    - **Root**: `RootUtils.installSplitApksAsShell` tramite `su 2000 -c "cmd package install-create -i com.android.vending ..."` con streaming STDIN diretto degli APK split.
+
 ---
 
 ## 4. Modified / Maintained Files Checklist
 - `app/build.gradle`: Configurato con `applicationId "com.example.kinginstaller"` e la firma di debug predefinita.
-- `app/src/main/AndroidManifest.xml`: Configurazione `FileProvider`, filtri Intent `ACTION_VIEW` e `ACTION_SEND`, alias `.ApkHandler` e `.OppoTrick`.
-- `ShizukuUtils.kt`: Installazione via Shizuku (dialog come shell) + `setInstallerViaShizuku()` (fix post-installazione via `UserService`).
-- `RootUtils.kt`: Esecuzione comandi `su` (`runSuWithCmd`) + `setInstallerViaRoot()` (fix installer post-installazione). L'installazione usa il lancio classico (vedi §1.5), non `am start` come root.
+- `app/src/main/AndroidManifest.xml`: Configurazione `FileProvider`, filtri Intent `ACTION_VIEW` e `ACTION_SEND` (incluse estensioni `.xapk`, `.apks`, `.apkm`), alias `.ApkHandler` e `.OppoTrick`.
+- `PackageArchiveUtils.kt`: Utility per l'analisi ed estrazione di archivi `.xapk`, `.apks`, `.apkm` e gestione file `.obb`.
+- `InstallationUtils.kt`: Copia file con supporto estensioni split, pulizia cartelle temporanee, installazione `PackageInstaller.Session` per il metodo Classico.
+- `ShizukuUtils.kt`: Installazione via Shizuku (dialog come shell) + `setInstallerViaShizuku()` + `installSplitApks()`.
+- `RootUtils.kt`: Esecuzione comandi `su` (`runSuWithCmd`), `setInstallerViaRoot()`, `launchInstallerAsShell()` e `installSplitApksAsShell()`.
 - `MyUserService.kt` / `IMyUserService.aidl`: `UserService` remoto che esegue `set-installer` con privilegi Shell/Root.
-- `MainActivity.kt`: Selezione metodo, `packageAddedReceiver` con polling reattivo + fix, `updateComponentStates()`, policy per versione Android.
+- `MainActivity.kt`: Selezione metodo, `packageAddedReceiver` con polling reattivo + fix, `updateComponentStates()`, policy per versione Android e gestione estrazione/installazione split vs singolo APK.
 - `KingInstaller.md`: Questo file di memoria continua per la persistenza del contesto e delle linee guida di sviluppo.
 - `CLAUDE.md`: Istruzioni operative per le sessioni Claude (workflow, invarianti da non regredire).
 
