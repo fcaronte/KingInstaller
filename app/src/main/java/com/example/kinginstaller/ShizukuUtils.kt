@@ -132,7 +132,7 @@ object ShizukuUtils {
 
                 val vending = InstallationUtils.VENDING_PKG
                 val am = "am start" +
-                        " -a android.intent.action.VIEW" +
+                        " -a android.intent.action.INSTALL_PACKAGE" +
                         " -d $fileUri" +
                         " -t application/vnd.android.package-archive" +
                         " --es android.intent.extra.INSTALLER_PACKAGE_NAME $vending" +
@@ -152,7 +152,8 @@ object ShizukuUtils {
                 }
 
                 if (!success) {
-                    val installIntent = Intent(Intent.ACTION_VIEW).apply {
+                    @Suppress("DEPRECATION")
+                    val installIntent = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
                         setDataAndType(fileUri, "application/vnd.android.package-archive")
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
                         putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, vending)
