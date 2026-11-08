@@ -29,29 +29,13 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
 
 ### 1.4. ROM Cinesi (Xiaomi / MIUI / HyperOS) — Gli Extra dell'Intent Vengono Ignorati
 - **Causa**: su MIUI/HyperOS gli intent di installazione sono dirottati verso `com.miui.packageinstaller`, che **ignora gli extra** (`EXTRA_INSTALLER_PACKAGE_NAME`, `REFERRER_NAME`, `ORIGINATING_PACKAGE`, ecc.). L'app viene quindi installata con "Installed by" errato. **Questo riguarda Xiaomi/MIUI/HyperOS, NON Samsung.**
-- **Nota sui test (Samsung S24)**: su **One UI** il metodo **classico** funziona già (installa come `com.android.vending`), quindi Samsung non è un device da correggere. Nei test l'S24 è usato solo come banco di prova del **codice post-installazione**, forzando il path Shizuku (che lancia il dialog come shell → "Installed by" = `com.google.android.packageinstaller`). La validazione reale del fix va fatta su un device **Xiaomi**.
-- **Fix affidabile**: impostare l'installer **dopo** l'installazione, con un comando diretto al package manager eseguito con privilegi (Shell via Shizuku `UserService`, oppure Root):
-  `cmd package set-installer-package --user 0 <pkg> com.android.vending` (con fallback `pm set-installer <pkg> com.android.vending`).
-- **Implementazione (via primaria = binder)**: `ShizukuUtils.setInstallerViaShizuku()` imposta "Installed by" chiamando direttamente `IPackageManager.setInstallerPackageName` tramite il binder di sistema wrappato da Shizuku (`setInstallerViaBinder`) — la **stessa tecnica dell'installazione** (`startInstallActivityAsShell`), **senza avviare un UserService**. ⚠️ Riesce solo se il chiamante è root/system: da shell semplice viene rifiutato (vedi LIMITE sotto). `RootUtils.setInstallerViaRoot()` fa lo stesso via `su`, eseguendo `cmd package set-installer` come **system (uid 1000)**, **shell (uid 2000)** e **root**, ciascuno etichettato (`[u1000]`/`[u2000]`/`[root]`), e in coda legge l'installer REALE con `dumpsys package … | grep installerPackageName` (`[installer=]`): così `onDone` riporta con certezza quale uid funziona o perché ognuno fallisce. ⚠️ **Android 14/15/17** (confermato anche su un device Android 15 di test, Magisk): `set-installer` come **root (uid 0)** è rifiutato con `SecurityException: Unknown calling UID: 0` (il PM pretende un uid "noto", associato a un pacchetto; uid 0 non lo è) e `set-installer-package` non esiste come comando. ⚠️ **Scoperta (Android 15, Magisk)**: nemmeno **uid 1000/2000** passano — danno `Caller does not have same cert as new installer package com.android.vending`. Il path POST-installazione (`setInstallerPackageName`) fa un **controllo di firma puro, senza** bypass `INSTALL_PACKAGES`: quindi **nessun uid via `su` può correggere "Installed by" dopo l'installazione**. ⚠️ E **AA ≥14 controlla anche "Requested by"**, quindi nemmeno `pm install -i` basta (lascia l'iniziatore a shell/nullo). Per questo il **Metodo Root** ora **lancia il package installer di sistema come shell** con l'extra `INSTALLER_PACKAGE_NAME=vending` → "Installed by"=vending **e** "Requested by"=packageinstaller in un colpo solo — vedi §1.5 "Metodo Root (design)". `setInstallerViaRoot` resta solo come best-effort del Classico su device rootato. Il `packageAddedReceiver` in `MainActivity` lancia il fix in modo **reattivo**, solo se dopo `fixGraceMillis` l'app non è già `isAACompatible`; timeout del polling 6 s.
-- **Fallback UserService**: se la via binder fallisce, si ripiega su `MyUserService` (AIDL → `set-installer` via shell), con warm-up (`prewarmUserService` chiamato in `installApk`) e binder in cache (`cachedService`). **NB**: su alcune One UI (es. l'S24 di test) il `UserService` **non si connette affatto** (bind silenzioso, senza eccezione né log).
-- **⚠️ LIMITE su ALCUNI device (NON universale) — test S24, One UI/Android 17**: impostare "Installed by" = `com.android.vending` da **shell** (Shizuku senza root) può essere **bloccato dal sistema**: `SecurityException: Caller does not have same cert as new installer package com.android.vending`. Il check confronta la firma del chiamante con quella di Google (vending): lo shell (firma piattaforma) non combacia. `pm set-installer` usa lo **stesso** metodo IPC (`IPackageManager.setInstallerPackageName`) → identico blocco. Solo **root/system** aggira il check (bypass tipo `isCallerSystemOrRoot`).
-- **Dove Shizuku FUNZIONA (importante)**: su molti device (es. **Pixel A17, Honor, Realme, RedMagic** e altri) il metodo Shizuku **funziona già**, perché è il **dialog di installazione** a onorare l'extra (installing=vending) senza bisogno del fix post-installazione. Il blocco "same cert" riguarda solo i device che (a) **ignorano l'extra** all'installazione **e** (b) **vietano allo shell** il `set-installer` (One UI/S24 confermato; **Xiaomi MIUI/HyperOS** riportato; **Vivo** solo segnalato, non confermato — potrebbe essere skill issue). Su questi: suggerimento UX **prima Classico, poi Root** (`promptNotCompatibleAfterShizuku`).
-- **Non-interferenza**: il fix post-installazione scatta SOLO se l'app non è già `isAACompatible`. Sui device dove Shizuku funziona, l'app è compatibile al primo controllo → il fix **non parte**, l'install resta identico. L'unica aggiunta a `installApk` è `prewarmUserService` (async, non bloccante).
-- **Limite del metodo classico puro**: senza privilegi (né Root né Shizuku) su Xiaomi NON è possibile correggere "Installed by" dopo che l'installer MIUI ha ignorato gli extra. Root/Shizuku restano necessari.
-- **Nota su "Requested by"**: `set-installer` cambia solo "Installed by" (`installingPackageName`). "Requested by" (`initiatingPackageName`) resta quello del dialog (es. `com.miui.packageinstaller`, che contiene "packageinstaller" e quindi supera `isAACompatible`). Non è modificabile dopo l'installazione.
+- **Fallback UserService**: se la via binder fallisce, si ripiega su `MyUserService` (AIDL → `set-installer` via shell), con warm-up (`prewarmUserService` chiamato in `installApk`) e binder in cache (`cachedService`).
+- **Nota su "Requested by"**: `set-installer` cambia solo "Installed by" (`installingPackageName`). "Requested by" (`initiatingPackageName`) resta quello del dialog (es. `com.miui.packageinstaller`, che contiene "packageinstaller" e quindi supera `isAACompatible`).
 
 ### 1.5. Invarianti UI Installer (NON regredire)
 - Il **finto installer di King** (activity-alias `.OppoTrick`, schema `package`) deve essere **visibile solo** durante l'installazione in **modalità Oppo**. Fuori da quella modalità resta disabilitato.
 - Durante "Installa con King" l'alias `.ApkHandler` viene **disabilitato** così King non compare nel chooser dell'installer di sistema (evita tap per errore). Gestito da `updateComponentStates(installing)`.
 - Aprendo un APK **dall'esterno** (file manager / "condividi con"), King **deve** restare tra le app con cui aprire, caricando l'APK pronto all'installazione: l'alias `.ApkHandler` è abilitato a riposo e riabilitato in `onResume`.
-- **Metodo Root (design) — lancio dell'installer di sistema COME SHELL**: il Root **NON** usa più il dialog lanciato dall'app, né il fix post-installazione, né `pm install -i`. Sfondo:
-  - Il `set-installer` **POST-installazione** è rifiutato per **OGNI uid** (confermato su Android 15, Magisk): `[u1000]`/`[u2000]` → `Caller does not have same cert as new installer package com.android.vending`; `[root]` → `Unknown calling UID: 0`. Il path `setInstallerPackageName` fa un **controllo di firma puro senza** bypass `INSTALL_PACKAGES` → impossibile correggere "Installed by" dopo l'installazione.
-  - **AA ≥14 controlla ANCHE "Requested by"** (`initiatingPackageName`), non solo "Installed by". Stato bersaglio: **`installingPackageName = com.android.vending`** *e* **`initiatingPackageName = com.google.android.packageinstaller`**. Perciò `pm install -i` (che lascerebbe "Requested by" a shell/nullo) **non basta**.
-  - **Soluzione = la STESSA tecnica del metodo Shizuku** (`ShizukuUtils.startInstallActivityAsShell`), ma via Root: lanciare lo stesso intent d'installazione (`ACTION_INSTALL_PACKAGE`, APK via `content://`, extra `INSTALLER_PACKAGE_NAME=com.android.vending` + `NOT_UNKNOWN_SOURCE` + `REFERRER_NAME`) **con identità shell (uid 2000)**. Il metodo Shizuku lo fa chiamando `startActivityAsUser` sul binder dell'ActivityTaskManager wrappato da Shizuku, spacciandosi per `com.android.shell`; il metodo Root fa l'equivalente con `su 2000 -c "am start …"` (am gira come uid 2000 → caller = shell). Da shell (privilegiata, `INSTALL_PACKAGES`) l'installer **onora** l'extra → "Installed by" = Play Store; ed è il packageinstaller a installare → "Requested by" = `com.google.android.packageinstaller`. Entrambi i campi in un colpo solo (da app normale l'extra è invece rifiutato: "invalid, remove it"). Nessun componente hardcoded: l'intent risolve al package installer di sistema come nel path Shizuku.
-  - **`RootUtils.launchInstallerAsShell(uriString, onLaunched)`**: compone l'`am start -a android.intent.action.INSTALL_PACKAGE -d <uri> -t … --es INSTALLER_PACKAGE_NAME com.android.vending --ez NOT_UNKNOWN_SOURCE true …` (stessi extra di `installApk`) e lo esegue con `su 2000 -c "…"`. `ok` = l'output contiene `Starting` e non `Error`.
-  - **`MainActivity.installViaRootFlow`**: ramo dedicato in `startInstallation`. Prima **concede la lettura** dell'URI `content://` (FileProvider dell'app) a `INSTALLER_PACKAGES` — la stessa lista del metodo Shizuku: `com.android.shell`, `com.google.android.packageinstaller`, `com.android.packageinstaller` — via `grantUriPermission`, così l'installer legge l'APK a prescindere da chi lancia `am start`. Poi chiama `launchInstallerAsShell`. L'esito **NON** è gestito qui (l'installer di sistema è interattivo): lo verifica il `packageAddedReceiver` via `isAACompatible` (verde se compatibile, rosso + summary al timeout). Se il lancio come shell fallisce (su assente) → `error_occurred`.
-  - **packageAddedReceiver**: nel passo di fix, per `rootTrickEnabled` **non** si tenta alcun post-fix (già fatto al volo) — solo verifica; `setInstallerViaRoot` resta come best-effort del **Classico** su device rootato.
-  - **Output a schermo = pulito**: se l'app risulta NON compatibile, a schermo va **solo** il messaggio chiaro (`install_success_no_aa`) + il summary `Installed by: … | Requested by: …`. I dettagli verbosi (output di `su`/`am`, `[root] …`) **non** compaiono più a schermo: finiscono in **logcat** (`Log.w`/`Log.d`) e quindi nel **log condiviso** (icona Condividi / tocco-per-copiare). Se il lancio dell'installer come shell fallisce → messaggio `root_launch_failed` (dettaglio solo in logcat).
 
 ### 1.6. Policy per Versione Android
 - **Android 15+ (API 35)**: lo switch **Oppo/Realme/OnePlus** è nascosto (non più utile) e disattivato se residuo da sessioni precedenti.
@@ -60,20 +44,22 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
 ---
 
 ## 2. Current Status & Milestone
-- **Versione Attuale**: v2.4
+- **Versione Attuale**: v2.6 (versionCode 13)
 - **Funzionalità Implementate**:
   - Architettura di installazione ibrida (Classico / Shizuku / Root).
-  - Integrazione Shizuku / Shizuku Next / ShizukuPlus via Binder IPC.
+  - Integrazione Shizuku / Shizuku Next / ShizukuPlus / Shizuku Next v14.0.33-next via Binder IPC e query manifest estese (`moe.shizuku.manager`, `rikka.shizuku`, `moe.shizuku.manager.dev`, `moe.shizuku.privileged.api`).
   - Funzione di reinstallazione in-app per riparare le app sideloaded senza visibilità su Android Auto.
   - Supporto nativo per la selezione della lingua per-app (Android 13+ / API 33).
   - Diagnostic Checker integrato per verificare "Installed By" e "Requested By".
-  - Gestione sicura di file di grandi dimensioni tramite URI `FileProvider` asincroni.
-  - Fix installer **post-installazione reattivo** per Xiaomi via Shizuku (oltre che Root): vedi §1.4.
-  - **Policy per versione Android** (vedi §1.6): switch Oppo nascosto su Android 15+; suggerimento package installer solo fino ad Android 14.
-  - **Feedback del fix installer**: durante la correzione post-installazione la UI mostra lo stato (arancione) e, in caso di fallimento, i valori reali di install-source ("Installed by / Requested by").
-  - **Condivisione log diagnostico**: icona di condivisione accanto al titolo "Welcome to Installer!" (`shareLogButton`) genera e condivide un report (device, ROM MIUI/HyperOS via `getprop`, stato metodo/Shizuku/root, install-source dell'ultima app, logcat del processo) — `DiagnosticsUtils.kt`.
-  - **Copia log negli appunti**: un **tocco sulla finestra del log** (`textViewError`) ne copia il testo negli appunti (`ClipData`/`ClipboardManager`), con conferma Toast `log_copied` (nascosta su Android 13+, dove il sistema mostra già il proprio avviso). Comodo per incollare la diagnostica `[root]`/`[installer=]` senza passare dalla condivisione.
-  - **Supporto esteso per file XAPK, APKS e APKM**: estrazione ed installazione automatica dei pacchetti suddivisi (split APK) ed estrazione dei file di espansione OBB per tutti e 3 i metodi (Classico, Shizuku, Root), mantenendo la completa retrocompatibilità per i file `.apk` singoli.
+  - **Supporto nativo per file split APK (`.xapk`, `.apks`, `.apkm`, `.zip`)**:
+    - Estrazione asincrona e gestione dei file di espansione OBB (`/sdcard/Android/obb/<packageName>/`).
+    - Ordinamento automatico con posizionamento dell'APK base all'indice 0.
+    - **Dialogo di selezione interattivo con SplitType**: classificazione automatica e pre-selezione basata sull'architettura CPU del dispositivo (`ABI_COMPATIBLE`), sulla densità dello schermo (`DENSITY_COMPATIBLE`, inclusi tutti gli split DPI come `mdpi`), e sulla lingua di sistema (`LANG_COMPATIBLE` per la lingua corrente e inglese).
+    - Pulsante `"Seleziona tutto"` / `"Deseleziona tutto"` all'interno di un layout dedicato (`dialog_split_selection.xml`) per prevenire problemi di spazio o wrapping in tutte le 11 lingue.
+  - **Reinstallazione app split da lista app (`AppManagerActivity`)**: estrazione automatica di base + split installati, compattazione in archivio `.apks` e passaggio al motore KingInstaller.
+  - **Download e installazione aggiornamenti in-app (`UpdateChecker`)**: download diretto dell'APK di aggiornamento da GitHub e avvio istantaneo dell'installazione al termine.
+  - **Pulizia permessi Android 13+**: rimozione del prompt obsoleto `MANAGE_EXTERNAL_STORAGE` all'avvio (gestione tramite URI `content://` e file picker di sistema).
+  - **Fix BAL (Background Activity Launch) su Android 13+**: utilizzo di `PendingIntent.getActivity` verso `MainActivity` per le sessioni split, consentendo l'apertura garantita del package installer su Android 13, 14, 15 e 17.
 
 ---
 
@@ -88,28 +74,18 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
 
 3. **Gestione Pacchetti Multi-Parti (XAPK / APKS / APKM)**:
   - `PackageArchiveUtils`: estrazione ZIP in directory temporanee `split_temp_*`, riordinamento automatico posizionando l'APK base all'indice 0, copia automatica dei file OBB in `/sdcard/Android/obb/<packageName>/`. Se l'archivio contiene 1 solo APK, il flusso degrada in modo trasparente sul metodo a singolo APK.
-  - Installazione Split APK:
-    - **Classico**: `InstallationUtils.installSplitApksClassico` tramite `PackageInstaller.Session` ed invio `PendingIntent` a `InstallationResultReceiver`.
-    - **Shizuku**: `ShizukuUtils.installSplitApks` tramite `PackageInstaller.Session` + `prewarmUserService` e correzione post-installazione.
-    - **Root**: `RootUtils.installSplitApksAsShell` tramite `su 2000 -c "cmd package install-create -i com.android.vending ..."` con streaming STDIN diretto degli APK split.
 
 ---
 
 ## 4. Modified / Maintained Files Checklist
-- `app/build.gradle`: Configurato con `applicationId "com.example.kinginstaller"` e la firma di debug predefinita.
-- `app/src/main/AndroidManifest.xml`: Configurazione `FileProvider`, filtri Intent `ACTION_VIEW` e `ACTION_SEND` (incluse estensioni `.xapk`, `.apks`, `.apkm`), alias `.ApkHandler` e `.OppoTrick`.
-- `PackageArchiveUtils.kt`: Utility per l'analisi ed estrazione di archivi `.xapk`, `.apks`, `.apkm` e gestione file `.obb`.
-- `InstallationUtils.kt`: Copia file con supporto estensioni split, pulizia cartelle temporanee, installazione `PackageInstaller.Session` per il metodo Classico.
-- `ShizukuUtils.kt`: Installazione via Shizuku (dialog come shell) + `setInstallerViaShizuku()` + `installSplitApks()`.
-- `RootUtils.kt`: Esecuzione comandi `su` (`runSuWithCmd`), `setInstallerViaRoot()`, `launchInstallerAsShell()` e `installSplitApksAsShell()`.
+- `app/build.gradle`: Configurato con `applicationId "com.example.kinginstaller"` e la firma di debug predefinita, versione `v2.6` (versionCode 13).
+- `app/src/main/AndroidManifest.xml`: Configurazione `FileProvider`, filtri Intent `ACTION_VIEW` e `ACTION_SEND` (incluse estensioni `.xapk`, `.apks`, `.apkm`), alias `.ApkHandler` e `.OppoTrick`, query manifest estese per Shizuku/Shizuku Next.
+- `PackageArchiveUtils.kt`: Utility per l'analisi ed estrazione di archivi `.xapk`, `.apks`, `.apkm`, gestione OBB e classificazione `SplitType`.
+- `InstallationUtils.kt`: Copia file con supporto estensioni split, pulizia cartelle temporanee, installazione `PackageInstaller.Session` con `PendingIntent.getActivity` per il metodo Classico (fix BAL Android 13+).
+- `ShizukuUtils.kt`: Installazione via Shizuku + `setInstallerViaShizuku()` via `UserService` + `installSplitApks()`.
+- `RootUtils.kt`: Esecuzione comandi `su` (`runSuWithCmd`), `setInstallerViaRoot()`, `launchInstallerAsShell()` e `installSplitApksAsShell()` con passaggio diretto del percorso assoluto del file (evitando `EPIPE`).
 - `MyUserService.kt` / `IMyUserService.aidl`: `UserService` remoto che esegue `set-installer` con privilegi Shell/Root.
-- `MainActivity.kt`: Selezione metodo, `packageAddedReceiver` con polling reattivo + fix, `updateComponentStates()`, policy per versione Android e gestione estrazione/installazione split vs singolo APK.
-- `KingInstaller.md`: Questo file di memoria continua per la persistenza del contesto e delle linee guida di sviluppo.
-- `CLAUDE.md`: Istruzioni operative per le sessioni Claude (workflow, invarianti da non regredire).
-
----
-
-## 5. Next Steps (Roadmap & TODO)
-- [ ] Monitorare le modifiche delle API del PackageInstaller sulle future versioni di Android (Android 15+).
-- [ ] Mantenere aggiornati i collegamenti consigliati per Shizuku Next e il supporto multi-lingua.
-- [ ] Verificare costantemente che ogni refactoring rispetti la regola d'oro "No Shell + PlayStore".
+- `MainActivity.kt`: Selezione metodo, `packageAddedReceiver` con verifica AA, policy versione Android, gestione estrazione/installazione split vs singolo APK e dialogo personalizzato di selezione split.
+- `AppManagerActivity.kt`: Verifica e reinstallazione di app singole e split (tramite compattazione `.apks`).
+- `UpdateChecker.kt`: Controllo aggiornamenti GitHub, download diretto APK e avvio installazione immediato.
+- `KingInstaller.md` & `CHANGELOG.md` & `CLAUDE.md`: Memoria di progetto, changelog e linee guida operative.
