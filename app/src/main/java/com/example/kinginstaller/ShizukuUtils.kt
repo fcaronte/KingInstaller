@@ -71,7 +71,7 @@ object ShizukuUtils {
                 val pType = method.parameterTypes[i]
                 args[i] = when {
                     pType.isAssignableFrom(Intent::class.java) -> intent
-                    pType == String::class.java -> if (i == 1) context.packageName else null
+                    pType == String::class.java -> if (i == 1) "com.android.shell" else null
                     pType == Int::class.javaPrimitiveType || pType == Integer::class.java -> 0
                     else -> null
                 }
@@ -162,6 +162,15 @@ object ShizukuUtils {
                     }
                     InstallationState.isFocusLost = false
                     success = startInstallActivityAsShell(context, installIntent)
+                    if (!success) {
+                        try {
+                            activity.startActivity(installIntent)
+                            success = true
+                            Log.d("ShizukuUtils", "startInstallActivityAsShell fallito -> fallback su startActivity riuscito")
+                        } catch (e: Exception) {
+                            Log.e("ShizukuUtils", "Fallback startActivity fallito", e)
+                        }
+                    }
                 }
 
                 if (success) {
