@@ -91,8 +91,6 @@ class MainActivity : AppCompatActivity() {
                 val fixGraceMillis = 500L
 
                 val pollingRunnable = object : Runnable {
-                    var fixAttempted = false
-
                     override fun run() {
                         val isCompatible = InstallationUtils.isAACompatible(context, packageName)
                         val elapsed = System.currentTimeMillis() - startTime
@@ -104,59 +102,14 @@ class MainActivity : AppCompatActivity() {
                                 installButton.isEnabled = true
                                 updateComponentStates(installing = false)
                             }
-                        } else if (!fixAttempted && elapsed >= fixGraceMillis) {
-                            // Identità non corretta: tentiamo UNA volta il fix privilegiato,
-                            // segnalandolo in UI così è chiaro che il fix è stato avviato.
-                            fixAttempted = true
-                            when {
-                                rootTrickEnabled -> {
-                                    // Metodo Root: "Installed by"/"Requested by" sono già impostati
-                                    // AL VOLO lanciando l'installer come shell (installViaRootFlow).
-                                    // Il set-installer POST-installazione è bloccato dalla firma per
-                                    // ogni uid → nessun post-fix, qui si fa solo verifica.
-                                    handler.postDelayed(this, intervalMillis)
-                                }
-                                RootUtils.isDeviceRooted -> {
-                                    // Classico su device rootato: best-effort col set-installer via
-                                    // su (sullo stesso path di firma può comunque fallire); ne
-                                    // catturiamo l'output per il messaggio diagnostico finale.
-                                    runOnUiThread {
-                                        tvError.text = getString(R.string.fixing_installer_root)
-                                        tvError.setTextColor(Color.parseColor("#FFA000"))
-                                    }
-                                    RootUtils.setInstallerViaRoot(packageName) { detail -> lastRootFixDetail = detail }
-                                    handler.postDelayed(this, intervalMillis)
-                                }
-                                shizukuTrickEnabled || (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission()) -> {
-                                    runOnUiThread {
-                                        tvError.text = getString(R.string.fixing_installer_shizuku)
-                                        tvError.setTextColor(Color.parseColor("#FFA000"))
-                                    }
-                                    ShizukuUtils.setInstallerViaShizuku(applicationContext, packageName) { ok ->
-                                        if (!ok) Log.w("KingInstaller", "setInstallerViaShizuku: UserService non raggiungibile per $packageName")
-                                    }
-                                    handler.postDelayed(this, intervalMillis)
-                                }
-                                else -> {
-                                    // Nessun metodo privilegiato attivo: non possiamo correggere i metadati.
-                                    handler.postDelayed(this, intervalMillis)
-                                }
-                            }
                         } else if (elapsed >= timeoutMillis) {
                             val summary = InstallationUtils.getInstallSourceSummary(context, packageName)
-                            val rootDetail = lastRootFixDetail
-                            // I dettagli verbosi (output di su/am) restano in LOGCAT → finiscono nel
-                            // log condiviso, NON a schermo: a schermo solo messaggio chiaro + summary
-                            // ("Installed by"/"Requested by").
-                            Log.w("KingInstaller", "AA non compatibile per $packageName -> $summary" +
-                                    (if (!rootDetail.isNullOrEmpty()) " | [root] $rootDetail" else ""))
+                            Log.w("KingInstaller", "AA non compatibile per $packageName -> $summary")
                             runOnUiThread {
                                 installButton.isEnabled = true
                                 updateComponentStates(installing = false)
                                 tvError.setTextColor(getColor(R.color.aa_red_text))
                                 tvError.text = getString(R.string.install_success_no_aa) + "\n" + summary
-                                // Se il metodo Shizuku non è bastato su questo device, suggeriamo prima
-                                // il Classico (senza Shizuku) e, se rootato, offriamo anche l'opzione Root.
                                 if (shizukuTrickEnabled) {
                                     promptNotCompatibleAfterShizuku(packageName)
                                 }
