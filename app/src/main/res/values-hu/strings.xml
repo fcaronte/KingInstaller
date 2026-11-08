@@ -99,6 +99,7 @@
     <string name="error_extracting_archive">Hiba az archívum kibontásakor: %1$s</string>
     <string name="error_no_apks_in_archive">Nem található érvényes APK fájl az archívumban</string>
     <string name="installing_split_apks">Osztott APK-k telepítése (%1$d fájl)…</string>
+    <string name="split_not_aa_notice">A split APK telepítése extra funkció – NEM teszi láthatóvá az alkalmazást az Android Autóban.</string>
     <string name="select_split_apks_title">Válaszd ki a telepítendő osztott APK-kat:</string>
     <string name="split_mandatory">Kötelező</string>
     <string name="base_apk_mandatory">Az alap APK kötelező</string>

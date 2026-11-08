@@ -97,6 +97,7 @@
     <string name="error_extracting_archive">Error extracting archive: %1$s</string>
     <string name="error_no_apks_in_archive">No valid APK files found in archive</string>
     <string name="installing_split_apks">Installing split APKs (%1$d files)…</string>
+    <string name="split_not_aa_notice">Split APK install is an extra feature — it does NOT make the app visible in Android Auto.</string>
     <string name="select_split_apks_title">Select Split APKs to install:</string>
     <string name="split_mandatory">Mandatory</string>
     <string name="base_apk_mandatory">Base APK is mandatory</string>

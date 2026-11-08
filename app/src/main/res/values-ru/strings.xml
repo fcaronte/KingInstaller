@@ -97,6 +97,7 @@
     <string name="error_extracting_archive">Ошибка распаковки архива: %1$s</string>
     <string name="error_no_apks_in_archive">В архиве не найдено допустимых файлов APK</string>
     <string name="installing_split_apks">Установка разделенных APK (%1$d файлов)…</string>
+    <string name="split_not_aa_notice">Установка split-APK — дополнительная функция: она НЕ делает приложение видимым в Android Auto.</string>
     <string name="select_split_apks_title">Выберите разделенные APK для установки:</string>
     <string name="split_mandatory">Обязательно</string>
     <string name="base_apk_mandatory">Базовый APK обязателен</string>

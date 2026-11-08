@@ -908,6 +908,9 @@ class MainActivity : AppCompatActivity() {
     private fun performSplitApkInstall(packageName: String?, apkFiles: List<File>) {
         val tvError = findViewById<TextView>(R.id.textViewError)
         tvError.text = getString(R.string.installing_split_apks, apkFiles.size)
+        // Avviso: l'installazione split è una comodità in più, ma NON può rendere l'app visibile in
+        // Android Auto (un bundle multi-APK non può ottenere "Requested by = packageinstaller").
+        Toast.makeText(this, R.string.split_not_aa_notice, Toast.LENGTH_LONG).show()
 
         if (shizukuTrickEnabled) {
             Log.d("MainActivity", "Avvio installazione split tramite Metodo Shizuku.")

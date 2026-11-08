@@ -98,6 +98,7 @@
     <string name="error_extracting_archive">解压安装包失败：%1$s</string>
     <string name="error_no_apks_in_archive">压缩包内未找到有效的 APK 文件</string>
     <string name="installing_split_apks">正在安装拆分 APK（%1$d 个文件）…</string>
+    <string name="split_not_aa_notice">拆分 APK 安装是附加功能——它不会让应用在 Android Auto 中可见。</string>
     <string name="select_split_apks_title">选择要安装的拆分 APK：</string>
     <string name="split_mandatory">必选</string>
     <string name="base_apk_mandatory">基础 APK 为必填项</string>

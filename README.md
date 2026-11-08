@@ -18,7 +18,7 @@ KingInstaller is a utility designed to install APK files in a way that tricks th
 
 ## ✨ Features & Recent Updates (v2.6)
 
-* **Split APKs Support (.xapk, .apks, .apkm):** Native support for extracting, selecting, and installing multi-part APK bundles and OBB expansion files.
+* **Split APKs Support (.xapk, .apks, .apkm):** Native support for extracting, selecting, and installing multi-part APK bundles and OBB expansion files. *Note: this is a convenience installer — split apps **cannot** be made visible in Android Auto, because a multi-APK bundle can't obtain the Play Store "Requested by" install source.*
 * **Smart Split Selection:** Automatically pre-selects device-compatible CPU architectures (ABIs), display densities (including all DPI resources like `mdpi`), and system language (`it`, `en`), deselecting unnecessary languages. Includes a one-tap "Select All / Deselect All" toggle.
 * **Hybrid Installation Architecture:** Combines direct intents, Shizuku remote `UserService` (supporting **Shizuku-Next**, **Standard Shizuku**, **ShizukuPlus**, and **Plus Drop-In**), and Root execution.
 * **Smart Workflow:** Streamlined installation flow recommending the classic method first, falling back to Shizuku, and utilizing Root as the ultimate solution when needed.
@@ -90,7 +90,7 @@ KingInstaller è un'utilità progettata per installare file APK ingannando il si
 
 ## ✨ Funzionalità e Ulteriori Aggiornamenti (v2.6)
 
-* **Supporto File Split APK (.xapk, .apks, .apkm):** Supporto nativo per estrarre, selezionare e installare pacchetti multi-parte e file di espansione OBB.
+* **Supporto File Split APK (.xapk, .apks, .apkm):** Supporto nativo per estrarre, selezionare e installare pacchetti multi-parte e file di espansione OBB. *Nota: è un installer di comodità — le app split **non** possono essere rese visibili in Android Auto, perché un bundle multi-APK non può ottenere l'origine d'installazione "Requested by" del Play Store.*
 * **Selezione Intelligente degli Split:** Pre-seleziona automaticamente l'architettura CPU compatibile (`ABI`), la densità dello schermo (`DENSITY`, inclusi gli split DPI come `mdpi`) e la lingua di sistema (`it`, `en`), deselezionando le lingue inutili. Include un pulsante "Seleziona tutto / Deseleziona tutto".
 * **Architettura di Installazione Ibrida:** Combina intent diretti, `UserService` remoto di Shizuku (con supporto a **Shizuku-Next**, **Shizuku Standard**, **ShizukuPlus** e **Plus Drop-In**) ed esecuzione tramite Root.
 * **Flusso Intelligente:** Processo di installazione ottimizzato che consiglia prima il metodo classico, passando a Shizuku o Root in caso di problemi.

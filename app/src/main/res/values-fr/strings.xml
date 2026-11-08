@@ -98,6 +98,7 @@
     <string name="error_extracting_archive">Erreur lors de l\'extraction de l\'archive : %1$s</string>
     <string name="error_no_apks_in_archive">Aucun fichier APK valide trouvé dans l\'archive</string>
     <string name="installing_split_apks">Installation des APKs fractionnés (%1$d fichiers)…</string>
+    <string name="split_not_aa_notice">L\'installation d\'APK split est une fonction en plus : elle ne rend PAS l\'app visible dans Android Auto.</string>
     <string name="select_split_apks_title">Sélectionnez les APKs fractionnés à installer :</string>
     <string name="split_mandatory">Obligatoire</string>
     <string name="base_apk_mandatory">L\'APK de base est obligatoire</string>
