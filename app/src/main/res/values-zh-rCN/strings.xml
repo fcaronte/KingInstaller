@@ -68,6 +68,7 @@
     <string name="support_my_work">支持我的工作</string>
     <string name="donate_paypal">PayPal</string>
     <string name="donate_buymeacoffee">请我喝咖啡</string>
+    <string name="checking_install_compatibility">正在检查 Android Auto 兼容性…</string>
     <string name="install_success_aa">应用安装成功！（兼容 Android Auto）</string>
     <string name="install_success_no_aa">应用已安装，但可能不兼容 Android Auto。请查看详情。</string>
     <string name="menu_xlauncher">通用 AA 解锁 (XLauncher)</string>

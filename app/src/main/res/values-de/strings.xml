@@ -68,6 +68,7 @@
     <string name="support_my_work">Meine Arbeit unterstützen</string>
     <string name="donate_paypal">PayPal</string>
     <string name="donate_buymeacoffee">Buy Me a Coffee</string>
+    <string name="checking_install_compatibility">Android Auto-Kompatibilität wird geprüft…</string>
     <string name="install_success_aa">App erfolgreich installiert! (AA-kompatibel)</string>
     <string name="install_success_no_aa">App installiert, aber möglicherweise NICHT AA-kompatibel. Details prüfen.</string>
     <string name="menu_xlauncher">Universelle AA-Freischaltung (XLauncher)</string>

@@ -16,6 +16,12 @@ object InstallationUtils {
     const val GOOGLE_INSTALLER_PKG = "com.google.android.packageinstaller"
     const val VENDING_PKG = "com.android.vending"
 
+    enum class AACompatibilityStatus {
+        PENDING,
+        COMPATIBLE,
+        INCOMPATIBLE
+    }
+
     fun getGoogleInstallerSourceDir(context: Context): String? {
         return try {
             val info = context.packageManager.getPackageInfo(GOOGLE_INSTALLER_PKG, 0)
@@ -105,40 +111,43 @@ object InstallationUtils {
     }
 
     fun isAACompatible(context: Context, packageName: String): Boolean {
+        return getAACompatibilityStatus(context, packageName) == AACompatibilityStatus.COMPATIBLE
+    }
+
+    fun getAACompatibilityStatus(context: Context, packageName: String): AACompatibilityStatus {
         return try {
             val pm = context.packageManager
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 val info = pm.getInstallSourceInfo(packageName)
                 val initiating = info.initiatingPackageName
                 val installing = info.installingPackageName
-
-                // Se i metadati non sono pronti, non considerare compatibile
                 if (initiating == null || installing == null) {
-                    return false
+                    return AACompatibilityStatus.PENDING
                 }
 
-                // 1. L'iniziatore non deve MAI essere la shell
-                if (initiating == "com.android.shell") {
-                    return false
+                val isValidInitiating = initiating != "com.android.shell" &&
+                    (initiating == VENDING_PKG ||
+                        initiating == GOOGLE_INSTALLER_PKG ||
+                        initiating == "com.android.packageinstaller" ||
+                        initiating.contains("packageinstaller"))
+                if (installing == VENDING_PKG && isValidInitiating) {
+                    AACompatibilityStatus.COMPATIBLE
+                } else {
+                    AACompatibilityStatus.INCOMPATIBLE
                 }
-
-                // 2. L'installante (installingPackageName) DEVE ESSERE ESCLUSIVAMENTE Play Store (com.android.vending)
-                val isInstallingVending = installing == VENDING_PKG
-
-                // 3. Il richiedente / iniziatore può essere package installer o play store (purché non shell)
-                val isValidInitiating = initiating == VENDING_PKG || 
-                                       initiating == GOOGLE_INSTALLER_PKG || 
-                                       initiating == "com.android.packageinstaller" ||
-                                       initiating.contains("packageinstaller")
-
-                isInstallingVending && isValidInitiating
             } else {
                 @Suppress("DEPRECATION")
                 val installer = pm.getInstallerPackageName(packageName)
-                installer == VENDING_PKG
+                when (installer) {
+                    null -> AACompatibilityStatus.PENDING
+                    VENDING_PKG -> AACompatibilityStatus.COMPATIBLE
+                    else -> AACompatibilityStatus.INCOMPATIBLE
+                }
             }
+        } catch (e: PackageManager.NameNotFoundException) {
+            AACompatibilityStatus.PENDING
         } catch (e: Exception) {
-            false
+            AACompatibilityStatus.INCOMPATIBLE
         }
     }
 

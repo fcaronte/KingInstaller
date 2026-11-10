@@ -65,6 +65,11 @@ Per fare in modo che le applicazioni di terze parti (es. **AABrowser**) vengano 
     - Con il **Classico**: su alcune build AOSP/Google A13 aggiornate con la patch CVE-2023-21017 (`A-236687884`), `InstallStart` rimuove l'extra `The given installer package name com.android.vending is invalid. Remove it.` declassando l'installer a `com.google.android.packageinstaller`.
     - Su questi specifici firmware A13 in cui sia Shizuku che il Classico sono limitati, la via risolutiva definitiva è il **Metodo Root**.
 
+### 1.8 Verifica post-installazione
+- `ACTION_PACKAGE_ADDED` / `ACTION_PACKAGE_REPLACED` avvia la verifica delle origini installazione fuori dal thread UI.
+- Il controllo termina subito quando `initiatingPackageName` e `installingPackageName` sono disponibili e danno un esito definitivo. Ripete il controllo solo se i metadati sono ancora null o il package non è ancora visibile, con attesa progressiva e timeout massimo di 6 secondi.
+- Stato di attesa ed esiti sono risorse localizzate in tutte le lingue supportate.
+
 ---
 
 ## 2. Current Status & Milestone

@@ -67,8 +67,9 @@
     <string name="support_my_work">Поддержать мою работу</string>
     <string name="donate_paypal">PayPal</string>
     <string name="donate_buymeacoffee">Купить мне кофе</string>
-    <string name="install_success_aa">App installed successfully! (AA Compatible)</string>
-    <string name="install_success_no_aa">App installed, but might NOT be AA compatible. Check details.</string>
+    <string name="checking_install_compatibility">Проверка совместимости с Android Auto…</string>
+    <string name="install_success_aa">Приложение успешно установлено! (Совместимо с Android Auto)</string>
+    <string name="install_success_no_aa">Приложение установлено, но может быть несовместимо с Android Auto. См. подробности.</string>
     <string name="menu_xlauncher">Универсальная разблокировка AA (XLauncher)</string>
     <string name="get_xlauncher">Установить XLauncher</string>
     <string name="not_aa_root_message">Метод Root не смог сделать это приложение видимым в Android Auto на этой прошивке. Как универсальное решение установите XLauncher Unlocked (модуль Xposed/LSPosed): он разблокирует любые приложения Android Auto независимо от способа установки.</string>

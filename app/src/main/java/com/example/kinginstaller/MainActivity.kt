@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
     private val shizukuRequestCode = 1001
 
     private val processedPackages = mutableMapOf<String, Long>()
+    private var compatibilityCheckGeneration = 0
 
     private val packageAddedReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -72,62 +73,62 @@ class MainActivity : AppCompatActivity() {
 
                 val tvError = findViewById<TextView>(R.id.textViewError)
                 val installButton = findViewById<Button>(R.id.installButton)
+                val generation = ++compatibilityCheckGeneration
+                val wasSplit = lastInstallWasSplit
+                tvError.text = getString(R.string.checking_install_compatibility)
+                tvError.setTextColor(Color.parseColor("#FFA000"))
+                installButton.isEnabled = false
 
-                // 1. Feedback Visivo di Attesa Immediato (Anti-Freeze UI)
-                runOnUiThread {
-                    tvError.text = "Verifica e ottimizzazione compatibilità in corso..."
-                    tvError.setTextColor(Color.parseColor("#FFA000")) // Arancione/giallo
-                    installButton.isEnabled = false
-                }
-                
-                // 3. Polling reattivo: ogni 150 ms verifichiamo la compatibilità AA fino al timeout.
-                //    L'installer corretto (Play Store) è impostato AL MOMENTO dell'installazione
-                //    (installer di sistema lanciato come shell). Il fix POST-installazione è stato
-                //    RIMOSSO: il set-installer dopo l'install è bloccato dalla firma per ogni uid.
-                //    In caso di fallimento mostriamo i valori reali di install-source per diagnosi.
-                val handler = Handler(Looper.getMainLooper())
-                val startTime = System.currentTimeMillis()
-                val timeoutMillis = 6000L
-                val intervalMillis = 150L
+                Thread({
+                    val timeoutMillis = 6000L
+                    val startedAt = System.currentTimeMillis()
+                    var retryDelayMillis = 100L
+                    var status = InstallationUtils.AACompatibilityStatus.PENDING
 
-                val pollingRunnable = object : Runnable {
-                    override fun run() {
-                        val isCompatible = InstallationUtils.isAACompatible(context, packageName)
-                        val elapsed = System.currentTimeMillis() - startTime
+                    while (status == InstallationUtils.AACompatibilityStatus.PENDING) {
+                        status = InstallationUtils.getAACompatibilityStatus(context, packageName)
+                        if (status != InstallationUtils.AACompatibilityStatus.PENDING) break
 
+                        val remaining = timeoutMillis - (System.currentTimeMillis() - startedAt)
+                        if (remaining <= 0L) break
+                        try {
+                            Thread.sleep(minOf(retryDelayMillis, remaining))
+                        } catch (_: InterruptedException) {
+                            Thread.currentThread().interrupt()
+                            return@Thread
+                        }
+                        retryDelayMillis = (retryDelayMillis * 2).coerceAtMost(600L)
+                    }
+
+                    val isCompatible = status == InstallationUtils.AACompatibilityStatus.COMPATIBLE
+                    val summary = if (isCompatible) null else InstallationUtils.getInstallSourceSummary(context, packageName)
+                    if (!isCompatible) {
+                        Log.w("KingInstaller", "AA non compatibile per $packageName -> $summary")
+                    }
+
+                    runOnUiThread {
+                        if (generation != compatibilityCheckGeneration || isFinishing || isDestroyed) return@runOnUiThread
+                        installButton.isEnabled = true
+                        updateComponentStates(installing = false)
                         if (isCompatible) {
-                            runOnUiThread {
-                                tvError.text = getString(R.string.install_success_aa)
-                                tvError.setTextColor(getColor(R.color.aa_green_text))
-                                installButton.isEnabled = true
-                                updateComponentStates(installing = false)
-                            }
-                        } else if (elapsed >= timeoutMillis) {
-                            val summary = InstallationUtils.getInstallSourceSummary(context, packageName)
-                            Log.w("KingInstaller", "AA non compatibile per $packageName -> $summary")
-                            runOnUiThread {
-                                installButton.isEnabled = true
-                                updateComponentStates(installing = false)
-                                tvError.setTextColor(getColor(R.color.aa_red_text))
-                                tvError.text = getString(R.string.install_success_no_aa) + "\n" + summary
-                                // Per gli split NON proponiamo altri metodi: non possono comunque
-                                // diventare AA-compatibili (niente "Requested by = packageinstaller").
-                                if (!lastInstallWasSplit) {
-                                    if (shizukuTrickEnabled) {
-                                        promptNotCompatibleAfterShizuku(packageName)
-                                    } else if (rootTrickEnabled) {
-                                        promptNotCompatibleAfterRoot()
-                                    } else if (RootUtils.isDeviceRooted || (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission())) {
-                                        promptNotCompatibleAfterClassic(packageName)
-                                    }
+                            tvError.text = getString(R.string.install_success_aa)
+                            tvError.setTextColor(getColor(R.color.aa_green_text))
+                        } else {
+                            tvError.setTextColor(getColor(R.color.aa_red_text))
+                            tvError.text = getString(R.string.install_success_no_aa) + "\n" + summary
+                            // Gli split non possono diventare AA-compatibili impostando un installer.
+                            if (!wasSplit) {
+                                if (shizukuTrickEnabled) {
+                                    promptNotCompatibleAfterShizuku(packageName)
+                                } else if (rootTrickEnabled) {
+                                    promptNotCompatibleAfterRoot()
+                                } else if (RootUtils.isDeviceRooted || (ShizukuUtils.isShizukuAvailable() && ShizukuUtils.hasShizukuPermission())) {
+                                    promptNotCompatibleAfterClassic(packageName)
                                 }
                             }
-                        } else {
-                            handler.postDelayed(this, intervalMillis)
                         }
                     }
-                }
-                handler.post(pollingRunnable)
+                }, "KingInstaller-CompatibilityCheck").start()
             }
         }
     }
