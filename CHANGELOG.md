@@ -1,5 +1,25 @@
 # Changelog
 
+## v2.6.1
+
+### 🇺🇸 English
+
+**Fixes & Improvements**
+- **More reliable OEM installer launch** — detects package installers on the device and grants them APK access, improving Shizuku and Root installs on Samsung, Xiaomi, Oppo, Huawei, and other devices.
+- **Fixed an internal APK handling loop** that could make KingInstaller reopen its own installation URI and truncate the APK. APK filenames from file managers are also sanitized.
+- **More reliable Shizuku fallback** — tries the direct Binder launch first, then UserService with the required URI permission, and finally the standard activity launch. The `.ApkHandler` safety timeout is now 8 seconds to avoid showing KingInstaller in the system chooser during cold starts.
+- **Faster post-install compatibility check** — runs off the UI thread, returns as soon as installation metadata is available, and retries with progressive delays only while metadata is pending.
+- Fixed an Android API-level check for opening per-app language settings. Post-install status messages are now localized in all supported languages.
+
+### 🇮🇹 Italiano
+
+**Correzioni e miglioramenti**
+- **Avvio più affidabile dell'installer OEM** — rileva i package installer presenti sul dispositivo e concede loro l'accesso all'APK, migliorando le installazioni Shizuku e Root su Samsung, Xiaomi, Oppo, Huawei e altri dispositivi.
+- **Risolto un loop nella gestione degli APK interni** che poteva far riaprire a KingInstaller il proprio URI d'installazione e troncare l'APK. Ora vengono anche sanificati i nomi file provenienti dai file manager.
+- **Fallback Shizuku più affidabile** — prova prima l'avvio diretto via Binder, poi UserService con il permesso URI necessario e infine l'avvio standard dell'activity. Il timeout di sicurezza di `.ApkHandler` è ora di 8 secondi, per evitare che KingInstaller compaia nel chooser di sistema durante gli avvii a freddo.
+- **Verifica post-installazione più rapida** — viene eseguita fuori dal thread UI, restituisce l'esito appena i metadati sono disponibili e riprova con attese progressive solo finché i metadati sono in attesa.
+- Corretto il controllo della versione Android per l'apertura delle impostazioni lingua per-app. I messaggi di stato post-installazione sono ora tradotti in tutte le lingue supportate.
+
 ## v2.6
 
 ### 🇺🇸 English
