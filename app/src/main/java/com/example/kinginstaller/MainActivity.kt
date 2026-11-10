@@ -531,7 +531,16 @@ class MainActivity : AppCompatActivity() {
 
         if (action == Intent.ACTION_VIEW || action == Intent.ACTION_INSTALL_PACKAGE) {
             val data = intent.data ?: return
-            if (data.toString().contains("king_install")) return
+            // Se l'intent proviene da KingInstaller stesso (FileProvider interno o extra Play Store rimbalzato)
+            // non dobbiamo processarlo come nuovo APK da copiare, altrimenti finiremmo per sovrascrivere
+            // e troncare il file su se stesso con un errore di copia.
+            if (data.toString().contains("king_install") ||
+                data.authority == "${packageName}.provider" ||
+                (intent.hasExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME) && intent.getStringExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME) == InstallationUtils.VENDING_PKG)) {
+                Log.w("MainActivity", "Ignorato intent d'installazione interno rimbalzato a KingInstaller: $data")
+                updateComponentStates(installing = false)
+                return
+            }
 
             val tvError = findViewById<TextView>(R.id.textViewError)
             tvError.text = getString(R.string.processing_apk)
@@ -569,6 +578,12 @@ class MainActivity : AppCompatActivity() {
                 @Suppress("DEPRECATION")
                 intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
             } ?: return
+
+            if (uri.authority == "${packageName}.provider") {
+                Log.w("MainActivity", "Ignorato ACTION_SEND per URI interno di KingInstaller")
+                updateComponentStates(installing = false)
+                return
+            }
 
             val tvError = findViewById<TextView>(R.id.textViewError)
             tvError.text = getString(R.string.processing_shared_apk)
@@ -643,6 +658,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun isAppLanguageSettingsSupported(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
         val intent = AppLanguageSettings.createSettingsIntent(packageName)
         return AppLanguageSettings.isSupported(
             Build.VERSION.SDK_INT,
@@ -651,6 +667,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openAppLanguageSettings() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         try {
             startActivity(AppLanguageSettings.createSettingsIntent(packageName))
         } catch (e: ActivityNotFoundException) {
@@ -781,9 +798,13 @@ class MainActivity : AppCompatActivity() {
         val tvError = findViewById<TextView>(R.id.textViewError)
         tvError.text = ""
 
+        // Disabilita .ApkHandler durante l'installazione per non comparire nel chooser.
+        // Timeout di sicurezza: se per qualunque motivo l'app non riceve onResume
+        // (crash, forza chiusura), il componente viene riabilitato automaticamente dopo 8 secondi
+        // invece di rimanere bloccato disabilitato per sempre.
         Handler(Looper.getMainLooper()).postDelayed({
             updateComponentStates(installing = false)
-        }, 1000L)
+        }, 8000L)
 
         if (PackageArchiveUtils.isSplitArchive(myFile)) {
             tvError.text = getString(R.string.extracting_archive)
@@ -1032,14 +1053,10 @@ class MainActivity : AppCompatActivity() {
         val tv = findViewById<TextView>(R.id.textViewError)
         val uri = InstallationUtils.getApkContentUri(this, File(filepath))
 
-        // Concediamo in anticipo la lettura dell'URI ai package installer: l'`am start` è lanciato
-        // dalla shell, ma l'installer leggerà l'APK grazie a questo grant (indipendente dal caller).
-        for (p in InstallationUtils.INSTALLER_PACKAGES) {
-            try {
-                grantUriPermission(p, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            } catch (ignored: Exception) {
-            }
-        }
+        // Concede la lettura dell'URI dinamicamente a tutti gli installer rilevati sul dispositivo
+        // (Google, Samsung, Xiaomi, Oppo, AOSP, shell), così l'installer OEM non ottiene
+        // una SecurityException: Permission Denial quando prova a leggere l'APK.
+        InstallationUtils.grantUriPermissionToInstallers(this, uri)
 
         tv.setTextColor(Color.parseColor("#FFA000"))
         tv.text = getString(R.string.installing_root)

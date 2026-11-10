@@ -51,6 +51,8 @@ object InstallationUtils {
             if (name.isNullOrEmpty()) {
                 name = "temp.apk"
             }
+            // Sanitizza il nome per evitare percorsi o subpath (es. "Download/app.apk")
+            name = File(name).name
             val lower = name.lowercase()
             if (!lower.endsWith(".apk") && !lower.endsWith(".xapk") && !lower.endsWith(".apks") && !lower.endsWith(".apkm")) {
                 name = "$name.apk"
@@ -63,6 +65,13 @@ object InstallationUtils {
             }
             
             val output = File(dir, name)
+
+            // Evita di copiare un file su se stesso (loop di troncamento a 0 byte)
+            if (output.exists() && (uri.scheme == "file" && uri.path == output.absolutePath || uri.toString().contains(context.packageName))) {
+                android.util.Log.d("InstallationUtils", "File già presente nella memoria interna, riutilizzo: ${output.absolutePath}")
+                return output.absolutePath
+            }
+
             context.contentResolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(output).use { out ->
                     input.copyTo(out)
@@ -70,6 +79,7 @@ object InstallationUtils {
             }
             output.absolutePath
         } catch (e: Exception) {
+            android.util.Log.e("InstallationUtils", "Errore in copyFileToInternalStorage per URI: $uri", e)
             null
         }
     }
@@ -137,12 +147,56 @@ object InstallationUtils {
         FileProvider.getUriForFile(context.applicationContext, "${context.packageName}.provider", apkFile)
 
     /**
-     * Package a cui concedere la lettura dell'URI dell'APK prima di lanciare l'installer come shell.
-     * Stessa lista del metodo Shizuku (`ShizukuUtils.installApk`): il grant è indipendente dal caller
-     * di `am start`, così l'installer legge l'APK; include `com.android.shell` perché è la shell a
-     * lanciare l'intent.
+     * Package noti a cui concedere la lettura dell'URI dell'APK prima di lanciare l'installer come shell.
+     * Include Google, AOSP e i principali installer OEM (Samsung, Xiaomi/MIUI, Oppo/OnePlus, Huawei)
+     * oltre a com.android.shell.
      */
-    val INSTALLER_PACKAGES = listOf("com.android.shell", GOOGLE_INSTALLER_PKG, "com.android.packageinstaller")
+    val INSTALLER_PACKAGES = listOf(
+        "com.android.shell",
+        GOOGLE_INSTALLER_PKG,
+        "com.android.packageinstaller",
+        "com.samsung.android.packageinstaller",
+        "com.sec.android.app.samsungapps",
+        "com.miui.packageinstaller",
+        "com.coloros.packageinstaller",
+        "com.oplus.packageinstaller",
+        "com.huawei.appmarket"
+    )
+
+    /**
+     * Concede dinamicamente il permesso di lettura dell'URI FileProvider a tutti i potenziali
+     * installer di sistema rilevati nel dispositivo e alla shell, garantendo che nessun installer
+     * OEM incorra in SecurityException: Permission Denial.
+     */
+    fun grantUriPermissionToInstallers(context: Context, fileUri: Uri) {
+        val targets = mutableSetOf<String>()
+        targets.addAll(INSTALLER_PACKAGES)
+
+        try {
+            val pm = context.packageManager
+            val testIntent = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
+                setDataAndType(fileUri, "application/vnd.android.package-archive")
+            }
+            val resolveInfos = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pm.queryIntentActivities(testIntent, PackageManager.ResolveInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                pm.queryIntentActivities(testIntent, 0)
+            }
+            for (info in resolveInfos) {
+                val pkg = info.activityInfo?.packageName
+                if (!pkg.isNullOrEmpty() && pkg != context.packageName) {
+                    targets.add(pkg)
+                }
+            }
+        } catch (_: Exception) {}
+
+        for (pkg in targets) {
+            try {
+                context.grantUriPermission(pkg, fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: Exception) {}
+        }
+    }
 
     /**
      * Riepilogo leggibile dei campi di origine installazione, per diagnostica.

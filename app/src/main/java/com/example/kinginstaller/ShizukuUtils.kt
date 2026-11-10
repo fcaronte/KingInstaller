@@ -111,65 +111,64 @@ object ShizukuUtils {
                     return@thread
                 }
 
-                ensureUserServiceConnected(context)
-
                 val fileUri = FileProvider.getUriForFile(
                     context, "${context.packageName}.provider", apkFile
                 )
 
-                val targetPackages = listOf(
-                    "com.android.shell",
-                    "com.google.android.packageinstaller",
-                    "com.android.packageinstaller"
-                )
-                targetPackages.forEach { pkg ->
-                    try {
-                        context.grantUriPermission(pkg, fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    } catch (_: Exception) {}
-                }
+                // 1. Concediamo la lettura dell'URI a tutti gli installer (Google, AOSP, OEM) e a com.android.shell
+                InstallationUtils.grantUriPermissionToInstallers(context, fileUri)
 
                 activity.runOnUiThread { onStatusUpdate(activity.getString(R.string.opening_package_installer)) }
 
                 val vending = InstallationUtils.VENDING_PKG
-                val am = "am start" +
-                        " -a android.intent.action.INSTALL_PACKAGE" +
-                        " -d $fileUri" +
-                        " -t application/vnd.android.package-archive" +
-                        " --es android.intent.extra.INSTALLER_PACKAGE_NAME $vending" +
-                        " --ez android.intent.extra.NOT_UNKNOWN_SOURCE true" +
-                        " --ei android.content.pm.extra.INSTALL_REASON 1"
 
-                val warm = cachedService
-                var success = false
-                if (warm?.asBinder()?.pingBinder() == true) {
-                    try {
-                        warm.execCommand(am)
-                        success = true
-                        Log.d("ShizukuUtils", "am start eseguito tramite UserService")
-                    } catch (e: Exception) {
-                        Log.e("ShizukuUtils", "execCommand tramite UserService fallito", e)
+                @Suppress("DEPRECATION")
+                val installIntent = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
+                    setDataAndType(fileUri, "application/vnd.android.package-archive")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, vending)
+                    putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
+                    putExtra("android.intent.extra.REFERRER_NAME", "android-app://$vending")
+                    putExtra("android.content.pm.extra.INSTALL_REASON", 1)
+                }
+
+                InstallationState.isFocusLost = false
+
+                // 2. Tenta prima il metodo diretto via Binder Shizuku (istantaneo, zero lag, nativo Pixel)
+                var success = startInstallActivityAsShell(context, installIntent)
+
+                // 3. Se fallisce, tenta via UserService (execCommand 'am start')
+                if (!success) {
+                    ensureUserServiceConnected(context)
+                    val warm = cachedService
+                    if (warm?.asBinder()?.pingBinder() == true) {
+                        try {
+                            val am = "am start" +
+                                    " -a android.intent.action.INSTALL_PACKAGE" +
+                                    " --grant-read-uri-permission" +
+                                    " -d $fileUri" +
+                                    " -t application/vnd.android.package-archive" +
+                                    " --es android.intent.extra.INSTALLER_PACKAGE_NAME $vending" +
+                                    " --ez android.intent.extra.NOT_UNKNOWN_SOURCE true" +
+                                    " --es android.intent.extra.REFERRER_NAME android-app://$vending" +
+                                    " --ei android.content.pm.extra.INSTALL_REASON 1"
+                            warm.execCommand(am)
+                            success = true
+                            Log.d("ShizukuUtils", "am start eseguito tramite UserService come fallback")
+                        } catch (e: Exception) {
+                            Log.e("ShizukuUtils", "execCommand tramite UserService fallito", e)
+                        }
                     }
                 }
 
+                // 4. Se entrambi falliscono, fallback su startActivity standard
                 if (!success) {
-                    @Suppress("DEPRECATION")
-                    val installIntent = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
-                        setDataAndType(fileUri, "application/vnd.android.package-archive")
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, vending)
-                        putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
-                        putExtra("android.content.pm.extra.INSTALL_REASON", 1)
-                    }
-                    InstallationState.isFocusLost = false
-                    success = startInstallActivityAsShell(context, installIntent)
-                    if (!success) {
-                        try {
-                            activity.startActivity(installIntent)
-                            success = true
-                            Log.d("ShizukuUtils", "startInstallActivityAsShell fallito -> fallback su startActivity riuscito")
-                        } catch (e: Exception) {
-                            Log.e("ShizukuUtils", "Fallback startActivity fallito", e)
-                        }
+                    try {
+                        activity.startActivity(installIntent)
+                        success = true
+                        Log.d("ShizukuUtils", "Fallback su startActivity riuscito")
+                    } catch (e: Exception) {
+                        Log.e("ShizukuUtils", "Fallback startActivity fallito", e)
                     }
                 }
 
